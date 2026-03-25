@@ -13,7 +13,7 @@ Project Dashboard is a **meta-project** — a project that tracks all your other
 - **AI Agents** — Three specialized agents (Cockpit, Radar, Bridge) for automated scanning and cross-project analysis
 - **Dark/Light Mode** — System preference detection with manual toggle
 
-![Dashboard Screenshot](https://img.shields.io/badge/demo-open%20index.html-blue)
+<video src="https://github.com/donludwig/project-dashboard/raw/main/project-dashboard.mp4" width="100%" autoplay muted loop></video>
 
 ## Quick Start
 
