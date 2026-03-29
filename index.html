@@ -1,0 +1,3340 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Dashboard — Demo</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  /* ── Theme tokens ── */
+  :root[data-theme="dark"] {
+    --bg: #090a0e;
+    --surface: #11131a;
+    --surface-2: #181b24;
+    --surface-3: #1f2330;
+    --border: #252a38;
+    --border-hover: #344;
+    --text: #e0e4ef;
+    --text-muted: #8a90a8;
+    --text-dim: #5a6080;
+    --table-header-bg: #161820;
+    --table-stripe: #0e1018;
+    --shadow: rgba(10,15,40,0.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6fb;
+    --surface: #fff;
+    --surface-2: #edf0f8;
+    --surface-3: #e4e8f2;
+    --border: #d0d6e6;
+    --border-hover: #b0b8d0;
+    --text: #181c2a;
+    --text-muted: #4a5070;
+    --text-dim: #7880a0;
+    --table-header-bg: #e8ecf5;
+    --table-stripe: #f8fafd;
+    --shadow: rgba(20,30,80,0.06);
+  }
+  :root {
+    --accent-nova: #e8432a;
+    --accent-prism: #005b8e;
+    --accent-helix: #7c3aed;
+    --accent-leaf: #10b981;
+    --accent-forge: #f59e0b;
+    --accent-bloom: #ec4899;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  /* ── Theme toggle ── */
+  .theme-toggle {
+    grid-column: 2;
+    grid-row: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--border-hover); color: var(--text); }
+  .theme-toggle .icon { font-size: 1rem; line-height: 1; }
+
+  /* ── Header ── */
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+  header .subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* ── About section (collapsible) ── */
+  .about-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+  }
+  .about-section > summary {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .about-section > summary::-webkit-details-marker { display: none; }
+  .about-section > summary::before {
+    content: '\25B6';
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .about-section[open] > summary::before { transform: rotate(90deg); }
+  .about-section > summary:hover { color: var(--text); }
+  .about-section .about-body {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .about-block {
+    padding-top: 1.25rem;
+    margin-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .about-block:first-child {
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+  }
+  .about-block h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .about-block p,
+  .about-block ul {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 0.5rem;
+  }
+  .about-block p:last-child,
+  .about-block ul:last-child { margin-bottom: 0; }
+  .about-block strong { color: var(--text); font-weight: 500; }
+  .about-block ul {
+    list-style: none;
+    padding: 0;
+  }
+  .about-block ul li {
+    padding: 0.15rem 0 0.15rem 1rem;
+    position: relative;
+  }
+  .about-block ul li::before {
+    content: '\2014';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+  }
+
+  /* ── Overview table ── */
+  .overview-table-wrap {
+    margin-bottom: 2.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px var(--shadow);
+    overflow: hidden;
+  }
+  .overview-table-wrap h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    display: inline;
+    vertical-align: middle;
+  }
+  table.overview {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    background: var(--surface);
+  }
+  table.overview thead th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    font-weight: 500;
+    background: var(--table-header-bg);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  table.overview thead th:hover { color: var(--text-muted); }
+  table.overview thead th::after {
+    content: '';
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.6rem;
+    opacity: 0.4;
+  }
+  table.overview thead th.sort-asc::after { content: '\25B2'; opacity: 1; }
+  table.overview thead th.sort-desc::after { content: '\25BC'; opacity: 1; }
+  table.overview tbody td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: middle;
+  }
+  table.overview tbody tr:nth-child(even) td {
+    background: var(--table-stripe);
+  }
+  table.overview tbody tr {
+    transition: background 0.15s;
+  }
+  table.overview tbody tr:hover td {
+    background: rgba(100, 160, 255, 0.06);
+  }
+  table.overview tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .project-color {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .project-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+  .overview tbody { counter-reset: row-num; }
+  .overview tbody tr { counter-increment: row-num; }
+  .overview tbody tr td:first-child {
+    white-space: nowrap;
+  }
+  .overview tbody tr td:first-child::before {
+    content: counter(row-num);
+    font-size: 0.6rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    display: inline-block;
+    width: 1.4em;
+    text-align: right;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  .table-name {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    text-decoration: none;
+  }
+  a.table-name:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .table-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    background: var(--surface-3);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .table-badges { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .table-scope { color: var(--text); font-weight: 500; }
+  .table-date { font-family: var(--mono); font-size: 0.75rem; white-space: nowrap; }
+  .table-link {
+    font-size: 0.7rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    background: var(--surface-2);
+    transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
+    display: inline-block;
+    margin: 0.1rem 0;
+  }
+  .table-link:hover { color: var(--text); background: var(--surface-3); }
+  .table-link::before {
+    content: '\2197';
+    margin-right: 3px;
+    font-size: 0.65rem;
+  }
+  .table-links { display: flex; flex-direction: row; gap: 0.4rem; white-space: nowrap; }
+  tr.sub-row td:first-child .table-name::before {
+    content: '\2514';
+    font-family: system-ui;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-right: 0.35rem;
+  }
+
+  /* ── Section headings ── */
+  .section-heading {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.01em;
+    padding-top: 1rem;
+  }
+
+  /* ── Project cards ── */
+  .projects {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .project {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .project:hover { border-color: var(--border-hover); }
+  .project-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem 1.5rem 0;
+  }
+  .project-indicator {
+    width: 4px;
+    min-height: 2.5rem;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .project-title-block { flex: 1; }
+  .project-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .project-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+  }
+  .project-badges {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: var(--surface-3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    font-family: var(--mono);
+  }
+  .project-body { padding: 1rem 1.5rem 1.5rem; }
+  .project-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    line-height: 1.65;
+  }
+  .project-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 768px) {
+    .project-grid { grid-template-columns: 1fr; }
+    .project-header { flex-wrap: wrap; }
+    .project-badges { margin-left: 0; }
+    table.overview { min-width: 900px; }
+    .project-body details {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table.docs-table { min-width: 580px; }
+  }
+  .project-section h4 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+  .project-section ul {
+    list-style: none;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .project-section ul li {
+    padding: 0.2rem 0 0.2rem 1rem;
+    position: relative;
+  }
+  .project-section ul li::before {
+    content: '\203A';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+  }
+  .project-paths {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .path-tag {
+    font-size: 0.7rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    background: var(--surface-2);
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+  }
+  a.path-tag.path-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  a.path-tag.path-link:hover {
+    color: var(--text);
+    border-color: var(--border-hover);
+  }
+  .path-tag.path-claude {
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px dashed var(--border);
+  }
+  .btn-claude {
+    font-size: 0.6rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.2rem 0.45rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-claude:hover {
+    color: var(--text);
+    border-color: var(--border-hover);
+  }
+  .btn-claude.copied {
+    color: var(--accent-leaf);
+    border-color: var(--accent-leaf);
+  }
+
+  /* ── Details ── */
+  details { margin-top: 1rem; }
+  details summary {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 0.35rem 0;
+    user-select: none;
+  }
+  details summary:hover { color: var(--text-muted); }
+  details[open] summary { margin-bottom: 0.75rem; }
+  details .detail-content {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--border);
+  }
+
+  /* ── Docs Table ── */
+  table.docs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin-top: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  table.docs-table thead th {
+    text-align: left;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    font-weight: 500;
+    background: var(--table-header-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  table.docs-table thead th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  table.docs-table thead th[data-sort]:hover { color: var(--text-muted); }
+  table.docs-table thead th[data-sort]::after {
+    content: '';
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.55rem;
+    opacity: 0.4;
+  }
+  table.docs-table thead th.sort-asc::after { content: '\25B2'; opacity: 1; }
+  table.docs-table thead th.sort-desc::after { content: '\25BC'; opacity: 1; }
+  table.docs-table tbody td {
+    padding: 0.35rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: middle;
+    font-family: var(--mono);
+  }
+  table.docs-table tbody td:last-child {
+    font-family: var(--font);
+    color: var(--text-dim);
+    font-size: 0.72rem;
+  }
+  table.docs-table tbody tr:nth-child(even) td {
+    background: var(--table-stripe);
+  }
+  table.docs-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  table.docs-table tbody tr:hover td {
+    background: rgba(100, 160, 255, 0.06);
+  }
+  table.docs-table td.doc-type {
+    font-family: var(--font);
+    font-size: 0.65rem;
+    text-align: left;
+    padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+  }
+  .doc-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .doc-badge.claude {
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(124, 58, 237, 0.25);
+  }
+  .doc-badge.projekt {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+  .doc-badge.code {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+  .doc-badge.research {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+  :root[data-theme="light"] .doc-badge.claude {
+    background: rgba(124, 58, 237, 0.1);
+    color: #6d28d9;
+    border-color: rgba(124, 58, 237, 0.2);
+  }
+  :root[data-theme="light"] .doc-badge.projekt {
+    background: rgba(59, 130, 246, 0.08);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.15);
+  }
+  :root[data-theme="light"] .doc-badge.code {
+    background: rgba(16, 185, 129, 0.08);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.15);
+  }
+  :root[data-theme="light"] .doc-badge.research {
+    background: rgba(245, 158, 11, 0.08);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.15);
+  }
+  table.docs-table td.doc-size,
+  table.docs-table td.doc-date {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    text-align: right;
+  }
+  table.docs-table td.doc-actions {
+    white-space: nowrap;
+    text-align: left;
+    padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+    width: 1%;
+  }
+  .doc-link, .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .doc-link:hover, .copy-btn:hover {
+    color: var(--text-muted);
+    border-color: var(--border-hover);
+    background: var(--surface-3);
+  }
+  .copy-btn.copied {
+    color: #10b981;
+    border-color: #10b981;
+  }
+
+  /* ── Tasks ── */
+  .task-list {
+    margin-top: 0.75rem;
+  }
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    transition: border-color 0.15s;
+  }
+  .task-item:last-child { margin-bottom: 0; }
+  .task-item:hover { border-color: var(--border-hover); }
+  .task-checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 2px solid var(--border-hover);
+    flex-shrink: 0;
+    margin-top: 1px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--surface);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .task-checkbox:checked {
+    background: var(--text-dim);
+    border-color: var(--text-dim);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6l2.5 2.5 4.5-5' stroke='%23fff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .task-checkbox:checked + .task-content { opacity: 0.5; text-decoration: line-through; }
+  .task-content { flex: 1; min-width: 0; }
+  .task-title {
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .task-id {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    background: var(--surface-3);
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    font-weight: 400;
+  }
+  .task-meta {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 0.2rem;
+  }
+  .task-status {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .task-status.offen {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+  .task-status.aktiv {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+  .task-status.erledigt {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+  :root[data-theme="light"] .task-status.offen {
+    background: rgba(59, 130, 246, 0.08);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.15);
+  }
+  :root[data-theme="light"] .task-status.aktiv {
+    background: rgba(245, 158, 11, 0.08);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.15);
+  }
+  :root[data-theme="light"] .task-status.erledigt {
+    background: rgba(16, 185, 129, 0.08);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.15);
+  }
+
+  /* ── Global Tasks ── */
+  .global-tasks {
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: 0 2px 12px var(--shadow);
+    overflow: hidden;
+  }
+  .global-tasks > summary {
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .global-tasks > summary::-webkit-details-marker { display: none; }
+  .global-tasks > summary::before {
+    content: '\25B6';
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    transition: transform 0.15s;
+  }
+  .global-tasks[open] > summary::before {
+    transform: rotate(90deg);
+  }
+  .task-count {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    background: var(--surface-3);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+  }
+  .global-tasks-body {
+    padding: 0 1.25rem 1.25rem;
+  }
+  /* AI Recommendations sub-section */
+  .ai-recommendations {
+    margin-top: 1rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .ai-recommendations > .ai-summary {
+    padding: 0.6rem 0.75rem;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .ai-recommendations > .ai-summary::-webkit-details-marker { display: none; }
+  .ai-recommendations > .ai-summary::before {
+    content: '\25B6';
+    font-size: 0.5rem;
+    color: var(--text-dim);
+    transition: transform 0.15s;
+  }
+  .ai-recommendations[open] > .ai-summary::before { transform: rotate(90deg); }
+  .ai-disclaimer {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    padding: 0 0.75rem 0.5rem;
+    margin: 0;
+    font-style: italic;
+  }
+  .ai-recommendations > .task-list {
+    padding: 0 0.75rem 0.75rem;
+  }
+  .ai-task {
+    border-style: dashed;
+    opacity: 0.85;
+  }
+  .ai-task .task-status {
+    background: rgba(100, 100, 100, 0.1);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .ai-promote-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-size: 0.6rem;
+    padding: 0.1rem 0.45rem;
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .ai-promote-btn:hover {
+    color: #60a5fa;
+    border-color: #60a5fa;
+    background: rgba(59, 130, 246, 0.08);
+  }
+  .ai-tag {
+    font-size: 0.55rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    background: var(--surface-3);
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    border: 1px dashed var(--border);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  .ai-task.promoted {
+    border-style: solid;
+    opacity: 1;
+  }
+  .ai-task.promoted .task-status {
+    background: rgba(59, 130, 246, 0.12) !important;
+    color: #60a5fa !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  }
+  .ai-task.promoted .ai-promote-btn { display: none; }
+  .ai-demote-btn {
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-size: 0.6rem;
+    padding: 0.1rem 0.45rem;
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .ai-demote-btn:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+  }
+  /* Sticky Toggle-Button */
+  .tasks-toggle-sticky {
+    position: fixed;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 100;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.35rem 0.65rem;
+    font-size: 0.7rem;
+    font-family: var(--font);
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: border-color 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .tasks-toggle-sticky:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+  .tasks-toggle-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #60a5fa;
+  }
+  .tasks-toggle-dot.has-active { background: #fbbf24; }
+
+  /* ── Collapsible sections ── */
+  details.overview-table-wrap > summary {
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    list-style: none;
+    background: var(--surface);
+    border: none;
+    outline: none;
+    margin-bottom: -1px;
+  }
+  .overview-table-wrap > summary::-webkit-details-marker { display: none; }
+  .overview-table-wrap > summary::before {
+    content: '\25B6';
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    margin-right: 0.5rem;
+    display: inline-block;
+    transition: transform 0.15s;
+    vertical-align: middle;
+  }
+  .overview-table-wrap[open] > summary::before { transform: rotate(90deg); }
+  .overview-table-wrap.synergies .synergy-grid {
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  /* ── Synergies ── */
+  .synergies { margin-bottom: 3rem; }
+  .synergy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1rem;
+  }
+  .synergy-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .synergy-card h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .synergy-card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .synergy-dots { display: flex; gap: 4px; }
+  .synergy-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .synergy-potential {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+    font-style: italic;
+  }
+
+  /* ── Agent cards ── */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+  .agent-card.agent-cockpit::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+  .agent-card.agent-radar::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+  .agent-card.agent-bridge::before { background: linear-gradient(90deg, #10b981, #8b5cf6); }
+  .agent-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .agent-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: var(--surface-3);
+  }
+  .agent-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .agent-role {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .agent-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 1rem;
+  }
+  .agent-commands {
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+  }
+  .agent-commands h4 {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+  .agent-cmd {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.2rem 0;
+    font-size: 0.78rem;
+  }
+  .agent-cmd code {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    background: var(--surface-3);
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .agent-cmd span { color: var(--text-muted); }
+  .agent-coord {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .agent-coord strong { color: var(--text-muted); font-weight: 500; }
+
+  /* ── Ideas section ── */
+  .ideas { margin-bottom: 3rem; }
+  .idea-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .idea-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--text-dim), var(--border));
+  }
+  .idea-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .idea-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+  }
+  .idea-title::after {
+    content: '\25BC';
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    margin-left: 0.5rem;
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .idea-card.collapsed .idea-title::after {
+    transform: rotate(-90deg);
+  }
+  .idea-card.collapsed .idea-desc,
+  .idea-card.collapsed .idea-workflow,
+  .idea-card.collapsed .idea-tools,
+  .idea-card.collapsed .about-block,
+  .idea-card.collapsed .project-paths {
+    display: none;
+  }
+  .idea-card.collapsed .idea-header {
+    margin-bottom: 0;
+  }
+  .idea-status {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    background: var(--surface-3);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    white-space: nowrap;
+    margin-left: auto;
+  }
+  .idea-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 1rem;
+  }
+  .idea-workflow {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .idea-workflow ol {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+  }
+  .idea-workflow li {
+    padding: 0.15rem 0;
+  }
+  .idea-workflow strong { color: var(--text); font-weight: 500; }
+  .idea-tools {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Back to top ── */
+  .back-to-top {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 99;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-muted);
+    box-shadow: 0 2px 8px var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, border-color 0.2s;
+  }
+  .back-to-top.visible { opacity: 1; pointer-events: auto; }
+  .back-to-top:hover { border-color: var(--border-hover); color: var(--text); }
+
+  /* ── Phase badges ── */
+  .phase-badge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-weight: 500;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  .phase-migration { background: #1e3a5f; color: #60a5fa; }
+  .phase-prototyp { background: #4a2c1a; color: #fbbf24; }
+  .phase-aktiv { background: #14532d; color: #4ade80; }
+  .phase-stabil { background: #1a2e1a; color: #86efac; }
+  .phase-idee { background: var(--surface-3); color: var(--text-dim); }
+  :root[data-theme="light"] .phase-migration { background: #dbeafe; color: #1d4ed8; }
+  :root[data-theme="light"] .phase-prototyp { background: #fef3c7; color: #92400e; }
+  :root[data-theme="light"] .phase-aktiv { background: #dcfce7; color: #166534; }
+  :root[data-theme="light"] .phase-stabil { background: #d1fae5; color: #065f46; }
+  :root[data-theme="light"] .phase-idee { background: #f3f4f6; color: #6b7280; }
+
+  /* ── Table search ── */
+  .table-search {
+    padding: 0.5rem 1.25rem 0.75rem;
+    background: var(--surface);
+  }
+  .table-search input {
+    width: 100%;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-family: var(--font);
+    outline: none;
+  }
+  .table-search input:focus { border-color: var(--border-hover); }
+  .table-search input::placeholder { color: var(--text-dim); }
+
+
+  /* ── Collapsible project cards ── */
+  .project-toggle {
+    cursor: pointer;
+    user-select: none;
+  }
+  .project-toggle::after {
+    content: '\25BC';
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    margin-left: 0.5rem;
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .project.collapsed .project-toggle::after {
+    transform: rotate(-90deg);
+  }
+  .project.collapsed .project-body {
+    display: none;
+  }
+  .project.collapsed .project-header {
+    padding-bottom: 1.5rem;
+  }
+
+  /* ── Relative date ── */
+  .table-date-rel {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-left: 0.25rem;
+  }
+
+  /* ── Activity bar ── */
+  .activity-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    margin-top: 0.3rem;
+    overflow: hidden;
+  }
+  .activity-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+</style>
+</head>
+<body>
+
+<button class="tasks-toggle-sticky" id="tasks-toggle" onclick="document.getElementById('global-tasks').scrollIntoView({behavior:'smooth'}); document.getElementById('global-tasks').open = !document.getElementById('global-tasks').open;">
+  <span class="tasks-toggle-dot has-active"></span>
+  <span id="tasks-toggle-label">2 Tasks</span>
+</button>
+
+<!-- Header -->
+<header>
+  <div>
+    <h1>Project Dashboard</h1>
+    <p class="subtitle">Alex Sample &mdash; Design Systems, Fluid Typography, UX Engineering</p>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+    <span class="icon" id="theme-icon">&#9790;</span>
+    <span id="theme-label">Light</span>
+  </button>
+</header>
+
+<!-- About: Projekt + Agents -->
+<details class="about-section">
+  <summary>About this Project &amp; Agents</summary>
+  <div class="about-body">
+
+    <!-- Was ist das Projekt -->
+    <div class="about-block">
+      <h3>What is this project?</h3>
+      <p>
+        This dashboard is a <strong>meta project</strong> that documents all active projects and maps their relationships.
+        It lives in the Claude Projects folder and is maintained with Claude Code &mdash; serving as a central hub for tracking ongoing work, dependencies, and synergies.
+      </p>
+      <p><strong>What can I use it for?</strong></p>
+      <ul>
+        <li>Ask cross-project questions: &ldquo;Which projects use Utopia?&rdquo;, &ldquo;Where are there token conflicts?&rdquo;</li>
+        <li>Build connections: Transfer insights from one design system to another</li>
+        <li>Track status: Last update, scope, and progress of all projects at a glance</li>
+        <li>Provide context: Claude has access to all source code and memory files in this project</li>
+      </ul>
+    </div>
+
+    <!-- Agents: Cards -->
+    <div class="about-block">
+      <h3>Cockpit, Radar &amp; Bridge</h3>
+      <p>Three specialized helpers for this meta project. Each has <strong>two invocation methods</strong> &mdash; see <em>Architecture</em> below.</p>
+      <div class="agent-grid">
+
+        <div class="agent-card agent-cockpit">
+          <div class="agent-header">
+            <div class="agent-icon">&#9881;</div>
+            <div>
+              <div class="agent-name">Cockpit</div>
+              <div class="agent-role">Coordinator &amp; Dashboard Developer</div>
+            </div>
+          </div>
+          <p class="agent-desc">
+            Control center of the dashboard. Evolves the <code>index.html</code>, coordinates Radar and Bridge, maintains memory files, and prioritizes feature ideas.
+          </p>
+          <div class="agent-commands">
+            <h4>Activation</h4>
+            <div class="agent-cmd"><code>/cockpit</code> <span>&mdash; Skill mode (manual)</span></div>
+            <div class="agent-cmd"><code>/cockpit status</code> <span>&mdash; Overview of all agents</span></div>
+            <div class="agent-cmd"><code>claude --agent cockpit</code> <span>&mdash; Agent mode (orchestrated)</span></div>
+          </div>
+          <div class="agent-coord">
+            <strong>Coordinates:</strong> Can spawn Radar and Bridge as subagents and run them in parallel.
+          </div>
+        </div>
+
+        <div class="agent-card agent-radar">
+          <div class="agent-header">
+            <div class="agent-icon">&#9201;</div>
+            <div>
+              <div class="agent-name">Radar</div>
+              <div class="agent-role">Update-Scanner</div>
+            </div>
+          </div>
+          <p class="agent-desc">
+            Scans project directories on three levels: <strong>Code data</strong> (files, lines, prototypes), <strong>Claude context</strong> (CLAUDE.md, memory files, sessions, MCP settings), and <strong>Health check</strong> (stale memories, missing CLAUDE.md). Automatically updates the overview table.
+          </p>
+          <div class="agent-commands">
+            <h4>Activation</h4>
+            <div class="agent-cmd"><code>/radar</code> <span>&mdash; Scan all projects</span></div>
+            <div class="agent-cmd"><code>/radar nova prism</code> <span>&mdash; Specific projects only</span></div>
+            <div class="agent-cmd"><code>/radar helix bloom</code> <span>&mdash; Short names supported</span></div>
+            <div class="agent-cmd"><span>or as a subagent of Cockpit (automatic)</span></div>
+          </div>
+          <div class="agent-coord">
+            <strong>Output:</strong> Per project: code diff table, Claude context (&check; CLAUDE.md, memory topics, session count, MCP servers), notes (&amp; warnings for stale memories or missing CLAUDE.md)
+          </div>
+        </div>
+
+        <div class="agent-card agent-bridge">
+          <div class="agent-header">
+            <div class="agent-icon">&#9732;</div>
+            <div>
+              <div class="agent-name">Bridge</div>
+              <div class="agent-role">Synergy Finder</div>
+            </div>
+          </div>
+          <p class="agent-desc">
+            Compares projects by content: token architectures, Utopia configurations, component patterns. Identifies transfer opportunities and provides specific code references.
+          </p>
+          <div class="agent-commands">
+            <h4>Activation</h4>
+            <div class="agent-cmd"><code>/bridge nova prism</code> <span>&mdash; Skill mode (manual)</span></div>
+            <div class="agent-cmd"><code>/bridge transfer prism&rarr;nova</code> <span>&mdash; Knowledge transfer</span></div>
+            <div class="agent-cmd"><span>or as a subagent of Cockpit (automatic)</span></div>
+          </div>
+          <div class="agent-coord">
+            <strong>Output:</strong> Comparison table + code references + recommendations + risks
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Architektur-Erklaerung -->
+    <div class="about-block">
+      <h3>Architecture: Skills vs. Agents</h3>
+      <p>
+        Claude Code offers two mechanisms for reusable instructions: <strong>Skills</strong> and <strong>Agents</strong>.
+        This project deliberately uses both &mdash; as a <strong>hybrid setup</strong>.
+      </p>
+
+      <table class="overview" style="margin:0.75rem 0; font-size:0.78rem;">
+        <thead>
+          <tr>
+            <th style="cursor:default;">&nbsp;</th>
+            <th style="cursor:default;">Skills (<code>/slash</code>)</th>
+            <th style="cursor:default;">Agents (<code>claude --agent</code>)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Invocation</td>
+            <td><code>/cockpit</code>, <code>/radar</code>, <code>/bridge</code></td>
+            <td><code>claude --agent cockpit</code></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Autocomplete on <code>/</code></td>
+            <td>Yes</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Cross-invocation</td>
+            <td>No &mdash; sequential by user only</td>
+            <td>Yes &mdash; Cockpit spawns Radar &amp; Bridge as subagents</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Parallel execution</td>
+            <td>No</td>
+            <td>Yes &mdash; Radar + Bridge simultaneously</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Tool restrictions</td>
+            <td>No &mdash; full access</td>
+            <td>Yes &mdash; <code>tools:</code> field in frontmatter</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Files</td>
+            <td><code>~/.claude/skills/*/SKILL.md</code></td>
+            <td><code>~/.claude/agents/*.md</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>Why both?</strong></p>
+      <ul>
+        <li><strong>Skills</strong> for daily use: type <code>/radar</code>, update data, done. Fast, direct, no setup.</li>
+        <li><strong>Agents</strong> for orchestrated workflows: <code>claude --agent cockpit</code> starts a session where Cockpit autonomously decides if and when it needs Radar or Bridge &mdash; and spawns them as subagents.</li>
+      </ul>
+
+      <p><strong>Limitation:</strong> Subagents cannot spawn further subagents. Only the main agent (Cockpit) can delegate. That&rsquo;s why Cockpit is the coordinator &mdash; Radar and Bridge are pure workers.</p>
+
+      <p><strong>Typical workflows:</strong></p>
+      <ul>
+        <li><em>Quick:</em> <code>/radar</code> &rarr; Numbers updated</li>
+        <li><em>Targeted:</em> <code>/bridge nova prism</code> &rarr; Comparison</li>
+        <li><em>Orchestrated:</em> <code>claude --agent cockpit</code> &rarr; &ldquo;Update the dashboard and check if Prism has new patterns that Nova could use&rdquo; &rarr; Cockpit spawns Radar + Bridge, processes results, rebuilds dashboard</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+
+<!-- Tasks -->
+<details class="global-tasks" id="global-tasks" open>
+  <summary class="section-heading">Tasks <span class="task-count" id="task-counter"></span></summary>
+  <div class="global-tasks-body">
+    <div class="task-list" id="manual-tasks">
+      <div class="task-item">
+        <input type="checkbox" class="task-checkbox">
+        <div class="task-content">
+          <div class="task-title">
+            <span>Migrate typography tokens to fluid scale</span>
+            <span class="task-id">DEMO-001</span>
+            <span class="task-status offen">Open</span>
+          </div>
+          <div class="task-meta">
+            <a href="#nova-fluid-type" style="color:#e8432a;text-decoration:none;font-weight:500;">Nova Fluid Type</a> &middot; Define clamp() values for all 9 font-size steps across breakpoints
+          </div>
+        </div>
+      </div>
+      <div class="task-item">
+        <input type="checkbox" class="task-checkbox">
+        <div class="task-content">
+          <div class="task-title">
+            <span>Component audit for consistent active states</span>
+            <span class="task-id">DEMO-002</span>
+            <span class="task-status aktiv">Active</span>
+          </div>
+          <div class="task-meta">
+            <a href="#helix-typography" style="color:#7c3aed;text-decoration:none;font-weight:500;">Helix Typography</a> &middot; 10 components need token-based active state styling with WCAG AA contrast
+          </div>
+        </div>
+      </div>
+    </div>
+    <details class="ai-recommendations" id="ai-recommendations">
+      <summary class="ai-summary">AI Recommendations <span class="task-count" id="ai-counter"></span></summary>
+      <p class="ai-disclaimer">Automatically generated suggestions based on project analysis. Not binding tasks.</p>
+      <div class="task-list">
+        <div class="task-item ai-task" data-project="nova-social-proof">
+          <div class="task-content">
+            <div class="task-title">
+              <span>Finalize activity feed variant selection after stakeholder review</span>
+              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
+            </div>
+            <div class="task-meta"><a href="#nova-social-proof" style="color:#ec4899;text-decoration:none;font-weight:500;">Nova Social Proof</a> &middot; Prototype ready but variant selection blocks transition to component implementation</div>
+          </div>
+        </div>
+        <div class="task-item ai-task" data-project="prism-fluid-type">
+          <div class="task-content">
+            <div class="task-title">
+              <span>WCAG 1.4.4 resize text verification for fluid typography</span>
+              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
+            </div>
+            <div class="task-meta"><a href="#prism-fluid-type" style="color:#005b8e;text-decoration:none;font-weight:500;">Prism Fluid Type</a> &middot; Viewport-based scaling may break text zoom; WCAG check mentioned but not confirmed as passing</div>
+          </div>
+        </div>
+        <div class="task-item ai-task" data-project="design-bridge">
+          <div class="task-content">
+            <div class="task-title">
+              <span>Define UX concept for resources &amp; learnings card grid</span>
+              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
+            </div>
+            <div class="task-meta"><a href="#design-bridge" style="color:#10b981;text-decoration:none;font-weight:500;">Design Bridge</a> &middot; Card interaction model (search, filter, navigation depth) still undefined</div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+</details>
+
+<!-- Overview Table -->
+<details class="overview-table-wrap" open>
+  <summary><h2>Project Overview</h2></summary>
+  <div class="table-search">
+    <input type="text" id="table-search" placeholder="Filter projects..." autocomplete="off">
+  </div>
+  <table class="overview" id="overview-table">
+    <thead>
+      <tr>
+        <th data-col="0">Project</th>
+        <th data-col="1">Type</th>
+        <th data-col="2">Organization</th>
+        <th data-col="3">Tech Stack</th>
+        <th data-col="4" data-type="number">Scope</th>
+        <th data-col="5" data-type="number">Files</th>
+        <th data-col="6" data-type="date">Last Update</th>
+        <th data-col="7">Phase</th>
+        <th data-col="8">Links</th>
+        <th data-col="9"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 1. Nova Fluid Type -->
+      <tr>
+        <td>
+          <a class="table-name" href="#nova-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8432a'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENf%3C/text%3E%3C/svg%3E" alt="">Nova Fluid Type</a>
+        </td>
+        <td>Design System</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Lit</span>
+            <span class="table-badge">Vite</span>
+            <span class="table-badge">TS</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="23820">~24k lines</td>
+        <td data-sort="637">637</td>
+        <td class="table-date" data-sort="2026-03-23T08:32">23.03.2026, 08:32</td>
+        <td><span class="phase-badge phase-migration">Migration</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-viewer.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('nova-fluid-type')">claude</button></td>
+      </tr>
+      <!-- 2. Nova Social Proof -->
+      <tr>
+        <td>
+          <a class="table-name" href="#nova-social-proof"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENs%3C/text%3E%3C/svg%3E" alt="">Nova Social Proof</a>
+        </td>
+        <td>Components</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Lit</span>
+            <span class="table-badge">Vite</span>
+            <span class="table-badge">Research</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="27273">~27k lines</td>
+        <td data-sort="655">655</td>
+        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
+        <td><span class="phase-badge phase-prototyp">Prototype</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/nova-social-proof/prototype-standalone/index.html">Local</a>
+            <a class="table-link" href="https://example.com/upload/prototype-social-proof/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('nova-social-proof')">claude</button></td>
+      </tr>
+      <!-- 3. Prism Fluid Type -->
+      <tr>
+        <td>
+          <a class="table-name" href="#prism-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23005b8e'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E" alt="">Prism Fluid Type</a>
+        </td>
+        <td>Design System</td>
+        <td>Prism UX</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">SCSS</span>
+            <span class="table-badge">Vite</span>
+            <span class="table-badge">BEM</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="18588">~19k lines</td>
+        <td data-sort="230">230</td>
+        <td class="table-date" data-sort="2026-03-25T09:23">25.03.2026, 09:23</td>
+        <td><span class="phase-badge phase-migration">Migration</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/prism-fluid-type/static/prism-utopia-viewer.html">Local</a>
+            <a class="table-link" href="https://example.com/upload/prism-fluid-type/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('prism-fluid-type')">claude</button></td>
+      </tr>
+      <!-- 4. Helix Typography -->
+      <tr>
+        <td>
+          <a class="table-name" href="#helix-typography"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%237c3aed'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EHx%3C/text%3E%3C/svg%3E" alt="">Helix Typography</a>
+        </td>
+        <td>Platform</td>
+        <td>Pinnacle Inc.</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">React</span>
+            <span class="table-badge">Next.js</span>
+            <span class="table-badge">Kotlin</span>
+            <span class="table-badge">GraphQL</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1077831">~1.1M lines</td>
+        <td data-sort="7317">7317</td>
+        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
+        <td><span class="phase-badge phase-migration">Migration</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/helix-typography/static/helix-utopia.html">Local</a>
+            <a class="table-link" href="https://example.com/upload/helix-typography/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('helix-typography')">claude</button></td>
+      </tr>
+      <!-- 5. Bloom Components -->
+      <tr>
+        <td>
+          <a class="table-name" href="#bloom-components"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EBl%3C/text%3E%3C/svg%3E" alt="">Bloom Components</a>
+        </td>
+        <td>Design System</td>
+        <td>Bloom Health</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Svelte</span>
+            <span class="table-badge">Tailwind</span>
+            <span class="table-badge">Storybook</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="14200">~14k lines</td>
+        <td data-sort="182">182</td>
+        <td class="table-date" data-sort="2026-03-20T14:48">20.03.2026, 14:48</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/bloom-components/storybook-static/index.html">Local</a>
+            <a class="table-link" href="https://bloom-ds.example.com/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('bloom-components')">claude</button></td>
+      </tr>
+      <!-- 6. Design Bridge -->
+      <tr>
+        <td>
+          <a class="table-name" href="#design-bridge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2310b981'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3E%26lt;/%26gt;%3C/text%3E%3C/svg%3E" alt="">Design Bridge</a>
+        </td>
+        <td>Learning Platform</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Vanilla JS</span>
+            <span class="table-badge">Open Props</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="4125">~4,1k lines</td>
+        <td data-sort="27">27</td>
+        <td class="table-date" data-sort="2026-03-25T08:17">25.03.2026, 08:17</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/design-bridge/deploy/index.html">Local</a>
+            <a class="table-link" href="https://design-bridge.example.com/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('design-bridge')">claude</button></td>
+      </tr>
+      <!-- 7. Token Workshop -->
+      <tr>
+        <td>
+          <a class="table-name" href="#token-workshop"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230ea5e9'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETw%3C/text%3E%3C/svg%3E" alt="">Token Workshop</a>
+        </td>
+        <td>Methodology</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Astro</span>
+            <span class="table-badge">MDX</span>
+            <span class="table-badge">Style Dictionary</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="3400">~3,4k lines</td>
+        <td data-sort="42">42</td>
+        <td class="table-date" data-sort="2026-03-18T16:30">18.03.2026, 16:30</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/token-workshop/dist/index.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('token-workshop')">claude</button></td>
+      </tr>
+      <!-- 8. Forge -->
+      <tr>
+        <td>
+          <a class="table-name" href="#forge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EFg%3C/text%3E%3C/svg%3E" alt="">Forge</a>
+        </td>
+        <td>Tool</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Vanilla JS</span>
+            <span class="table-badge">Node.js</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1189">~1,2k lines</td>
+        <td data-sort="10">10</td>
+        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
+        <td><span class="phase-badge phase-stabil">Stable</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/forge/forge.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('forge')">claude</button></td>
+      </tr>
+      <!-- 8b. Forge Mobile Type (Sub-Row) -->
+      <tr class="sub-row">
+        <td>
+          <a class="table-name" href="#forge-mobile-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='14' font-weight='700' fill='%23fff' text-anchor='middle'%3EFm%3C/text%3E%3C/svg%3E" alt="">Forge Mobile Type</a>
+        </td>
+        <td>Tool</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">HTML</span>
+            <span class="table-badge">CSS</span>
+            <span class="table-badge">JS</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1343">~1,3k lines</td>
+        <td data-sort="8">8</td>
+        <td class="table-date" data-sort="2026-03-25T10:06">25.03.2026, 10:06</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('forge-mobile-type')">claude</button></td>
+      </tr>
+      <!-- 9. The Handoff -->
+      <tr>
+        <td>
+          <a class="table-name" href="#the-handoff"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETH%3C/text%3E%3C/svg%3E" alt="">The Handoff</a>
+        </td>
+        <td>Methodology</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Claude Code</span>
+            <span class="table-badge">Figma MCP</span>
+            <span class="table-badge">Markdown</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="0">&mdash;</td>
+        <td data-sort="5">5</td>
+        <td class="table-date" data-sort="2026-03-23T08:22">23.03.2026, 08:22</td>
+        <td><span class="phase-badge phase-idee">Idea</span></td>
+        <td>
+          <div class="table-links">
+            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('the-handoff')">claude</button></td>
+      </tr>
+      <!-- 10. Spectrum Color -->
+      <tr>
+        <td>
+          <a class="table-name" href="#spectrum-color"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ESC%3C/text%3E%3C/svg%3E" alt="">Spectrum Color</a>
+        </td>
+        <td>Color System</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">OKLCH</span>
+            <span class="table-badge">CSS</span>
+            <span class="table-badge">Leonardo</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="0">&mdash;</td>
+        <td data-sort="3">3</td>
+        <td class="table-date" data-sort="2026-03-23T08:22">23.03.2026, 08:22</td>
+        <td><span class="phase-badge phase-idee">Idea</span></td>
+        <td>
+          <div class="table-links">
+            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('spectrum-color')">claude</button></td>
+      </tr>
+      <!-- 11. Project Dashboard -->
+      <tr>
+        <td>
+          <a class="table-name" href="#project-dashboard"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23888'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EPD%3C/text%3E%3C/svg%3E" alt="">Project Dashboard</a>
+        </td>
+        <td>Meta Project</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">HTML</span>
+            <span class="table-badge">CSS</span>
+            <span class="table-badge">JS</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="2640">~2,6k lines</td>
+        <td data-sort="15">15</td>
+        <td class="table-date" data-sort="2026-03-25T16:00">25.03.2026, 16:00</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('project-dashboard')">claude</button></td>
+      </tr>
+    </tbody>
+  </table>
+</details>
+
+<!-- Synergies -->
+<details class="overview-table-wrap synergies" open>
+  <summary><h2>Synergies &amp; Collaboration</h2></summary>
+  <div class="synergy-grid">
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
+        </span>
+        Utopia Fluid Type &mdash; Shared Methodology
+      </h3>
+      <p>
+        All three design systems (Nova, Prism, Helix) are migrating to Utopia-based fluid typography with CSS clamp(). Insights from one project (e.g., token override strategy in Prism) can be directly transferred to the others.
+      </p>
+      <div class="synergy-potential">Potential: Shared Utopia config generator, cross-system best practices, common viewport viewer component</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
+          <span class="synergy-dot" style="background: var(--accent-bloom);"></span>
+          <span class="synergy-dot" style="background: var(--accent-forge);"></span>
+        </span>
+        Redleaf Ecosystem &mdash; Nova + Social Proof + Forge
+      </h3>
+      <p>
+        Three projects working on the same design system: Nova Fluid Type modernizes the typography, Social Proof extends the component library, Forge enables live preview.
+      </p>
+      <div class="synergy-potential">Potential: Forge as a universal preview tool, Social Proof with fluid type values, unified prototyping workflow</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-leaf);"></span>
+          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+        </span>
+        Design Bridge &mdash; Documenting All Learnings
+      </h3>
+      <p>
+        Experiences from fluid type migrations, token architectures, and AI workflows can be prepared as learning resources on the platform.
+      </p>
+      <div class="synergy-potential">Potential: Case studies, Token Workshop content, AI workflow documentation as learning cards</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-forge);"></span>
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
+        </span>
+        Viewport Viewer &mdash; Universal Preview Tool
+      </h3>
+      <p>
+        Forge, Prism Utopia Viewer, and Helix all use their own viewport preview tools. A generic tool could serve all three design systems.
+      </p>
+      <div class="synergy-potential">Potential: Generic fluid type viewer tool, open source, design-system-agnostic</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
+        </span>
+        Token Architecture &mdash; Primitive vs. Semantic
+      </h3>
+      <p>
+        Prism and Helix share the same challenge: overriding semantic tokens for fluid type without breaking primitives and line heights.
+      </p>
+      <div class="synergy-potential">Potential: Shared token override pattern, documented architecture pattern</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-leaf);"></span>
+          <span class="synergy-dot" style="background: var(--accent-bloom);"></span>
+        </span>
+        Prototyping-Workflow &mdash; AI + Figma MCP
+      </h3>
+      <p>
+        Nova Social Proof uses Claude Code + Figma MCP for research-to-prototype workflows. Experiences can be documented as a learning card on Design Bridge.
+      </p>
+      <div class="synergy-potential">Potential: Design Bridge workflow card &ldquo;From Research to Prototype with AI&rdquo;</div>
+    </div>
+
+  </div>
+</details>
+
+<!-- Project Details -->
+<details open>
+<summary class="section-heading"><h2>Project Details</h2></summary>
+<div class="projects">
+
+  <!-- 1. Nova Fluid Type -->
+  <article class="project" id="nova-fluid-type">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-nova);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Nova Fluid Type</div>
+        <div class="project-subtitle">Redleaf Design System &mdash; Fluid Typography Migration</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Lit 3.3</span>
+        <span class="badge">Vite 7</span>
+        <span class="badge">TypeScript</span>
+        <span class="badge">Storybook 10</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Migration of Redleaf typography from breakpoint-based (19px &rarr; 21px jump at 992px) to fluid scaling with CSS <code>clamp()</code> and Utopia. Two type scales (1.1 Major Second for mobile, 1.25 Major Third for desktop), 11 font-size steps, 14px minimum size. 42 web components, 8 themes for different sub-brands.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Key Features</h4>
+          <ul>
+            <li>11 fluid font-size steps via clamp()</li>
+            <li>Utopia methodology: 320px&ndash;1200px viewport</li>
+            <li>42 Lit-based web components</li>
+            <li>8 multi-brand themes</li>
+            <li>Demo HTML + viewport viewer for stakeholders</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>Precise Utopia clamp() calculation without rounding errors</li>
+            <li>Keep heading mappings unchanged (no breaking changes)</li>
+            <li>Control scaling of large headings (up to 80px)</li>
+            <li>14px floor for accessibility across all viewports</li>
+            <li>Keep 8 themes compatible simultaneously</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Token Architecture &amp; Details</summary>
+        <div class="detail-content">
+          <strong>Package:</strong> @redleaf/design-system (GitHub Package Registry)<br>
+          <strong>Export:</strong> ESM-only, TypeScript Declarations<br>
+          <strong>CSS:</strong> PostCSS + Custom Media + Nesting + Autoprefixer<br>
+          <strong>Fonts:</strong> Custom Sans (Body), Custom Serif (Headlines), System Fonts<br>
+          <strong>Viewport Range:</strong> 320px (Mobile Base 19px) &rarr; 1200px (Desktop Base 21px)<br>
+          <strong>Type Scales:</strong> 1.1 Major Second (Mobile), 1.25 Major Third (Desktop)<br>
+          <strong>Release:</strong> Release Please + Conventional Commits
+        </div>
+      </details>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-fluid-type/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-fluid-type','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">2,6 KB</td><td class="doc-date">2026-03-13 07:04</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-fluid-type/CHANGELOG.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-fluid-type','CHANGELOG.md')">copy</button></td><td>CHANGELOG.md</td><td>Version history</td><td class="doc-size">253,2 KB</td><td class="doc-date">2026-03-13 07:04</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-fluid-type/package.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-fluid-type','package.json')">copy</button></td><td>package.json</td><td>NPM configuration</td><td class="doc-size">3,1 KB</td><td class="doc-date">2026-03-13 07:04</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-fluid-type/tsconfig.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-fluid-type','tsconfig.json')">copy</button></td><td>tsconfig.json</td><td>TypeScript configuration</td><td class="doc-size">0,7 KB</td><td class="doc-date">2026-03-13 07:04</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-fluid-type/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-fluid-type','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">1,6 KB</td><td class="doc-date">2026-03-22 11:30</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="task-list" style="padding: 0 1.25rem 0.5rem;">
+        <div class="task-item">
+          <input type="checkbox" class="task-checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              <span>Migrate typography tokens to fluid scale</span>
+              <span class="task-id">DEMO-001</span>
+              <span class="task-status offen">Open</span>
+            </div>
+            <div class="task-meta">Define clamp() values for all 9 font-size steps across breakpoints</div>
+          </div>
+        </div>
+      </div>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-viewer.html">Viewer (local)</a>
+        <a class="path-tag path-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-demo.html">Demo (local)</a>
+        <span class="path-tag">~/projects/nova-fluid-type</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-nova-fluid-type</span>
+        <span class="path-tag">github.com/redleaf/design-system</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 2. Nova Social Proof -->
+  <article class="project" id="nova-social-proof">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-bloom);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Nova Social Proof</div>
+        <div class="project-subtitle">Redleaf Design System &mdash; Activity Feed &amp; Progressbar</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Lit 3.3</span>
+        <span class="badge">Vite 7</span>
+        <span class="badge">Prototype</span>
+        <span class="badge">Research</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Two new Redleaf components: <strong>Activity Feed</strong> (social proof &mdash; 8 variants from anonymous to ticker) and <strong>Progressbar Enhanced</strong> (milestones, celebration state, dynamic goals). Extensive UX research with 50+ sources and competitive analysis. Interactive HTML prototype with real design tokens and fonts.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Activity Feed Variants</h4>
+          <ul>
+            <li>V1 Anonymous &mdash; GDPR-compliant, no opt-in</li>
+            <li>V2 First Names &mdash; Personalized with opt-in</li>
+            <li>V3 + Comments &mdash; Supporter statements</li>
+            <li>V4 + Amounts &mdash; Donation anchoring</li>
+            <li>V5&ndash;V8: Multi-Activity, Contact, Ticker, Counter</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>GDPR: Anonymous vs. named variants with opt-in</li>
+            <li>8 variants &times; 3 engagement levels = decision matrix</li>
+            <li>Mobile optimization: Ticker vs. list on narrow screens</li>
+            <li>Animation performance with real-time updates</li>
+            <li>Stakeholder decision: Which variant for which campaign type?</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Progressbar &amp; Prototype Status</summary>
+        <div class="detail-content">
+          <strong>Progressbar Variants:</strong> P1 Minimal, P2 Urgency, P3/P4 Milestones, P5 Triple Metrics, P6 Stacked, P7 Dynamic Goals, P8 Celebration<br>
+          <strong>Artifacts:</strong> RESEARCH-social-proof-progressbar.md (30KB), HTML prototype, live version, WALKTHROUGH.md, Figma page<br>
+          <strong>Next Steps:</strong> Variant feedback, define engagement levels, finalize Figma designs, implement Lit web components
+        </div>
+      </details>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-social-proof/RESEARCH-social-proof-progressbar.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-social-proof','RESEARCH-social-proof-progressbar.md')">copy</button></td><td>RESEARCH-social-proof-progressbar.md</td><td>UX research, 50+ sources</td><td class="doc-size">28,4 KB</td><td class="doc-date">2026-03-18 21:05</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-social-proof/WALKTHROUGH.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-social-proof','WALKTHROUGH.md')">copy</button></td><td>WALKTHROUGH.md</td><td>Prototype walkthrough</td><td class="doc-size">6,7 KB</td><td class="doc-date">2026-03-20 10:01</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-social-proof/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-social-proof','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">2,7 KB</td><td class="doc-date">2026-03-18 09:53</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-social-proof/package.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-social-proof','package.json')">copy</button></td><td>package.json</td><td>NPM configuration</td><td class="doc-size">3,1 KB</td><td class="doc-date">2026-03-18 09:53</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/nova-social-proof/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'nova-social-proof','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">1,9 KB</td><td class="doc-date">2026-03-22 11:30</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="file:///Users/you/projects/nova-social-proof/prototype-standalone/index.html">Prototype (local)</a>
+        <a class="path-tag path-link" href="https://example.com/upload/prototype-social-proof/">Prototype (Live)</a>
+        <span class="path-tag">~/projects/nova-social-proof</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-nova-social-proof</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 3. Prism Fluid Type -->
+  <article class="project" id="prism-fluid-type">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-prism);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Prism Fluid Type</div>
+        <div class="project-subtitle">Prism UX Design System &mdash; Open Source, Fluid Typography</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">SCSS/Sass</span>
+        <span class="badge">Vite</span>
+        <span class="badge">Storybook 9</span>
+        <span class="badge">EUPL-1.2</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Open-source UX standard for digital government services. Migration of typography from a two-step system (mobile + desktop jump at 768px) to fluid scaling via Utopia. 9-level font scale with clamp(), viewport 320&ndash;1600px, 30+ components with BEM naming. Accessibility (WCAG) is the top priority.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Key Features</h4>
+          <ul>
+            <li>9-level fluid font scale (clamp())</li>
+            <li>Viewport 320px&ndash;1600px, base 15&ndash;16px</li>
+            <li>30+ components (.prism-* prefix, BEM)</li>
+            <li>BackstopJS visual regression testing</li>
+            <li>axe-core + Playwright WCAG tests</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>Primitive vs. semantic token override (line-height dependency)</li>
+            <li>Desktop @media (min-width: 768px) overrides fluid values</li>
+            <li>Ensure WCAG compliance across all changes</li>
+            <li>Ultra-wide screens (1600px) vs. mobile (320px)</li>
+            <li>Only modify semantic tokens, never primitives</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Token Architecture &amp; Prototypes</summary>
+        <div class="detail-content">
+          <strong>Package:</strong> @prism-ux/native v2.5.0<br>
+          <strong>Registry:</strong> npm + NuGet<br>
+          <strong>Prototypes:</strong> prism-utopia-components.html (main demo), prism-utopia-viewer.html (viewport tool)<br>
+          <strong>Scale:</strong> Down 1.067, Up 1.2&ndash;1.3<br>
+          <strong>Token Strategy:</strong> .utopia-active toggle class overrides only semantic tokens<br>
+          <strong>Repository:</strong> gitlab.com/prism-design/prism-ux-plain
+        </div>
+      </details>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/prism-fluid-type/component-layouts.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'prism-fluid-type','component-layouts.md')">copy</button></td><td>component-layouts.md</td><td>Component layout docs</td><td class="doc-size">5,0 KB</td><td class="doc-date">2026-03-16 15:14</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/prism-fluid-type/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'prism-fluid-type','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">2,0 KB</td><td class="doc-date">2026-03-16 15:14</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/prism-fluid-type/CHANGELOG.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'prism-fluid-type','CHANGELOG.md')">copy</button></td><td>CHANGELOG.md</td><td>Version history</td><td class="doc-size">56,0 KB</td><td class="doc-date">2026-03-16 15:14</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/prism-fluid-type/package.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'prism-fluid-type','package.json')">copy</button></td><td>package.json</td><td>NPM configuration</td><td class="doc-size">2,2 KB</td><td class="doc-date">2026-03-16 15:14</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/prism-fluid-type/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'prism-fluid-type','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">2,5 KB</td><td class="doc-date">2026-03-25 09:23</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="https://example.com/upload/prism-fluid-type/">Live</a>
+        <a class="path-tag path-link" href="file:///Users/you/projects/prism-fluid-type/static/prism-utopia-viewer.html">Viewer</a>
+        <span class="path-tag">~/projects/prism-fluid-type</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-prism-fluid-type</span>
+        <span class="path-tag">gitlab.com/prism-design</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 4. Helix Typography -->
+  <article class="project" id="helix-typography">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-helix);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Helix Typography</div>
+        <div class="project-subtitle">Helix Monorepo &mdash; White-Label Financial Portal Platform (Pinnacle Inc.)</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">React 18</span>
+        <span class="badge">Next.js 15</span>
+        <span class="badge">Kotlin</span>
+        <span class="badge">GraphQL</span>
+        <span class="badge">MongoDB</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        White-label multi-tenant portal platform for financial services. Helix Frontend (React 18 + Vite SSR), Atlas CMS (Next.js 15), Atlas API (Kotlin + Spring Boot), Apollo Gateway (21 GraphQL microservices). Fluid typography via Utopia with multi-brand support. 326+ CMS components, features like cashback, events, vouchers.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Architecture</h4>
+          <ul>
+            <li>Helix: React 18 + Vite 7 + Ionic + styled-components</li>
+            <li>Atlas CMS: Next.js 15 + React 19 + Tailwind + Refine</li>
+            <li>Atlas API: Kotlin + Spring Boot 3.1 + MongoDB</li>
+            <li>Apollo Gateway: 21 federated GraphQL Services</li>
+            <li>Auth: Better-Auth (CREDS, HMAC, SSO, Service Accounts)</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>Multi-tenancy: Host-based routing, theme per tenant</li>
+            <li>Keep 326+ CMS components in sync</li>
+            <li>SSR + SPA hybrid (Vite + Express)</li>
+            <li>Coordinate 21 GraphQL microservices</li>
+            <li>Release coordination across 4 stages (local/dev/preview/prod)</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Utopia Typography &amp; Multi-Brand</summary>
+        <div class="detail-content">
+          <strong>Utopia Fluid Type:</strong> 9-Step Scale, downScale 1.033, upScale 1.125&ndash;1.2<br>
+          <strong>Multi-Brand:</strong> Brands override only settings tokens; scale recalculates automatically<br>
+          <strong>WCAG 1.4.4:</strong> Verified at 200% zoom<br>
+          <strong>Testing:</strong> Vitest 3.2, Cypress 14.5, Storybook, Chromatic, axe-core<br>
+          <strong>Deployment:</strong> release-please, GitLab CI, Artifactory
+        </div>
+      </details>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/helix-typography/helix/TYPOGRAPHY-AUDIT.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'helix-typography','helix/TYPOGRAPHY-AUDIT.md')">copy</button></td><td>helix/TYPOGRAPHY-AUDIT.md</td><td>Typography audit</td><td class="doc-size">27,0 KB</td><td class="doc-date">2026-03-16 15:14</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/helix-typography/static/UTOPIA-IMPLEMENTATION-GUIDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'helix-typography','static/UTOPIA-IMPLEMENTATION-GUIDE.md')">copy</button></td><td>static/UTOPIA-IMPLEMENTATION-GUIDE.md</td><td>Utopia implementation guide</td><td class="doc-size">7,6 KB</td><td class="doc-date">2026-03-25 09:14</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/helix-typography/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'helix-typography','README.md')">copy</button></td><td>README.md</td><td>Root documentation</td><td class="doc-size">4,3 KB</td><td class="doc-date">2026-03-11 17:08</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/helix-typography/helix/docs/Database.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'helix-typography','helix/docs/Database.md')">copy</button></td><td>helix/docs/Database.md</td><td>Database documentation</td><td class="doc-size">0,1 KB</td><td class="doc-date">2026-03-11 17:08</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/helix-typography/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'helix-typography','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">3,3 KB</td><td class="doc-date">2026-03-22 11:30</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="task-list" style="padding: 0 1.25rem 0.5rem;">
+        <div class="task-item">
+          <input type="checkbox" class="task-checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              <span>Component audit for consistent active states</span>
+              <span class="task-id">DEMO-002</span>
+              <span class="task-status aktiv">Active</span>
+            </div>
+            <div class="task-meta">10 components need token-based active state styling with WCAG AA contrast</div>
+          </div>
+        </div>
+        <div class="task-item ai-task" data-project="helix-typography">
+          <div class="task-content">
+            <div class="task-title">
+              <span>Consolidate duplicate line-height tokens across theme files</span>
+              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
+            </div>
+            <div class="task-meta">3 theme files define overlapping line-height values; single source of truth recommended</div>
+          </div>
+        </div>
+      </div>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="https://example.com/upload/helix-typography/">Live</a>
+        <a class="path-tag path-link" href="file:///Users/you/projects/helix-typography/static/helix-utopia.html">Utopia Demo</a>
+        <span class="path-tag">~/projects/helix-typography</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-helix-typography</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 5. Bloom Components -->
+  <article class="project" id="bloom-components">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-bloom);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Bloom Components</div>
+        <div class="project-subtitle">Bloom Health &mdash; Accessible UI Component Library</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Svelte 5</span>
+        <span class="badge">Tailwind 4</span>
+        <span class="badge">Storybook 10</span>
+        <span class="badge">a11y-first</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Accessible UI component library for the Bloom Health portal. 24 Svelte components with automated WCAG 2.2 AA tests, keyboard navigation, and screen reader optimization. Fluid spacing via Utopia, semantic design tokens, dark/light/high-contrast themes.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Key Features</h4>
+          <ul>
+            <li>24 Svelte 5 components (Runes-based)</li>
+            <li>WCAG 2.2 AA: axe-core + Playwright tests</li>
+            <li>Fluid Spacing + Typography via Utopia</li>
+            <li>3 Themes: Light, Dark, High-Contrast</li>
+            <li>Figma-Sync via Token Studio</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>Svelte 5 migration (Runes instead of Stores)</li>
+            <li>High-contrast theme: Forced-Colors media query</li>
+            <li>Component status: Draft, Review, Stable pipeline</li>
+            <li>Tailwind 4 alpha features in production</li>
+            <li>Cross-browser consistency for ARIA patterns</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/bloom-components/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'bloom-components','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">3,8 KB</td><td class="doc-date">2026-03-20 14:48</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/bloom-components/package.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'bloom-components','package.json')">copy</button></td><td>package.json</td><td>NPM configuration</td><td class="doc-size">2,4 KB</td><td class="doc-date">2026-03-20 14:48</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/bloom-components/svelte.config.js">open</a> <button class="copy-btn" onclick="copyDocPath(this,'bloom-components','svelte.config.js')">copy</button></td><td>svelte.config.js</td><td>Svelte configuration</td><td class="doc-size">1,1 KB</td><td class="doc-date">2026-03-15 09:22</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/bloom-components/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'bloom-components','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">2,1 KB</td><td class="doc-date">2026-03-20 14:48</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="file:///Users/you/projects/bloom-components/storybook-static/index.html">Storybook (local)</a>
+        <a class="path-tag path-link" href="https://bloom-ds.example.com/">Storybook (Live)</a>
+        <span class="path-tag">~/projects/bloom-components</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-bloom-components</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 6. Design Bridge -->
+  <article class="project" id="design-bridge">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-leaf);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Design Bridge</div>
+        <div class="project-subtitle">Learning platform &mdash; Bridge between Design &amp; Development</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Vanilla JS</span>
+        <span class="badge">Open Props</span>
+        <span class="badge">i18n DE/EN</span>
+        <span class="badge">No Build</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Bilingual learning platform. Bridging design and development &mdash; helping designers understand code, technical decisions, and dev workflows without becoming developers themselves. 16 curated learning cards across 3 paths (Understand Code, Build Bridges, Design System), glossary with 20 terms, dark/light mode, automatic language detection.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Key Features</h4>
+          <ul>
+            <li>3 learning paths: Understand Code, Build Bridges, Design System</li>
+            <li>16 curated resources (tips, workflows, tools, videos)</li>
+            <li>Glossary with inline popovers and smart matching</li>
+            <li>Bilingual DE/EN with browser detection</li>
+            <li>Zero build &mdash; pure HTML/CSS/JS, Open Props</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>i18n without a library (custom data-i18n system)</li>
+            <li>Complex filter logic (3 dimensions simultaneously)</li>
+            <li>Glossary popover: Term detection with case sensitivity</li>
+            <li>Content maintenance: Keeping resources up to date</li>
+            <li>No Git repo initialized yet</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Design &amp; Concept</summary>
+        <div class="detail-content">
+          <strong>Design:</strong> shadcn/ui-inspired, Geist Font (Vercel), Open Props foundation<br>
+          <strong>Philosophy:</strong> AI-centric &mdash; Claude as a learning tool, meta-learning with two Claude instances<br>
+          <strong>Contact:</strong> hello@example.com<br>
+          <strong>Deployment:</strong> design-bridge.example.com (static hosting)
+        </div>
+      </details>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/design-bridge/CHANGELOG.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'design-bridge','CHANGELOG.md')">copy</button></td><td>CHANGELOG.md</td><td>Version history</td><td class="doc-size">3,9 KB</td><td class="doc-date">2026-03-25 08:15</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/design-bridge/content/de.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'design-bridge','content/de.json')">copy</button></td><td>content/de.json</td><td>Content German</td><td class="doc-size">14,1 KB</td><td class="doc-date">2026-03-21 10:30</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/design-bridge/content/en.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'design-bridge','content/en.json')">copy</button></td><td>content/en.json</td><td>Content English</td><td class="doc-size">14,0 KB</td><td class="doc-date">2026-03-21 10:31</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/design-bridge/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'design-bridge','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">4,7 KB</td><td class="doc-date">2026-03-21 07:35</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="https://design-bridge.example.com/">Live</a>
+        <a class="path-tag path-link" href="file:///Users/you/projects/design-bridge/deploy/index.html">Site (local)</a>
+        <span class="path-tag">~/projects/design-bridge</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-design-bridge</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 7. Token Workshop -->
+  <article class="project" id="token-workshop">
+    <div class="project-header">
+      <div class="project-indicator" style="background: #0ea5e9;"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Token Workshop</div>
+        <div class="project-subtitle">Interactive Learning Resource &mdash; Design Tokens from Scratch</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Astro</span>
+        <span class="badge">MDX</span>
+        <span class="badge">Style Dictionary</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Interactive workshop site about design tokens. 8 lessons from primitive tokens through semantic layers to multi-brand and dark mode. Each lesson includes a live code playground, quiz questions, and checklists. Target audience: designers and frontend devs who want to understand and build token systems.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Key Features</h4>
+          <ul>
+            <li>8 structured lessons with progressive disclosure</li>
+            <li>Live code playgrounds (editable in the browser)</li>
+            <li>Style Dictionary pipeline as a teaching tool</li>
+            <li>Export formats: CSS, SCSS, JSON, iOS, Android</li>
+            <li>Astro Islands for interactive components</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>Visualize complex concepts simply</li>
+            <li>Code playground performance in the browser</li>
+            <li>Style Dictionary v4 Breaking Changes</li>
+            <li>Multi-brand examples without real client data</li>
+            <li>Maintain content in German and English</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/token-workshop/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'token-workshop','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">2,3 KB</td><td class="doc-date">2026-03-18 16:30</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/token-workshop/astro.config.mjs">open</a> <button class="copy-btn" onclick="copyDocPath(this,'token-workshop','astro.config.mjs')">copy</button></td><td>astro.config.mjs</td><td>Astro configuration</td><td class="doc-size">0,8 KB</td><td class="doc-date">2026-03-15 11:20</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/token-workshop/package.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'token-workshop','package.json')">copy</button></td><td>package.json</td><td>NPM configuration</td><td class="doc-size">1,5 KB</td><td class="doc-date">2026-03-18 16:30</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/token-workshop/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'token-workshop','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">1,8 KB</td><td class="doc-date">2026-03-18 16:30</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="file:///Users/you/projects/token-workshop/dist/index.html">Local</a>
+        <span class="path-tag">~/projects/token-workshop</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-token-workshop</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 8. Forge -->
+  <article class="project" id="forge">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-forge);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Forge</div>
+        <div class="project-subtitle">Typography Preview Tool for Redleaf Design System</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Vanilla JS</span>
+        <span class="badge">Node.js</span>
+        <span class="badge">Zero Deps</span>
+        <span class="badge">Single File</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Typography preview tool for the Redleaf Design System. Displays 11+ real websites in iframes with live typography changes. Node.js reverse proxy (zero npm dependencies) bypasses X-Frame-Options. Fonts embedded as Base64 (841 KB single file). Supports 8 brands with light/dark mode, Token Studio integration, and an offline-capable font scale configurator.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Key Features</h4>
+          <ul>
+            <li>Live preview of 11+ pages via iframe</li>
+            <li>Font Scale Configurator (Mobile 19px, Desktop 21px)</li>
+            <li>8 Brands + Light/Dark Mode</li>
+            <li>841 KB Single-File-Distribution (forge.html)</li>
+            <li>Token Studio JSON Export (54 KB)</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Challenges</h4>
+          <ul>
+            <li>Bypassing X-Frame-Options &amp; CSP headers (reverse proxy)</li>
+            <li>Cross-iframe communication via postMessage</li>
+            <li>Embedding proprietary fonts as Base64</li>
+            <li>Zero dependencies &mdash; Node.js built-ins only</li>
+            <li>Local use only (proxy must not be hosted externally)</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/forge/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'forge','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">9,8 KB</td><td class="doc-date">2026-03-10 15:30</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/forge/typography.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'forge','typography.json')">copy</button></td><td>typography.json</td><td>Typography configuration</td><td class="doc-size">5,8 KB</td><td class="doc-date">2026-03-05 08:12</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/forge/tokens.json">open</a> <button class="copy-btn" onclick="copyDocPath(this,'forge','tokens.json')">copy</button></td><td>tokens.json</td><td>Design Tokens</td><td class="doc-size">52,9 KB</td><td class="doc-date">2026-03-05 18:21</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/forge/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'forge','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">1,8 KB</td><td class="doc-date">2026-03-22 11:31</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="file:///Users/you/projects/forge/forge.html">Forge</a>
+        <span class="path-tag">~/projects/forge</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-forge</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 8b. Forge Mobile Type (Subprojekt) -->
+  <article class="project" id="forge-mobile-type" style="margin-left: 1.5rem;">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--accent-forge);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Forge Mobile Type <span style="font-size:0.7rem; color:var(--text-dim); font-weight:400;">Subproject of Forge</span></div>
+        <div class="project-subtitle">Mobile Font Size Optimization for Redleaf</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">HTML</span>
+        <span class="badge">CSS</span>
+        <span class="badge">JS</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Redleaf frequently uses very long headings. On mobile, H1 (~47px) takes up too much space &mdash; you only see the headline. This tool generates optimized mobile font sizes with configurable headline multipliers and displays the adjusted CSS live.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Problem</h4>
+          <ul>
+            <li>H1 on mobile: 2.488 &times; 19px = ~47px (too large)</li>
+            <li>Long titles take up the entire screen</li>
+            <li>No separate mobile scale in current CSS</li>
+            <li>Only one breakpoint jump at 992px (19 &rarr; 21px)</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Approach</h4>
+          <ul>
+            <li>Custom mobile multipliers for steps 60&ndash;110</li>
+            <li>Configurable via slider/input</li>
+            <li>Live preview on real content</li>
+            <li>Display and export generated CSS</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/forge-mobile-type/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'forge-mobile-type','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">1,5 KB</td><td class="doc-date">2026-03-23 09:37</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <a class="path-tag path-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
+        <span class="path-tag">~/projects/forge-mobile-type</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-forge-mobile-type</span>
+        <span class="path-tag">Parent project: ~/projects/forge</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 9. Project Dashboard -->
+  <article class="project" id="project-dashboard">
+    <div class="project-header">
+      <div class="project-indicator" style="background: var(--text-muted);"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Project Dashboard</div>
+        <div class="project-subtitle">Meta Project &mdash; Overview, Agents &amp; Synergies</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">HTML</span>
+        <span class="badge">CSS</span>
+        <span class="badge">JS</span>
+        <span class="badge">Zero Deps</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Meta project that documents, connects, and maps all active projects. Single HTML file with dark/light mode, sortable overview table, direct links to project folders and prototypes. Three specialized skills (<code>/cockpit</code>, <code>/radar</code>, <code>/bridge</code>) and orchestrated agents for automated scanning, synergy detection, and knowledge transfer between design systems.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Key Features</h4>
+          <ul>
+            <li>Sortable overview table with direct links</li>
+            <li>Project details, project ideas, synergy mapping</li>
+            <li>3 Skills: /cockpit, /radar, /bridge</li>
+            <li>Hybrid skill/agent architecture (orchestrated via <code>claude --agent cockpit</code>)</li>
+            <li>Dark/light mode with system preference</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Architecture Principles</h4>
+          <ul>
+            <li>Single HTML file &mdash; no build, no framework</li>
+            <li>Zero dependencies &mdash; only embedded CSS &amp; JS</li>
+            <li>Memory files in ~/.claude/projects/ for context</li>
+            <li>Skills for quick one-off calls, agents for orchestration</li>
+            <li>Inspired by the <a href="https://tsoporan.com/blog/spine-pattern-multi-repo-ai-development/" target="_blank" rel="noopener">Spine Pattern</a> (meta-repo for AI context)</li>
+          </ul>
+        </div>
+      </div>
+      <details open>
+        <summary>Show Documents &amp; Configuration</summary>
+        <table class="docs-table">
+          <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/project-dashboard/LICENSE">open</a> <button class="copy-btn" onclick="copyDocPath(this,'project-dashboard','LICENSE')">copy</button></td><td>LICENSE</td><td>MIT License</td><td class="doc-size">1,1 KB</td><td class="doc-date">2026-03-25 10:34</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/project-dashboard/favicon.svg">open</a> <button class="copy-btn" onclick="copyDocPath(this,'project-dashboard','favicon.svg')">copy</button></td><td>favicon.svg</td><td>Dashboard-Icon (PD)</td><td class="doc-size">0,2 KB</td><td class="doc-date">2026-03-23 08:22</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/project-dashboard/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'project-dashboard','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">3,3 KB</td><td class="doc-date">2026-03-25 09:26</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <div class="project-paths">
+        <span class="path-tag">~/projects/project-dashboard</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-project-dashboard</span>
+      </div>
+    </div>
+  </article>
+
+</div>
+</details>
+
+<!-- Projektideen -->
+<section class="ideas">
+  <h2 class="section-heading">Project Ideas</h2>
+
+  <div class="idea-card" id="the-handoff">
+    <div class="idea-header">
+      <div class="idea-title" onclick="this.closest('.idea-card').classList.toggle('collapsed')">The Handoff</div>
+      <span class="idea-status">Idea</span>
+    </div>
+    <p class="idea-desc">
+      AI-powered design-to-dev workflow for component documentation. The classic workflow is reversed: documentation and edge cases come <strong>before</strong> building in Figma, not after. At the end, the loop closes: the finished Storybook component is synced back to Figma.
+    </p>
+    <div class="idea-workflow">
+      <strong>Workflow:</strong>
+      <ol>
+        <li><strong>Prompt Setup</strong> &mdash; MD doc template + a11y checklists + meta-prompt</li>
+        <li><strong>Doc Creation</strong> &mdash; Structured MD docs with AI (edge cases from the start: loading, error, keyboard nav)</li>
+        <li><strong>Figma Implementation</strong> &mdash; Build component, layer names = code identifiers</li>
+        <li><strong>Live Validation</strong> &mdash; Figma MCP + Design System MCP validate Figma against docs in real time</li>
+        <li><strong>Handoff</strong> &mdash; Devs receive: Figma file (dev-ready) + MD docs (Storybook-ready)</li>
+        <li><strong>Feedback Loop</strong> &mdash; Finished Storybook component synced back to Figma via Claude Code</li>
+      </ol>
+    </div>
+    <div class="about-block" style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border);">
+      <h4 style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:0.4rem;">Accessibility Checks (3 Pillars)</h4>
+      <div class="idea-workflow">
+        <ul style="list-style:none; padding:0; margin:0;">
+          <li style="padding:0.15rem 0 0.15rem 1rem; position:relative;"><span style="position:absolute;left:0;color:var(--text-dim);">&rsaquo;</span><strong>5 Quick Checks</strong> &mdash; Keyboard, Zoom 400%, Screen Reader, Contrast, States</li>
+          <li style="padding:0.15rem 0 0.15rem 1rem; position:relative;"><span style="position:absolute;left:0;color:var(--text-dim);">&rsaquo;</span><strong>ACCESSIBILITY.md Pattern</strong> &mdash; AI Agent Skill (Semantic HTML, ARIA, Anti-Patterns)</li>
+          <li style="padding:0.15rem 0 0.15rem 1rem; position:relative;"><span style="position:absolute;left:0;color:var(--text-dim);">&rsaquo;</span><strong>Project Standard</strong> &mdash; Template, severity matrix, CI/CD integration</li>
+        </ul>
+      </div>
+    </div>
+    <div class="idea-tools">
+      <span class="badge">Claude Code</span>
+      <span class="badge">Figma MCP</span>
+      <span class="badge">Design System MCP</span>
+      <span class="badge">Storybook</span>
+      <span class="badge">Markdown</span>
+      <span class="badge">A11y Checks</span>
+      <span class="badge">ACCESSIBILITY.md</span>
+    </div>
+    <details open>
+      <summary>Show Documents &amp; Configuration</summary>
+      <table class="docs-table">
+        <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+        <tbody>
+          <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/the-handoff/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'the-handoff','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">1,0 KB</td><td class="doc-date">2026-03-23 07:17</td></tr>
+          <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/the-handoff/a11y-checks.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'the-handoff','a11y-checks.md')">copy</button></td><td>a11y-checks.md</td><td>Accessibility checklist</td><td class="doc-size">3,5 KB</td><td class="doc-date">2026-03-23 07:28</td></tr>
+          <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/the-handoff/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'the-handoff','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">2,0 KB</td><td class="doc-date">2026-03-23 07:28</td></tr>
+        </tbody>
+      </table>
+      </details>
+    <div class="project-paths" style="border-top:none; padding-top:0.5rem;">
+      <span class="path-tag">~/projects/the-handoff</span>
+      <span class="path-tag path-claude">~/.claude/projects/...-the-handoff</span>
+    </div>
+  </div>
+
+  <!-- Spectrum Color -->
+  <div class="idea-card" id="spectrum-color" style="margin-top:1rem;">
+    <div class="idea-header">
+      <div class="idea-title" onclick="this.closest('.idea-card').classList.toggle('collapsed')">Spectrum Color</div>
+      <span class="idea-status">Idea</span>
+    </div>
+    <p class="idea-desc">
+      OKLCH-based color palette generation for accessible design systems. 22 weights, 000&ndash;999, adapted for the <strong>OKLCH</strong> color space &mdash; perceptually uniform, CSS-native, no blue hue shift. Weight 500 guarantees WCAG 4.5:1 on both white and black.
+    </p>
+    <div class="idea-workflow">
+      <strong>Building Blocks:</strong>
+      <ol>
+        <li><strong>Base Palette</strong> &mdash; 22 weights in 5 categories (Highlights, 1/4 Tones, Mid-Tones, 3/4 Tones, Shadows), 10 semantic variants</li>
+        <li><strong>OKLCH Adaptation</strong> &mdash; Generic &rarr; semantic tokens, L/C/H as separate custom properties, light/dark mirroring</li>
+        <li><strong>Adobe Leonardo</strong> &mdash; Open source contrast engine: input = contrast ratio, output = matching color</li>
+        <li><strong>Figma Generator</strong> &mdash; OKLCH palette generation directly in Figma</li>
+      </ol>
+    </div>
+    <div class="about-block" style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border);">
+      <h4 style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:0.4rem;">Connections</h4>
+      <div class="idea-workflow">
+        <ul style="list-style:none; padding:0; margin:0;">
+          <li style="padding:0.15rem 0 0.15rem 1rem; position:relative;"><span style="position:absolute;left:0;color:var(--text-dim);">&rsaquo;</span><strong>Prism Fluid Type</strong> &mdash; Already has OKLCH implemented, learnings transferable via Bridge</li>
+          <li style="padding:0.15rem 0 0.15rem 1rem; position:relative;"><span style="position:absolute;left:0;color:var(--text-dim);">&rsaquo;</span><strong>Nova</strong> &mdash; Could receive an OKLCH palette (currently Hex/RGB)</li>
+          <li style="padding:0.15rem 0 0.15rem 1rem; position:relative;"><span style="position:absolute;left:0;color:var(--text-dim);">&rsaquo;</span><strong>Helix</strong> &mdash; Multi-brand system benefits from universally interchangeable palettes</li>
+        </ul>
+      </div>
+    </div>
+    <div class="idea-tools">
+      <span class="badge">OKLCH</span>
+      <span class="badge">CSS Custom Properties</span>
+      <span class="badge">Adobe Leonardo</span>
+      <span class="badge">Figma</span>
+      <span class="badge">WCAG</span>
+    </div>
+    <details open>
+      <summary>Show Documents &amp; Configuration</summary>
+      <table class="docs-table">
+        <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
+        <tbody>
+          <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/spectrum-color/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'spectrum-color','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">1,1 KB</td><td class="doc-date">2026-03-23 08:04</td></tr>
+          <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/spectrum-color/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'spectrum-color','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">2,8 KB</td><td class="doc-date">2026-03-23 08:04</td></tr>
+        </tbody>
+      </table>
+      </details>
+    <div class="project-paths" style="border-top:none; padding-top:0.5rem;">
+      <span class="path-tag">~/projects/spectrum-color</span>
+      <span class="path-tag path-claude">~/.claude/projects/...-spectrum-color</span>
+    </div>
+  </div>
+
+</section>
+
+<!-- Back to top -->
+<button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0})" aria-label="Back to top">&#8593;</button>
+
+<footer>
+  <span>Generated by Claude Code &mdash; Meta Project Dashboard</span>
+  <span id="footer-date"></span>
+</footer>
+
+<script>
+  // ── 0. Open Claude in Terminal ──
+  function openClaude(project) {
+    const cmd = 'cd ~/projects/' + project + ' && claude';
+    const ta = document.createElement('textarea');
+    ta.value = cmd;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = event.target;
+    btn.textContent = 'copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'claude'; btn.classList.remove('copied'); }, 1500);
+  }
+
+  // ── 0b. Copy doc path to clipboard ──
+  function copyDocPath(btn, projectDir, filePath) {
+    const full = '~/projects/' + projectDir + '/' + filePath;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(full);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = full;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    btn.textContent = '\u2713';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1500);
+  }
+
+  // ── 0c. Docs table sorting ──
+  document.addEventListener('click', function(e) {
+    const th = e.target.closest('table.docs-table thead th[data-sort]');
+    if (!th) return;
+    const table = th.closest('table');
+    const idx = Array.from(th.parentNode.children).indexOf(th);
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const type = th.dataset.sort;
+    const asc = !th.classList.contains('sort-asc');
+    table.querySelectorAll('th').forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+    th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+    rows.sort((a, b) => {
+      let va = a.children[idx].textContent.trim();
+      let vb = b.children[idx].textContent.trim();
+      if (type === 'size') {
+        va = parseFloat(va.replace(',', '.')) || 0;
+        vb = parseFloat(vb.replace(',', '.')) || 0;
+        return asc ? va - vb : vb - va;
+      }
+      if (type === 'date') return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+      return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+    rows.forEach(r => tbody.appendChild(r));
+  });
+
+  // ── 1. Table sorting ──
+  (function() {
+    const table = document.getElementById('overview-table');
+    if (!table) return;
+    const headers = table.querySelectorAll('thead th');
+    const tbody = table.querySelector('tbody');
+    let currentCol = -1;
+    // sortState: 0 = unsorted, 1 = ascending, 2 = descending
+    let sortState = 0;
+
+    // Save original row order on first load
+    const originalOrder = Array.from(tbody.querySelectorAll('tr'));
+
+    headers.forEach(th => {
+      th.addEventListener('click', () => {
+        const col = parseInt(th.dataset.col);
+        const type = th.dataset.type || 'text';
+
+        if (col === currentCol) {
+          sortState = (sortState + 1) % 3;
+        } else {
+          currentCol = col;
+          sortState = 1;
+        }
+
+        headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+
+        // State 0: reset to original order
+        if (sortState === 0) {
+          currentCol = -1;
+          originalOrder.forEach(row => tbody.appendChild(row));
+          return;
+        }
+
+        const ascending = sortState === 1;
+        th.classList.add(ascending ? 'sort-asc' : 'sort-desc');
+
+        const allRows = Array.from(tbody.querySelectorAll('tr'));
+        const parents = allRows.filter(r => !r.classList.contains('sub-row'));
+        // Build a map: parent row -> following sub-rows
+        const subMap = new Map();
+        allRows.forEach((row, i) => {
+          if (row.classList.contains('sub-row')) {
+            for (let j = i - 1; j >= 0; j--) {
+              if (!allRows[j].classList.contains('sub-row')) {
+                if (!subMap.has(allRows[j])) subMap.set(allRows[j], []);
+                subMap.get(allRows[j]).push(row);
+                break;
+              }
+            }
+          }
+        });
+        // Sort only parent rows
+        parents.sort((a, b) => {
+          const cellA = a.children[col], cellB = b.children[col];
+          let valA, valB;
+          if (type === 'number') {
+            valA = parseFloat(cellA.dataset.sort || cellA.textContent) || 0;
+            valB = parseFloat(cellB.dataset.sort || cellB.textContent) || 0;
+          } else if (type === 'date') {
+            valA = cellA.dataset.sort || ''; valB = cellB.dataset.sort || '';
+          } else {
+            valA = (cellA.textContent || '').trim().toLowerCase();
+            valB = (cellB.textContent || '').trim().toLowerCase();
+          }
+          if (valA < valB) return ascending ? -1 : 1;
+          if (valA > valB) return ascending ? 1 : -1;
+          return 0;
+        });
+        // Re-append: each parent followed by its sub-rows
+        parents.forEach(parent => {
+          tbody.appendChild(parent);
+          (subMap.get(parent) || []).forEach(sub => tbody.appendChild(sub));
+        });
+      });
+    });
+  })();
+
+  // ── 2. Back to top ──
+  (function() {
+    const btn = document.getElementById('back-to-top');
+    if (!btn) return;
+    window.addEventListener('scroll', () => {
+      btn.classList.toggle('visible', window.scrollY > 400);
+    });
+  })();
+
+  // ── 3. Footer auto-date ──
+  (function() {
+    const el = document.getElementById('footer-date');
+    if (!el) return;
+    const d = new Date();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    el.textContent = 'Last viewed: ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  })();
+
+  // ── 4. Theme toggle ──
+  function toggleTheme() {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboard-theme', next);
+    updateToggleUI(next);
+  }
+  function updateToggleUI(theme) {
+    document.getElementById('theme-icon').innerHTML = theme === 'dark' ? '&#9790;' : '&#9728;';
+    document.getElementById('theme-label').textContent = theme === 'dark' ? 'Light' : 'Dark';
+  }
+  (function() {
+    const saved = localStorage.getItem('dashboard-theme');
+    if (saved) {
+      document.documentElement.setAttribute('data-theme', saved);
+      updateToggleUI(saved);
+    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      updateToggleUI('light');
+    }
+  })();
+
+  // ── 5. Table search ──
+  (function() {
+    const input = document.getElementById('table-search');
+    const table = document.getElementById('overview-table');
+    if (!input || !table) return;
+    input.addEventListener('input', () => {
+      const q = input.value.toLowerCase();
+      table.querySelectorAll('tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  })();
+
+  // ── 8. Relative dates + 9. Activity bars ──
+  (function() {
+    const now = new Date();
+    document.querySelectorAll('.table-date[data-sort]').forEach(td => {
+      const dateStr = td.dataset.sort;
+      if (!dateStr) return;
+      const d = new Date(dateStr);
+      const diff = Math.floor((now - d) / 86400000);
+      let rel;
+      if (diff === 0) rel = 'today';
+      else if (diff === 1) rel = 'yesterday';
+      else if (diff < 7) rel = diff + 'd ago';
+      else if (diff < 30) rel = Math.floor(diff / 7) + 'w ago';
+      else rel = Math.floor(diff / 30) + 'mo ago';
+
+      const span = document.createElement('span');
+      span.className = 'table-date-rel';
+      span.textContent = '(' + rel + ')';
+      td.appendChild(span);
+
+      // Activity bar
+      const freshness = Math.max(0, 1 - diff / 30);
+      const bar = document.createElement('div');
+      bar.className = 'activity-bar';
+      const fill = document.createElement('div');
+      fill.className = 'activity-bar-fill';
+      fill.style.width = Math.round(freshness * 100) + '%';
+      if (freshness > 0.7) fill.style.background = '#4ade80';
+      else if (freshness > 0.3) fill.style.background = '#fbbf24';
+      else fill.style.background = '#ef4444';
+      bar.appendChild(fill);
+      td.appendChild(bar);
+    });
+  })();
+
+  // ── Persistence (localStorage) ──
+  (function() {
+    var STORAGE_KEY = 'pd-state';
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { return {}; }
+    }
+    function saveState(state) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+    }
+
+    var state = loadState();
+    if (!state.checked) state.checked = {};     // { taskKey: true }
+    if (!state.promoted) state.promoted = {};   // { taskKey: { html: '...' } or true }
+    if (!state.details) state.details = {};     // { detailsId: true/false }
+
+    // --- Assign details IDs (for persistence) ---
+    document.querySelectorAll('details').forEach(function(d, i) {
+      if (!d.id) d.id = 'det-' + i;
+    });
+
+    // --- Restore details state ---
+    Object.keys(state.details).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.open = state.details[id];
+    });
+
+    // --- Save details state on toggle ---
+    document.addEventListener('toggle', function(e) {
+      if (e.target.tagName !== 'DETAILS') return;
+      state.details[e.target.id] = e.target.open;
+      saveState(state);
+    }, true);
+
+    // --- Task System ---
+    var manual = document.getElementById('manual-tasks');
+    var counter = document.getElementById('task-counter');
+    var aiCounter = document.getElementById('ai-counter');
+    var toggleLabel = document.getElementById('tasks-toggle-label');
+    var toggleDot = document.querySelector('.tasks-toggle-dot');
+
+    function getTaskKey(item) {
+      var t = item.querySelector('.task-title > span:first-child');
+      return t ? t.textContent.trim() : '';
+    }
+
+    // --- Counters ---
+    function updateCounts() {
+      var manualAll = manual ? manual.querySelectorAll('.task-item') : [];
+      var aiItems = document.querySelectorAll('#ai-recommendations .ai-task:not(.promoted)');
+      var checkedCount = 0;
+      manualAll.forEach(function(el) {
+        var cb = el.querySelector('.task-checkbox');
+        if (cb && cb.checked) checkedCount++;
+      });
+      var openCount = manualAll.length - checkedCount;
+      var hasActive = Array.from(manualAll).some(function(el) {
+        return el.querySelector('.task-status.aktiv') && !el.querySelector('.task-checkbox:checked');
+      });
+
+      if (counter) counter.textContent = openCount + ' open';
+      if (aiCounter) aiCounter.textContent = aiItems.length + ' suggestions';
+      if (toggleLabel) toggleLabel.textContent = openCount + ' Tasks';
+      if (toggleDot) toggleDot.classList.toggle('has-active', hasActive);
+    }
+
+    // Global AI recommendations container
+    var aiListContainer = document.querySelector('#ai-recommendations > .task-list');
+
+    // --- Restore state: promoted tasks ---
+    Object.keys(state.promoted).forEach(function(taskKey) {
+      var data = state.promoted[taskKey];
+      var titleHTML = (data && data.titleHTML) ? data.titleHTML : taskKey;
+      var metaHTML = (data && data.metaHTML) ? data.metaHTML : '';
+
+      // 1. Move global AI task from AI container to manual block
+      var moved = false;
+      if (manual && aiListContainer) {
+        var children = Array.from(aiListContainer.children);
+        for (var i = 0; i < children.length; i++) {
+          if (getTaskKey(children[i]) === taskKey) {
+            styleAsPromoted(children[i], taskKey);
+            manual.appendChild(children[i]);
+            moved = true;
+            break;
+          }
+        }
+      }
+      // Fallback: recreate from saved data
+      if (!moved && manual && !Array.from(manual.children).some(function(c) { return getTaskKey(c) === taskKey; })) {
+        var item = document.createElement('div');
+        item.className = 'task-item ai-task promoted';
+        item.setAttribute('data-task-key', taskKey);
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'task-checkbox';
+        if (state.checked[taskKey]) cb.checked = true;
+        var content = document.createElement('div');
+        content.className = 'task-content';
+        content.innerHTML = '<div class="task-title"><span>' + titleHTML + '</span><span class="ai-tag">AI</span><span class="task-status offen">Open</span></div>' +
+          (metaHTML ? '<div class="task-meta">' + metaHTML + '</div>' : '');
+        item.appendChild(cb);
+        item.appendChild(content);
+        addDemoteBtn(item, taskKey);
+        manual.appendChild(item);
+      }
+
+      // 2. Style card duplicates as promoted
+      document.querySelectorAll('.project-body .ai-task').forEach(function(t) {
+        if (getTaskKey(t) !== taskKey) return;
+        styleAsPromoted(t, taskKey);
+      });
+
+      if (state.checked[taskKey]) syncVisual(taskKey, true);
+    });
+
+    // --- Promote buttons on remaining AI tasks ---
+    document.querySelectorAll('.ai-task:not(.promoted)').forEach(function(task) {
+      var title = task.querySelector('.task-title');
+      if (!title || title.querySelector('.ai-promote-btn')) return;
+      var btn = document.createElement('button');
+      btn.className = 'ai-promote-btn';
+      btn.textContent = 'Promote';
+      btn.addEventListener('click', function() { promoteTask(task); });
+      title.appendChild(btn);
+    });
+
+    function styleAsPromoted(t, taskKey) {
+      t.classList.add('promoted');
+      var badge = t.querySelector('.task-status');
+      if (badge && !badge.classList.contains('erledigt')) {
+        badge.textContent = 'Open'; badge.className = 'task-status offen';
+      }
+      var pbtn = t.querySelector('.ai-promote-btn');
+      if (pbtn) pbtn.remove();
+      var titleEl = t.querySelector('.task-title');
+      if (titleEl && !titleEl.querySelector('.ai-tag')) {
+        var tag = document.createElement('span');
+        tag.className = 'ai-tag';
+        tag.textContent = 'AI';
+        var statusEl = titleEl.querySelector('.task-status');
+        if (statusEl) titleEl.insertBefore(tag, statusEl);
+        else titleEl.appendChild(tag);
+      }
+      if (!t.querySelector('.task-checkbox')) {
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'task-checkbox';
+        if (state.checked[taskKey]) cb.checked = true;
+        t.insertBefore(cb, t.firstChild);
+      }
+      addDemoteBtn(t, taskKey);
+    }
+
+    function addDemoteBtn(aiTask, taskKey) {
+      var title = aiTask.querySelector('.task-title');
+      if (!title || title.querySelector('.ai-demote-btn')) return;
+      var btn = document.createElement('button');
+      btn.className = 'ai-demote-btn';
+      btn.textContent = '\u2715 revert';
+      btn.addEventListener('click', function() { demoteTask(taskKey); });
+      title.appendChild(btn);
+    }
+
+    function applyPromote(aiTask, taskKey, isNew) {
+      // Style all matching AI tasks as promoted
+      document.querySelectorAll('.ai-task').forEach(function(t) {
+        if (getTaskKey(t) !== taskKey) return;
+        styleAsPromoted(t, taskKey);
+      });
+
+      // Move global AI task from AI container up to manual block
+      if (manual && aiListContainer) {
+        var globalAiTask = null;
+        aiListContainer.querySelectorAll('.ai-task').forEach(function(t) {
+          if (getTaskKey(t) === taskKey) globalAiTask = t;
+        });
+        if (globalAiTask) {
+          manual.appendChild(globalAiTask);
+        }
+      }
+
+      // Apply checked state to all instances
+      if (state.checked[taskKey]) syncVisual(taskKey, true);
+    }
+
+    function demoteTask(taskKey) {
+      // Clean up state
+      delete state.promoted[taskKey];
+      delete state.checked[taskKey];
+      saveState(state);
+
+      // Reset all AI tasks
+      document.querySelectorAll('.ai-task').forEach(function(t) {
+        if (getTaskKey(t) !== taskKey) return;
+        t.classList.remove('promoted');
+        var cb = t.querySelector('.task-checkbox');
+        if (cb) cb.remove();
+        var dbtn = t.querySelector('.ai-demote-btn');
+        if (dbtn) dbtn.remove();
+        var aiTag = t.querySelector('.ai-tag');
+        if (aiTag) aiTag.remove();
+        var badge = t.querySelector('.task-status');
+        if (badge) { badge.textContent = 'Suggestion'; badge.className = 'task-status offen'; badge.style.cssText = ''; }
+        var title = t.querySelector('.task-title');
+        if (title && !title.querySelector('.ai-promote-btn')) {
+          var btn = document.createElement('button');
+          btn.className = 'ai-promote-btn';
+          btn.textContent = 'Promote';
+          btn.addEventListener('click', function() { promoteTask(t); });
+          title.appendChild(btn);
+        }
+      });
+
+      // Move global AI task back to AI recommendations container
+      if (manual && aiListContainer) {
+        var movedTask = null;
+        manual.querySelectorAll('.ai-task').forEach(function(t) {
+          if (getTaskKey(t) === taskKey) movedTask = t;
+        });
+        if (movedTask) {
+          aiListContainer.appendChild(movedTask);
+        }
+      }
+
+      updateCounts();
+    }
+
+    function promoteTask(aiTask) {
+      var taskKey = getTaskKey(aiTask);
+      // Save task HTML for restore after reload
+      var titleEl = aiTask.querySelector('.task-title > span:first-child');
+      var meta = aiTask.querySelector('.task-meta');
+      state.promoted[taskKey] = {
+        titleHTML: titleEl ? titleEl.innerHTML : taskKey,
+        metaHTML: meta ? meta.innerHTML : ''
+      };
+      saveState(state);
+      applyPromote(aiTask, taskKey, true);
+      updateCounts();
+    }
+
+    // --- Restore checkbox state (manual tasks) ---
+    document.querySelectorAll('#manual-tasks .task-item, .project-body .task-item:not(.ai-task)').forEach(function(item) {
+      var key = getTaskKey(item);
+      var cb = item.querySelector('.task-checkbox');
+      if (cb && state.checked[key]) {
+        cb.checked = true;
+        var badge = item.querySelector('.task-status');
+        if (badge) { badge.textContent = 'Done'; badge.className = 'task-status erledigt'; }
+      }
+    });
+
+    // --- Checkbox sync: global <-> cards + persistence ---
+    function syncVisual(taskKey, checked) {
+      document.querySelectorAll('.task-item').forEach(function(item) {
+        if (getTaskKey(item) !== taskKey) return;
+        var cb = item.querySelector('.task-checkbox');
+        if (cb && cb.checked !== checked) cb.checked = checked;
+        var badge = item.querySelector('.task-status');
+        if (badge && !badge.classList.contains('aktiv') || checked) {
+          if (checked) { badge.textContent = 'Done'; badge.className = 'task-status erledigt'; }
+          else { badge.textContent = 'Open'; badge.className = 'task-status offen'; }
+        }
+      });
+    }
+
+    document.addEventListener('change', function(e) {
+      if (!e.target.classList.contains('task-checkbox')) return;
+      var item = e.target.closest('.task-item');
+      if (!item) return;
+      var taskKey = getTaskKey(item);
+      var checked = e.target.checked;
+
+      if (checked) state.checked[taskKey] = true;
+      else delete state.checked[taskKey];
+      saveState(state);
+
+      syncVisual(taskKey, checked);
+      updateCounts();
+    });
+
+    updateCounts();
+  })();
+</script>
+
+</body>
+</html>
