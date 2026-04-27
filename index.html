@@ -183,6 +183,10 @@
     box-shadow: 0 2px 12px var(--shadow);
     overflow: hidden;
   }
+  .overview-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .overview-table-wrap h2 {
     font-size: 1rem;
     font-weight: 600;
@@ -300,6 +304,22 @@
   .table-date { font-family: var(--mono); font-size: 0.75rem; white-space: nowrap; }
   .table-hours { font-family: var(--mono); font-size: 0.78rem; text-align: right; white-space: nowrap; color: var(--text); }
   .table-hours[data-sort="0"] { color: var(--text-dim); }
+
+  /* Time Log summary in project cards (one-liner, no drift) */
+  .time-log-summary {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0;
+    background: var(--surface-2);
+    border-left: 3px solid var(--border);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .time-log-summary strong { color: var(--text); font-family: var(--mono); font-weight: 600; }
+  .time-log-label { color: var(--text-dim); font-weight: 500; margin-right: 0.25rem; }
+  .time-log-breakdown { color: var(--text-dim); font-size: 0.75rem; font-family: var(--mono); }
+  .time-log-link { color: var(--text); text-decoration: underline; text-decoration-color: var(--border); }
+  .time-log-link:hover { text-decoration-color: var(--text); }
   .table-link {
     font-size: 0.7rem;
     font-family: var(--mono);
@@ -1695,6 +1715,7 @@
     </div>
     <span class="hours-total" title="Sum of all time-log.md (manual + Claude sessions, active time excluding pauses). Rough orientation, not exact tracking.">&Sigma; <strong id="hours-total-value">62.8h</strong> invested <span class="hours-breakdown">(manual: 12.0 + claude: 50.8)</span></span>
   </div>
+  <div class="overview-scroll">
   <table class="overview" id="overview-table">
     <thead>
       <tr>
@@ -2030,6 +2051,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 </details>
 
 <!-- Synergies -->
@@ -2212,6 +2234,12 @@
           </div>
         </div>
       </div>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>4.2h</strong> invested
+        <span class="time-log-breakdown">(manual: 1.0 + claude active: 3.2)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/nova-fluid-type/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-viewer.html">Viewer (local)</a>
         <a class="path-tag path-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-demo.html">Demo (local)</a>
@@ -2284,6 +2312,12 @@
           </tbody>
         </table>
       </details>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>8.5h</strong> invested
+        <span class="time-log-breakdown">(manual: 2.5 + claude active: 6.0)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/nova-social-proof/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/nova-social-proof/prototype-standalone/index.html">Prototype (local)</a>
         <a class="path-tag path-link" href="https://example.com/upload/prototype-social-proof/">Prototype (Live)</a>
@@ -2358,6 +2392,12 @@
           </tbody>
         </table>
       </details>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>0.3h</strong> invested
+        <span class="time-log-breakdown">(manual: 0.0 + claude active: 0.3)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/prism-fluid-type/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <a class="path-tag path-link" href="https://example.com/upload/prism-fluid-type/">Live</a>
         <a class="path-tag path-link" href="file:///Users/you/projects/prism-fluid-type/static/prism-utopia-viewer.html">Viewer</a>
@@ -2517,6 +2557,12 @@
           </tbody>
         </table>
       </details>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>0.5h</strong> invested
+        <span class="time-log-breakdown">(manual: 0.0 + claude active: 0.5)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/bloom-components/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/bloom-components/storybook-static/index.html">Storybook (local)</a>
         <a class="path-tag path-link" href="https://bloom-ds.example.com/">Storybook (Live)</a>
@@ -2588,6 +2634,12 @@
           </tbody>
         </table>
       </details>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>12.4h</strong> invested
+        <span class="time-log-breakdown">(manual: 3.0 + claude active: 9.4)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/design-bridge/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <a class="path-tag path-link" href="https://design-bridge.example.com/">Live</a>
         <a class="path-tag path-link" href="file:///Users/you/projects/design-bridge/deploy/index.html">Site (local)</a>
@@ -2649,6 +2701,12 @@
           </tbody>
         </table>
       </details>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>1.2h</strong> invested
+        <span class="time-log-breakdown">(manual: 0.3 + claude active: 0.9)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/token-workshop/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/token-workshop/dist/index.html">Local</a>
         <span class="path-tag">~/projects/token-workshop</span>
@@ -2765,6 +2823,12 @@
           </tbody>
         </table>
       </details>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>6.8h</strong> invested
+        <span class="time-log-breakdown">(manual: 1.5 + claude active: 5.3)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/forge-mobile-type/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
         <span class="path-tag">~/projects/forge-mobile-type</span>
@@ -2826,6 +2890,12 @@
           </tbody>
         </table>
       </details>
+      <div class="time-log-summary">
+        <span class="time-log-label">Time Log:</span>
+        <strong>28.6h</strong> invested
+        <span class="time-log-breakdown">(manual: 3.7 + claude active: 24.9)</span>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/project-dashboard/time-log.md">Details in time-log.md</a>
+      </div>
       <div class="project-paths">
         <span class="path-tag">~/projects/project-dashboard</span>
         <span class="path-tag path-claude">~/.claude/projects/...-project-dashboard</span>
