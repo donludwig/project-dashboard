@@ -13,6 +13,8 @@ If you're a designer trying to get into Claude Code and looking to understand be
 ## Features
 
 - Sortable, filterable project table, collapsible sections
+- Column visibility toggle — show/hide columns from the overview, persisted in localStorage
+- Hours tracking via per-project `time-log.md` (manual entries + auto Claude sessions)
 - Auto-generated color-coded favicons per project
 - Expandable project cards
 - Docs tables per project (research, project, code, Claude files)
@@ -143,8 +145,46 @@ Sortable by any column. Click column headers to sort. Includes:
 - Type, organization, tech stack badges
 - Code metrics (lines, files)
 - Last update with timestamp
+- Hours invested (sourced from per-project `time-log.md`)
 - Phase badge (Active, Stable, Migration, Prototype, Idea)
 - Direct links to local files and live sites
+
+### Column Visibility Toggle
+
+A **Display columns** dropdown next to the search input lets you hide columns you don't need. The button shows a `visible/total` counter when columns are hidden, and the state is saved to `localStorage` so it survives reloads. Useful when the table gets wider than your screen — hide what's not relevant for the moment.
+
+### Hours Tracking (time-log.md)
+
+Each project has a `time-log.md` in its root as a rough orientation (not exact tracking). Format:
+
+```markdown
+---
+type: time-log
+project: nova-fluid-type
+---
+
+# Time Log
+
+## Manual
+
+| Date | Hours | Note |
+|---|---|---|
+| 2026-03-21 | 3.0 | Setup, concept |
+
+## Claude Sessions (auto, by scan.sh)
+
+| Session | Date | Start | End | Hours |
+|---|---|---|---|---|
+| de81b351 | 2026-04-26 | 15:26 | 22:34 | 7.1 |
+
+**Total:** 10.1h (manual: 3.0 + claude: 7.1)
+```
+
+- **Manual section** — you maintain it: work outside of Claude sessions (concept, notes, code without Claude). Decimal hours with a dot.
+- **Claude Sessions section** — `scan.sh` writes it automatically from `.jsonl` session timestamps. Active time only — gaps over 30 minutes (lunch breaks, resuming the next day) are excluded so multi-day sessions don't count idle hours as work. Sub-agent sessions are also excluded.
+- **Total** — auto-summed by `scan.sh`.
+
+The dashboard shows the total per project in the **Hours** column and a Σ across all projects above the table. There's also an optional `<details>` time-log block in each project card with the full breakdown.
 
 ### Radar Scanner (scan.sh)
 

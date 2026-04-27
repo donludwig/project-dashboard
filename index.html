@@ -298,6 +298,8 @@
   .table-badges { display: flex; gap: 0.3rem; flex-wrap: wrap; }
   .table-scope { color: var(--text); font-weight: 500; }
   .table-date { font-family: var(--mono); font-size: 0.75rem; white-space: nowrap; }
+  .table-hours { font-family: var(--mono); font-size: 0.78rem; text-align: right; white-space: nowrap; color: var(--text); }
+  .table-hours[data-sort="0"] { color: var(--text-dim); }
   .table-link {
     font-size: 0.7rem;
     font-family: var(--mono);
@@ -1238,9 +1240,12 @@
   .table-search {
     padding: 0.5rem 1.25rem 0.75rem;
     background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
   .table-search input {
-    width: 100%;
+    flex: 1;
     padding: 0.4rem 0.75rem;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -1252,6 +1257,107 @@
   }
   .table-search input:focus { border-color: var(--border-hover); }
   .table-search input::placeholder { color: var(--text-dim); }
+  .hours-total {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    white-space: nowrap;
+    cursor: help;
+  }
+  .hours-total strong { color: var(--text); font-weight: 600; }
+  .hours-breakdown { color: var(--text-dim); font-size: 0.72rem; margin-left: 0.25rem; }
+
+  /* Column toggle dropdown */
+  .col-toggle { position: relative; }
+  .col-toggle-btn {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-family: var(--font);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .col-toggle-btn:hover { border-color: var(--border-hover); }
+  .col-toggle-btn .caret { width: 12px; height: 12px; margin-left: 0.4rem; vertical-align: -1px; opacity: 0.8; }
+  .col-toggle-btn .col-icon { width: 12px; height: 12px; margin-right: 0.4rem; vertical-align: -1px; opacity: 0.8; }
+  .col-toggle-btn .col-count {
+    display: none;
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.4rem;
+    background: var(--surface-3, var(--surface));
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-dim);
+  }
+  .col-toggle-btn.has-filter {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+  .col-toggle-btn.has-filter .col-icon { opacity: 1; }
+  .col-toggle-btn.has-filter .col-count {
+    display: inline-block;
+    background: var(--text);
+    color: var(--surface);
+    font-weight: 600;
+  }
+  .col-toggle-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 100;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    padding: 0.4rem 0;
+    min-width: 220px;
+    display: none;
+  }
+  :root[data-theme="light"] .col-toggle-panel { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .col-toggle-panel.open { display: block; }
+  .col-toggle-panel-header {
+    padding: 0.25rem 0.85rem 0.5rem;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  .col-toggle-panel label {
+    display: block;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.78rem;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .col-toggle-panel label:hover { background: var(--surface-2); }
+  .col-toggle-panel label input[type="checkbox"] {
+    margin: 0 0.55rem 0 0;
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  .col-toggle-panel label span { vertical-align: middle; }
+  .col-toggle-panel hr { border: none; border-top: 1px solid var(--border); margin: 0.3rem 0; }
+  .col-toggle-reset {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.35rem 0.85rem;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    font-family: var(--font);
+    cursor: pointer;
+  }
+  .col-toggle-reset:hover { background: var(--surface-2); color: var(--text); }
 
 
   /* ── Collapsible project cards ── */
@@ -1570,6 +1676,24 @@
   <summary><h2>Project Overview</h2></summary>
   <div class="table-search">
     <input type="text" id="table-search" placeholder="Filter projects..." autocomplete="off">
+    <div class="col-toggle">
+      <button class="col-toggle-btn" id="col-toggle-btn" type="button" aria-expanded="false"><svg class="col-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2.5" height="10" rx="0.5"/><rect x="6.75" y="3" width="2.5" height="10" rx="0.5"/><rect x="11.5" y="3" width="2.5" height="10" rx="0.5"/></svg>Display columns<span class="col-count" id="col-toggle-count"></span><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
+      <div class="col-toggle-panel" id="col-toggle-panel" role="menu">
+        <div class="col-toggle-panel-header">Visible columns</div>
+        <label><input type="checkbox" data-col="1" checked><span>Type</span></label>
+        <label><input type="checkbox" data-col="2" checked><span>Organization</span></label>
+        <label><input type="checkbox" data-col="3" checked><span>Tech Stack</span></label>
+        <label><input type="checkbox" data-col="4" checked><span>Scope</span></label>
+        <label><input type="checkbox" data-col="5" checked><span>Files</span></label>
+        <label><input type="checkbox" data-col="6" checked><span>Last Update</span></label>
+        <label><input type="checkbox" data-col="7" checked><span>Hours</span></label>
+        <label><input type="checkbox" data-col="8" checked><span>Phase</span></label>
+        <label><input type="checkbox" data-col="9" checked><span>Links</span></label>
+        <hr>
+        <button class="col-toggle-reset" type="button" id="col-toggle-reset">Show all columns</button>
+      </div>
+    </div>
+    <span class="hours-total" title="Sum of all time-log.md (manual + Claude sessions, active time excluding pauses). Rough orientation, not exact tracking.">&Sigma; <strong id="hours-total-value">62.8h</strong> invested <span class="hours-breakdown">(manual: 12.0 + claude: 50.8)</span></span>
   </div>
   <table class="overview" id="overview-table">
     <thead>
@@ -1581,9 +1705,10 @@
         <th data-col="4" data-type="number">Scope</th>
         <th data-col="5" data-type="number">Files</th>
         <th data-col="6" data-type="date">Last Update</th>
-        <th data-col="7">Phase</th>
-        <th data-col="8">Links</th>
-        <th data-col="9"></th>
+        <th data-col="7" data-type="number">Hours</th>
+        <th data-col="8">Phase</th>
+        <th data-col="9">Links</th>
+        <th data-col="10"></th>
       </tr>
     </thead>
     <tbody>
@@ -1604,6 +1729,7 @@
         <td class="table-scope" data-sort="23820">~24k lines</td>
         <td data-sort="637">637</td>
         <td class="table-date" data-sort="2026-03-23T08:32">23.03.2026, 08:32</td>
+        <td class="table-hours" data-sort="4.2">4.2h</td>
         <td><span class="phase-badge phase-migration">Migration</span></td>
         <td>
           <div class="table-links">
@@ -1629,6 +1755,7 @@
         <td class="table-scope" data-sort="27273">~27k lines</td>
         <td data-sort="655">655</td>
         <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
+        <td class="table-hours" data-sort="8.5">8.5h</td>
         <td><span class="phase-badge phase-prototyp">Prototype</span></td>
         <td>
           <div class="table-links">
@@ -1655,6 +1782,7 @@
         <td class="table-scope" data-sort="18588">~19k lines</td>
         <td data-sort="230">230</td>
         <td class="table-date" data-sort="2026-03-25T09:23">25.03.2026, 09:23</td>
+        <td class="table-hours" data-sort="0.3">0.3h</td>
         <td><span class="phase-badge phase-migration">Migration</span></td>
         <td>
           <div class="table-links">
@@ -1682,6 +1810,7 @@
         <td class="table-scope" data-sort="1077831">~1.1M lines</td>
         <td data-sort="7317">7317</td>
         <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
+        <td class="table-hours" data-sort="0">&mdash;</td>
         <td><span class="phase-badge phase-migration">Migration</span></td>
         <td>
           <div class="table-links">
@@ -1708,6 +1837,7 @@
         <td class="table-scope" data-sort="14200">~14k lines</td>
         <td data-sort="182">182</td>
         <td class="table-date" data-sort="2026-03-20T14:48">20.03.2026, 14:48</td>
+        <td class="table-hours" data-sort="0.5">0.5h</td>
         <td><span class="phase-badge phase-aktiv">Active</span></td>
         <td>
           <div class="table-links">
@@ -1733,6 +1863,7 @@
         <td class="table-scope" data-sort="4125">~4,1k lines</td>
         <td data-sort="27">27</td>
         <td class="table-date" data-sort="2026-03-25T08:17">25.03.2026, 08:17</td>
+        <td class="table-hours" data-sort="12.4">12.4h</td>
         <td><span class="phase-badge phase-aktiv">Active</span></td>
         <td>
           <div class="table-links">
@@ -1759,6 +1890,7 @@
         <td class="table-scope" data-sort="3400">~3,4k lines</td>
         <td data-sort="42">42</td>
         <td class="table-date" data-sort="2026-03-18T16:30">18.03.2026, 16:30</td>
+        <td class="table-hours" data-sort="1.2">1.2h</td>
         <td><span class="phase-badge phase-aktiv">Active</span></td>
         <td>
           <div class="table-links">
@@ -1783,6 +1915,7 @@
         <td class="table-scope" data-sort="1189">~1,2k lines</td>
         <td data-sort="10">10</td>
         <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
+        <td class="table-hours" data-sort="0">&mdash;</td>
         <td><span class="phase-badge phase-stabil">Stable</span></td>
         <td>
           <div class="table-links">
@@ -1808,6 +1941,7 @@
         <td class="table-scope" data-sort="1343">~1,3k lines</td>
         <td data-sort="8">8</td>
         <td class="table-date" data-sort="2026-03-25T10:06">25.03.2026, 10:06</td>
+        <td class="table-hours" data-sort="6.8">6.8h</td>
         <td><span class="phase-badge phase-aktiv">Active</span></td>
         <td>
           <div class="table-links">
@@ -1833,6 +1967,7 @@
         <td class="table-scope" data-sort="0">&mdash;</td>
         <td data-sort="5">5</td>
         <td class="table-date" data-sort="2026-03-23T08:22">23.03.2026, 08:22</td>
+        <td class="table-hours" data-sort="0.2">0.2h</td>
         <td><span class="phase-badge phase-idee">Idea</span></td>
         <td>
           <div class="table-links">
@@ -1858,6 +1993,7 @@
         <td class="table-scope" data-sort="0">&mdash;</td>
         <td data-sort="3">3</td>
         <td class="table-date" data-sort="2026-03-23T08:22">23.03.2026, 08:22</td>
+        <td class="table-hours" data-sort="0.1">0.1h</td>
         <td><span class="phase-badge phase-idee">Idea</span></td>
         <td>
           <div class="table-links">
@@ -1883,6 +2019,7 @@
         <td class="table-scope" data-sort="2640">~2,6k lines</td>
         <td data-sort="15">15</td>
         <td class="table-date" data-sort="2026-03-25T16:00">25.03.2026, 16:00</td>
+        <td class="table-hours" data-sort="28.6">28.6h</td>
         <td><span class="phase-badge phase-aktiv">Active</span></td>
         <td>
           <div class="table-links">
@@ -1993,7 +2130,7 @@
 
 <!-- Project Details -->
 <details open>
-<summary class="section-heading"><h2>Project Details</h2></summary>
+<summary><h2 class="section-heading" style="display:inline;cursor:pointer;">Project Details</h2></summary>
 <div class="projects">
 
   <!-- 1. Nova Fluid Type -->
@@ -2062,7 +2199,7 @@
           </tbody>
         </table>
       </details>
-      <div class="task-list" style="padding: 0 1.25rem 0.5rem;">
+      <div class="task-list">
         <div class="task-item">
           <input type="checkbox" class="task-checkbox">
           <div class="task-content">
@@ -2296,7 +2433,7 @@
           </tbody>
         </table>
       </details>
-      <div class="task-list" style="padding: 0 1.25rem 0.5rem;">
+      <div class="task-list">
         <div class="task-item">
           <input type="checkbox" class="task-checkbox">
           <div class="task-content">
@@ -2697,7 +2834,6 @@
   </article>
 
 </div>
-</details>
 
 <!-- Projektideen -->
 <section class="ideas">
@@ -2810,6 +2946,7 @@
   </div>
 
 </section>
+</details>
 
 <!-- Back to top -->
 <button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0})" aria-label="Back to top">&#8593;</button>
@@ -2959,6 +3096,88 @@
         });
       });
     });
+  })();
+
+  // ── 1b. Column visibility toggle ──
+  (function() {
+    const table = document.getElementById('overview-table');
+    const btn = document.getElementById('col-toggle-btn');
+    const panel = document.getElementById('col-toggle-panel');
+    const reset = document.getElementById('col-toggle-reset');
+    if (!table || !btn || !panel) return;
+
+    const STORAGE_KEY = 'dashboard-hidden-cols';
+    const checkboxes = panel.querySelectorAll('input[type="checkbox"][data-col]');
+    const countEl = document.getElementById('col-toggle-count');
+
+    function applyHidden(hiddenCols) {
+      const hidden = new Set(hiddenCols);
+      const headers = table.querySelectorAll('thead th');
+      headers.forEach(th => {
+        const col = parseInt(th.dataset.col, 10);
+        th.style.display = hidden.has(col) ? 'none' : '';
+      });
+      table.querySelectorAll('tbody tr').forEach(row => {
+        Array.from(row.children).forEach((cell, i) => {
+          cell.style.display = hidden.has(i) ? 'none' : '';
+        });
+      });
+      checkboxes.forEach(cb => {
+        cb.checked = !hidden.has(parseInt(cb.dataset.col, 10));
+      });
+      const total = checkboxes.length;
+      const visible = total - hidden.size;
+      if (hidden.size > 0) {
+        btn.classList.add('has-filter');
+        if (countEl) countEl.textContent = visible + '/' + total;
+      } else {
+        btn.classList.remove('has-filter');
+        if (countEl) countEl.textContent = '';
+      }
+    }
+
+    function loadHidden() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+
+    function saveHidden(hiddenCols) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(hiddenCols)); } catch (e) {}
+    }
+
+    applyHidden(loadHidden());
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!panel.contains(e.target) && e.target !== btn) {
+        panel.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        const hidden = Array.from(checkboxes)
+          .filter(c => !c.checked)
+          .map(c => parseInt(c.dataset.col, 10));
+        applyHidden(hidden);
+        saveHidden(hidden);
+      });
+    });
+
+    if (reset) {
+      reset.addEventListener('click', () => {
+        applyHidden([]);
+        saveHidden([]);
+      });
+    }
   })();
 
   // ── 2. Back to top ──
