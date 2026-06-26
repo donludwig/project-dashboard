@@ -347,6 +347,24 @@
     color: var(--text-dim);
     margin-right: 0.35rem;
   }
+  tr.org-header td {
+    background: var(--bg-subtle, rgba(127,127,127,0.06));
+    border-top: 2px solid var(--border, rgba(127,127,127,0.18));
+    padding: 0.5rem 0.75rem 0.3rem;
+  }
+  tr.org-header:first-child td { border-top: none; }
+  .org-header-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted, #888);
+  }
+  .overview tbody tr.org-header { counter-increment: none; }
+  .overview tbody tr.org-header td:first-child::before { content: none; }
+  .overview tbody tr.org-header td:first-child { white-space: normal; }
+  /* When sorting by a column: hide org grouping and rank globally */
+  .overview.is-sorted tr.org-header { display: none !important; }
 
   /* ── Section headings ── */
   .section-heading {
@@ -1733,7 +1751,7 @@
       </tr>
     </thead>
     <tbody>
-      <!-- 1. Nova Fluid Type -->
+      <tr class="org-header"><td colspan="11"><span class="org-header-label">Redleaf NGO</span></td></tr>
       <tr>
         <td>
           <a class="table-name" href="#nova-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8432a'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENf%3C/text%3E%3C/svg%3E" alt="">Nova Fluid Type</a>
@@ -1759,7 +1777,6 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('nova-fluid-type')">claude</button></td>
       </tr>
-      <!-- 2. Nova Social Proof -->
       <tr>
         <td>
           <a class="table-name" href="#nova-social-proof"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENs%3C/text%3E%3C/svg%3E" alt="">Nova Social Proof</a>
@@ -1786,7 +1803,56 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('nova-social-proof')">claude</button></td>
       </tr>
-      <!-- 3. Prism Fluid Type -->
+      <tr>
+        <td>
+          <a class="table-name" href="#forge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EFg%3C/text%3E%3C/svg%3E" alt="">Forge</a>
+        </td>
+        <td>Tool</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Vanilla JS</span>
+            <span class="table-badge">Node.js</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1189">~1,2k lines</td>
+        <td data-sort="10">10</td>
+        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
+        <td class="table-hours" data-sort="0">&mdash;</td>
+        <td><span class="phase-badge phase-stabil">Stable</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/forge/forge.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('forge')">claude</button></td>
+      </tr>
+      <tr class="sub-row">
+        <td>
+          <a class="table-name" href="#forge-mobile-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='14' font-weight='700' fill='%23fff' text-anchor='middle'%3EFm%3C/text%3E%3C/svg%3E" alt="">Forge Mobile Type</a>
+        </td>
+        <td>Tool</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">HTML</span>
+            <span class="table-badge">CSS</span>
+            <span class="table-badge">JS</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1343">~1,3k lines</td>
+        <td data-sort="8">8</td>
+        <td class="table-date" data-sort="2026-03-25T10:06">25.03.2026, 10:06</td>
+        <td class="table-hours" data-sort="6.8">6.8h</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('forge-mobile-type')">claude</button></td>
+      </tr>
+      <tr class="org-header"><td colspan="11"><span class="org-header-label">Prism UX</span></td></tr>
       <tr>
         <td>
           <a class="table-name" href="#prism-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23005b8e'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E" alt="">Prism Fluid Type</a>
@@ -1813,7 +1879,7 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('prism-fluid-type')">claude</button></td>
       </tr>
-      <!-- 4. Helix Typography -->
+      <tr class="org-header"><td colspan="11"><span class="org-header-label">Pinnacle Inc.</span></td></tr>
       <tr>
         <td>
           <a class="table-name" href="#helix-typography"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%237c3aed'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EHx%3C/text%3E%3C/svg%3E" alt="">Helix Typography</a>
@@ -1841,7 +1907,7 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('helix-typography')">claude</button></td>
       </tr>
-      <!-- 5. Bloom Components -->
+      <tr class="org-header"><td colspan="11"><span class="org-header-label">Bloom Health</span></td></tr>
       <tr>
         <td>
           <a class="table-name" href="#bloom-components"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EBl%3C/text%3E%3C/svg%3E" alt="">Bloom Components</a>
@@ -1868,7 +1934,7 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('bloom-components')">claude</button></td>
       </tr>
-      <!-- 6. Design Bridge -->
+      <tr class="org-header"><td colspan="11"><span class="org-header-label">Personal</span></td></tr>
       <tr>
         <td>
           <a class="table-name" href="#design-bridge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2310b981'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3E%26lt;/%26gt;%3C/text%3E%3C/svg%3E" alt="">Design Bridge</a>
@@ -1894,7 +1960,6 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('design-bridge')">claude</button></td>
       </tr>
-      <!-- 7. Token Workshop -->
       <tr>
         <td>
           <a class="table-name" href="#token-workshop"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230ea5e9'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETw%3C/text%3E%3C/svg%3E" alt="">Token Workshop</a>
@@ -1920,58 +1985,6 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('token-workshop')">claude</button></td>
       </tr>
-      <!-- 8. Forge -->
-      <tr>
-        <td>
-          <a class="table-name" href="#forge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EFg%3C/text%3E%3C/svg%3E" alt="">Forge</a>
-        </td>
-        <td>Tool</td>
-        <td>Redleaf NGO</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Vanilla JS</span>
-            <span class="table-badge">Node.js</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="1189">~1,2k lines</td>
-        <td data-sort="10">10</td>
-        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
-        <td class="table-hours" data-sort="0">&mdash;</td>
-        <td><span class="phase-badge phase-stabil">Stable</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/forge/forge.html">Local</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('forge')">claude</button></td>
-      </tr>
-      <!-- 8b. Forge Mobile Type (Sub-Row) -->
-      <tr class="sub-row">
-        <td>
-          <a class="table-name" href="#forge-mobile-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='14' font-weight='700' fill='%23fff' text-anchor='middle'%3EFm%3C/text%3E%3C/svg%3E" alt="">Forge Mobile Type</a>
-        </td>
-        <td>Tool</td>
-        <td>Redleaf NGO</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">HTML</span>
-            <span class="table-badge">CSS</span>
-            <span class="table-badge">JS</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="1343">~1,3k lines</td>
-        <td data-sort="8">8</td>
-        <td class="table-date" data-sort="2026-03-25T10:06">25.03.2026, 10:06</td>
-        <td class="table-hours" data-sort="6.8">6.8h</td>
-        <td><span class="phase-badge phase-aktiv">Active</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('forge-mobile-type')">claude</button></td>
-      </tr>
-      <!-- 9. The Handoff -->
       <tr>
         <td>
           <a class="table-name" href="#the-handoff"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETH%3C/text%3E%3C/svg%3E" alt="">The Handoff</a>
@@ -1997,7 +2010,6 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('the-handoff')">claude</button></td>
       </tr>
-      <!-- 10. Spectrum Color -->
       <tr>
         <td>
           <a class="table-name" href="#spectrum-color"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ESC%3C/text%3E%3C/svg%3E" alt="">Spectrum Color</a>
@@ -2023,7 +2035,6 @@
         </td>
         <td><button class="btn-claude" onclick="openClaude('spectrum-color')">claude</button></td>
       </tr>
-      <!-- 11. Project Dashboard -->
       <tr>
         <td>
           <a class="table-name" href="#project-dashboard"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23888'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EPD%3C/text%3E%3C/svg%3E" alt="">Project Dashboard</a>
@@ -3117,24 +3128,29 @@
 
         headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
 
-        // State 0: reset to original order
+        // State 0: reset to original (org-grouped) order, show org-headers again
         if (sortState === 0) {
           currentCol = -1;
+          table.classList.remove('is-sorted');
           originalOrder.forEach(row => tbody.appendChild(row));
           return;
         }
 
         const ascending = sortState === 1;
         th.classList.add(ascending ? 'sort-asc' : 'sort-desc');
+        // Active sort: drop the org grouping — hide org-headers (CSS) and rank globally
+        table.classList.add('is-sorted');
 
         const allRows = Array.from(tbody.querySelectorAll('tr'));
-        const parents = allRows.filter(r => !r.classList.contains('sub-row'));
-        // Build a map: parent row -> following sub-rows
+        const isHeader = r => r.classList.contains('org-header');
+        const isSub = r => r.classList.contains('sub-row');
+        const parents = allRows.filter(r => !isSub(r) && !isHeader(r));
+        // Build a map: parent row -> following sub-rows (skipping org-headers)
         const subMap = new Map();
         allRows.forEach((row, i) => {
-          if (row.classList.contains('sub-row')) {
+          if (isSub(row)) {
             for (let j = i - 1; j >= 0; j--) {
-              if (!allRows[j].classList.contains('sub-row')) {
+              if (!isSub(allRows[j]) && !isHeader(allRows[j])) {
                 if (!subMap.has(allRows[j])) subMap.set(allRows[j], []);
                 subMap.get(allRows[j]).push(row);
                 break;
@@ -3142,7 +3158,7 @@
             }
           }
         });
-        // Sort only parent rows
+        // Sort only parent rows (globally across all organisations)
         parents.sort((a, b) => {
           const cellA = a.children[col], cellB = b.children[col];
           let valA, valB;
@@ -3188,6 +3204,7 @@
         th.style.display = hidden.has(col) ? 'none' : '';
       });
       table.querySelectorAll('tbody tr').forEach(row => {
+        if (row.classList.contains('org-header')) return; // colspan cell stays full-width
         Array.from(row.children).forEach((cell, i) => {
           cell.style.display = hidden.has(i) ? 'none' : '';
         });
@@ -3298,9 +3315,20 @@
     if (!input || !table) return;
     input.addEventListener('input', () => {
       const q = input.value.toLowerCase();
-      table.querySelectorAll('tbody tr').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      let header = null, headerHasMatch = false;
+      const flush = () => { if (header) header.style.display = headerHasMatch ? '' : 'none'; };
+      rows.forEach(row => {
+        if (row.classList.contains('org-header')) {
+          flush();
+          header = row; headerHasMatch = false;
+          return;
+        }
+        const match = row.textContent.toLowerCase().includes(q);
+        row.style.display = match ? '' : 'none';
+        if (match) headerHasMatch = true;
       });
+      flush();
     });
   })();
 
@@ -3330,7 +3358,8 @@
       bar.className = 'activity-bar';
       const fill = document.createElement('div');
       fill.className = 'activity-bar-fill';
-      fill.style.width = Math.round(freshness * 100) + '%';
+      // Minimum width so even very old projects show a small (red) bar instead of vanishing
+      fill.style.width = Math.max(10, Math.round(freshness * 100)) + '%';
       if (freshness > 0.7) fill.style.background = '#4ade80';
       else if (freshness > 0.3) fill.style.background = '#fbbf24';
       else fill.style.background = '#ef4444';

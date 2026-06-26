@@ -251,7 +251,7 @@ After that, the **Docs Check** lists all documents in each project's root direct
 **Usage:**
 ```bash
 ./scan.sh              # Scan all projects
-./scan.sh kern tipi    # Scan specific projects (fuzzy match)
+./scan.sh design-sys app    # Scan specific projects (fuzzy match)
 ```
 
 **Health Check (CFM):** Each row ends with status letters — uppercase = present, lowercase = missing:
