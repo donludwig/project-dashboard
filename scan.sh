@@ -4,7 +4,7 @@
 # Output: structured format for dashboard updates
 #
 # Usage: ./scan.sh                (all projects)
-#        ./scan.sh kern tipi      (only named projects, fuzzy match)
+#        ./scan.sh design-sys app      (only named projects, fuzzy match)
 #
 # Customize: Edit the PROJECTS array below to match your setup.
 

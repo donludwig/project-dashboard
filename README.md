@@ -192,7 +192,7 @@ The dashboard includes a bash script that collects all project metrics in ~3 sec
 
 ```bash
 ./scan.sh              # Scan all projects
-./scan.sh kern tipi    # Scan specific projects (fuzzy match)
+./scan.sh design-sys app    # Scan specific projects (fuzzy match)
 ```
 
 Per project, the script collects: file count, lines of code, last modification date, Claude memory count, and session count. It also runs a health check (`CFM`) — uppercase means present, lowercase means missing:
