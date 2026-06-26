@@ -13,6 +13,9 @@ If you're a designer trying to get into Claude Code and looking to understand be
 ## Features
 
 - Sortable, filterable project table, collapsible sections
+- Grouped by organization with section sub-headings — sorting by a column switches to a flat global ranking
+- Sub-projects shown as indented sub-rows that stay attached to their parent
+- Freshness bar per project — green when recently updated, red (and short) when stale
 - Column visibility toggle — show/hide columns from the overview, persisted in localStorage
 - Hours tracking via per-project `time-log.md` (manual entries + auto Claude sessions)
 - Auto-generated color-coded favicons per project
@@ -140,11 +143,13 @@ type: project
 
 ### Overview Table
 
-Sortable by any column. Click column headers to sort. Includes:
+By default, projects are **grouped by organization** with section sub-headings. Click any column header to sort — this collapses the grouping and ranks all projects **globally** across organizations (a third click resets to the grouped view). Sub-projects always stay attached to their parent, and search hides a section heading when nothing in it matches.
+
+Each row includes:
 - Project name with color-coded icon
 - Type, organization, tech stack badges
 - Code metrics (lines, files)
-- Last update with timestamp
+- Last update with timestamp and a **freshness bar** — a small colored bar that runs green (recent) through amber to a short red bar (stale), so you can spot neglected projects at a glance
 - Hours invested (sourced from per-project `time-log.md`)
 - Phase badge (Active, Stable, Migration, Prototype, Idea)
 - Direct links to local files and live sites
