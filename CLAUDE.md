@@ -6,7 +6,7 @@ Communication language: English.
 
 ## Architecture
 
-- **index.html** (~2.6k lines): Complete dashboard in a single file (HTML + CSS + JS, no build step)
+- **index.html** (~3.7k lines): Complete dashboard in a single file (HTML + CSS + JS, no build step)
 - **scan.sh**: Radar scanner — collects all project metrics in ~3 seconds (see below)
 - **favicon.svg**: Dashboard icon (gray square, "PD")
 - **README.md**: Public documentation
@@ -23,7 +23,7 @@ The HTML follows a strict section order:
 5. **Project Cards** (lines ~1514-2185) — Collapsible detail cards per project with grid layout + docs table
 6. **Project Ideas** (lines ~2186-2297) — Collapsible idea cards for early-stage concepts
 7. **Synergies** (lines ~2298-2450) — Connection cards between projects
-8. **JavaScript** (lines ~2450-2633) — Table sorting, search/filter, theme toggle, back-to-top, clipboard, last-viewed
+8. **JavaScript** — Table sorting (org-grouped by default, global ranking when sorted), search/filter (hides empty org sections), column visibility toggle, freshness/activity bars, theme toggle, back-to-top, clipboard, last-viewed
 
 ## Bootstrap: Setting Up Your Dashboard
 
@@ -246,6 +246,8 @@ The script walks through all project directories and collects five numbers per p
 
 After that, the **Docs Check** lists all documents in each project's root directory — with file size and date. This is the comparison basis: if a file appears here that isn't in the dashboard's docs table yet, it needs to be added.
 
+**Hours tracking (`time-log.md`):** scan.sh also maintains a `time-log.md` in each project root. It auto-writes the `## Claude Sessions` section from `.jsonl` session timestamps (active time only — gaps over 30 min are excluded) and leaves the `## Manual` section for the user. The per-project total (manual + claude) feeds the **Hours** column and the Σ total above the table. Each project card may also include an optional `<details>` time-log block. When adopting the dashboard, point the `PROJECTS` array at your real projects; estimate-only or showcase projects can keep manual entries instead of generated sessions.
+
 **Why so fast?** Previously, Radar spawned 10 AI agents in parallel — each agent read files individually, reasoned about them, read more files (~3 minutes). The script does the same with simple shell commands ("count all files", "find the newest date") — tasks the computer handles in milliseconds. The AI only comes in afterwards for interpretation: What changed? Which docs are missing?
 
 **Usage:**
@@ -292,7 +294,7 @@ When scanning a project directory, collect:
 - Claude (purple badge): CLAUDE.md, memory files, agent configs, .claude/ contents
 
 **Updating the HTML:**
-- Update table row: scope (lines), files, last update, phase badge
+- Update table row: scope (lines), files, last update, hours, phase badge
 - Update docs table: add/remove file rows, update sizes and timestamps
 - Use `stat -f '%z' file` for byte size → format as "x.x KB"
 - Use `stat -f '%Sm' -t '%Y-%m-%d %H:%M' file` for timestamp
@@ -315,13 +317,22 @@ When scanning a project directory, collect:
   <td class="table-scope" data-sort="1234">~1.2k lines</td>
   <td data-sort="42">42</td>
   <td class="table-date" data-sort="2026-03-25T10:30">25.03.2026, 10:30</td>
+  <td class="table-hours" data-sort="3.0">3.0h</td>
   <td><span class="phase-badge phase-active">Active</span></td>
   <td><div class="table-links"><a class="table-link" href="file:///...">Local</a></div></td>
   <td><button class="btn-claude" onclick="openClaude('project-dir')">claude</button></td>
 </tr>
 ```
 
-Sub-rows (child projects) use `class="sub-row"` and always stay grouped under their parent.
+The table has 11 columns: name, type, organization, tech badges, scope (lines), files, last update, hours, phase, links, claude button. The hours cell uses a numeric `data-sort` (`3.0`) and displays `3.0h`; a value of `0` shows as `&mdash;`.
+
+**Sub-rows (child projects):** use `class="sub-row"` — they always stay attached to their parent and never sort independently.
+
+**Organization grouping:** rows are grouped by organization with section-heading rows. Each group starts with:
+```html
+<tr class="org-header"><td colspan="11"><span class="org-header-label">Organization Name</span></td></tr>
+```
+By default the table shows these groups. When the user sorts by a column, JS adds `class="is-sorted"` to the table, which hides the org-headers (CSS) and ranks all projects globally; a reset (third click) restores the grouping. Org-header rows are skipped by the sort, search (hidden when their section has no match), row counter, and column-toggle logic.
 
 ### Icon Pattern
 
