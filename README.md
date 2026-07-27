@@ -14,6 +14,8 @@ If you're a designer trying to get into Claude Code and looking to understand be
 
 <img width="1600" height="1268" alt="Project Dashboard demo in dark mode: sortable project overview with hours, phases and freshness bars, pinned project quicklinks in the header, and a sidebar with tasks, AI recommendations, and synergy cards — a single HTML file with zero dependencies" src="screenshot.png" />
 
+![Section banner: 01 · What it does — Features](assets/headings/01-features.png)
+
 ## Features
 
 **Overview table**
@@ -58,6 +60,8 @@ If you're a designer trying to get into Claude Code and looking to understand be
 - Dark/light theme, auto-generated color-coded favicons per project
 - Footer with live stats (projects, organizations, in progress, open tasks, hours) and a layout reset
 
+![Section banner: 02 · Clone, then let Claude Code set it up — Quick Start](assets/headings/02-quick-start.png)
+
 ## Quick Start
 
 ### 1. Clone and explore the demo
@@ -99,6 +103,8 @@ Ask Claude Code anytime:
 - `"Scan my projects and update the dashboard"` — refreshes all metrics
 - `"Find synergies between my projects"` — discovers new connections
 - `"Add project X to the dashboard"` — adds a new project
+
+![Section banner: 03 · Tables, tasks, time tracking — Feature Details](assets/headings/03-feature-details.png)
 
 ## Feature Details
 
@@ -258,6 +264,8 @@ The Radar agent calls this script first, then only uses AI for interpretation: w
 
 Edit the `PROJECTS` array at the top of the script to match your projects. Note that the script writes a `time-log.md` into each existing project directory, so point the array at your real projects before running it.
 
+![Section banner: 04 · One file, four helpers — Structure](assets/headings/04-structure.png)
+
 ## Structure
 
 ```
@@ -265,7 +273,7 @@ index.html      — The complete dashboard (HTML + CSS + JS)
 scan.sh         — Radar scanner script (metrics, time logs, tasks, link check)
 time-log.md     — Hours log for this repo (example of the format)
 favicon.svg     — Dashboard icon
-assets/         — Visuals (README header, social preview, LinkedIn)
+assets/         — Visuals (README header, section banners, social preview, LinkedIn)
 README.md       — This file
 CHANGELOG.md    — Release notes
 LICENSE         — MIT License
@@ -273,6 +281,8 @@ CLAUDE.md       — AI assistant instructions (the brain of the project)
 ```
 
 The `CLAUDE.md` is the key file — it contains all the conventions, scan logic, and setup instructions that Claude Code uses to configure and maintain your dashboard.
+
+![Section banner: 05 · Zero dependencies, AI-native — Design Principles](assets/headings/05-design-principles.png)
 
 ## Design Principles
 
@@ -287,6 +297,8 @@ The `CLAUDE.md` is the key file — it contains all the conventions, scan logic,
 - The [Spine Pattern](https://tsoporan.com/blog/spine-pattern-multi-repo-ai-development/) — using a meta-repo as AI context anchor
 - Design System documentation patterns
 - Personal knowledge management tools
+
+![Section banner: 06 · Don Ludwig, freelance UX designer — About](assets/headings/06-about.png)
 
 ## About
 
