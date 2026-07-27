@@ -1,3 +1,5 @@
+![Project Dashboard — single-file HTML dashboard, set up and maintained via Claude Code](assets/header.png)
+
 # Project Dashboard
 
 I've been managing a few design system projects at the same time and kept losing track of what's where. I opened Claude Code and started building a dashboard. Just a single HTML file, nothing fancy.
@@ -263,6 +265,7 @@ index.html      — The complete dashboard (HTML + CSS + JS)
 scan.sh         — Radar scanner script (metrics, time logs, tasks, link check)
 time-log.md     — Hours log for this repo (example of the format)
 favicon.svg     — Dashboard icon
+assets/         — Visuals (README header, social preview, LinkedIn)
 README.md       — This file
 CHANGELOG.md    — Release notes
 LICENSE         — MIT License
