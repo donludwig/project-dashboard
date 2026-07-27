@@ -9,7 +9,7 @@ Communication language: English.
 - **index.html** (~4.9k lines): Complete dashboard in a single file (HTML + CSS + JS, no build step)
 - **scan.sh**: Radar scanner — collects all project metrics in ~3 seconds (see below)
 - **favicon.svg**: Dashboard icon (abstract dashboard glyph — cyan header bar + panel blocks on dark ground)
-- **assets/**: Visuals — README header (`header.png`), GitHub social preview (`social-preview.png`), LinkedIn image (`linkedin.png`)
+- **assets/**: Visuals — README header (`header.png`), section banners (`headings/01-06`, placed above the `##` headings in README.md; keep the `##` lines for anchors), GitHub social preview (`social-preview.png`), LinkedIn image (`linkedin.png`)
 - **README.md**: Public documentation
 - **CHANGELOG.md**: Release notes — add an entry for every feature release
 - **LICENSE**: MIT
