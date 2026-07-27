@@ -16,7 +16,7 @@ If you're a designer trying to get into Claude Code and looking to understand be
 
 ---
 
-![Section 01 · What it does](assets/headings/01-features.png)
+![Section 01 · What it does](assets/banners/01-features.png)
 
 ## Features
 
@@ -64,7 +64,7 @@ If you're a designer trying to get into Claude Code and looking to understand be
 
 ---
 
-![Section 02 · Clone, then let Claude Code set it up](assets/headings/02-quick-start.png)
+![Section 02 · Clone, then let Claude Code set it up](assets/banners/02-quick-start.png)
 
 ## Quick Start
 
@@ -110,7 +110,7 @@ Ask Claude Code anytime:
 
 ---
 
-![Section 03 · Tables, tasks, time tracking](assets/headings/03-feature-details.png)
+![Section 03 · Tables, tasks, time tracking](assets/banners/03-feature-details.png)
 
 ## Feature Details
 
@@ -272,7 +272,7 @@ Edit the `PROJECTS` array at the top of the script to match your projects. Note 
 
 ---
 
-![Section 04 · One file, four helpers](assets/headings/04-structure.png)
+![Section 04 · One file, four helpers](assets/banners/04-structure.png)
 
 ## Structure
 
@@ -292,7 +292,7 @@ The `CLAUDE.md` is the key file — it contains all the conventions, scan logic,
 
 ---
 
-![Section 05 · Zero dependencies, AI-native](assets/headings/05-design-principles.png)
+![Section 05 · Zero dependencies, AI-native](assets/banners/05-design-principles.png)
 
 ## Design Principles
 
@@ -310,7 +310,7 @@ The `CLAUDE.md` is the key file — it contains all the conventions, scan logic,
 
 ---
 
-![Section 06 · Don Ludwig, freelance UX designer](assets/headings/06-about.png)
+![Section 06 · Don Ludwig, freelance UX designer](assets/banners/06-about.png)
 
 ## About
 
