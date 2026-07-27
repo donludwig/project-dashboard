@@ -12,7 +12,7 @@ The whole thing is still a single HTML file with zero dependencies — no build 
 
 If you're a designer trying to get into Claude Code and looking to understand better code and developers, fork it, swap in your own projects, and go from there. The demo you're looking at ships with twelve fictional projects so you can click through every feature before wiring up your own.
 
-<img width="1833" height="1251" alt="Project Dashboard in dark mode: sortable project overview with hours, phases and freshness bars, pinned project quicklinks in the header, and a sidebar with tasks, AI recommendations, and synergy cards" src="screenshot.png" />
+<img width="1600" height="1268" alt="Project Dashboard demo in dark mode: sortable project overview with hours, phases and freshness bars, pinned project quicklinks in the header, and a sidebar with tasks, AI recommendations, and synergy cards — a single HTML file with zero dependencies" src="screenshot.png" />
 
 ## Features
 

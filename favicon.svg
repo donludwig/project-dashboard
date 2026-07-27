@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#13212c"/>
-  <rect x="0.5" y="0.5" width="31" height="31" fill="none" stroke="#2b404e" stroke-width="1"/>
-  <text x="16" y="22" font-family="system-ui" font-size="16" font-weight="700" fill="#22d3ee" text-anchor="middle">PD</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Project Dashboard">
+  <rect width="32" height="32" fill="#0b141b"></rect>
+  <rect x="4" y="4" width="24" height="6" fill="#22d3ee"></rect>
+  <rect x="4" y="13" width="11" height="15" fill="#243947"></rect>
+  <rect x="18" y="13" width="10" height="7" fill="#243947"></rect>
+  <rect x="18" y="23" width="10" height="5" fill="#243947"></rect>
 </svg>
