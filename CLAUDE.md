@@ -6,24 +6,27 @@ Communication language: English.
 
 ## Architecture
 
-- **index.html** (~3.7k lines): Complete dashboard in a single file (HTML + CSS + JS, no build step)
+- **index.html** (~4.9k lines): Complete dashboard in a single file (HTML + CSS + JS, no build step)
 - **scan.sh**: Radar scanner — collects all project metrics in ~3 seconds (see below)
-- **favicon.svg**: Dashboard icon (gray square, "PD")
+- **favicon.svg**: Dashboard icon (square, dark surface with cyan "PD")
 - **README.md**: Public documentation
+- **CHANGELOG.md**: Release notes — add an entry for every feature release
 - **LICENSE**: MIT
 
 ## Structure of index.html
 
 The HTML follows a strict section order:
 
-1. **Theme Tokens** (lines ~1-50) — CSS Custom Properties for Dark/Light Mode via `data-theme="dark"|"light"` on `<html>`
-2. **Component Styles** (lines ~50-1000) — All CSS: layout, table, cards, agents, docs-tables, synergies, responsive
-3. **About Section** (lines ~1017-1181) — Collapsible `<details class="about-section">` with project description and agent cards
-4. **Overview Table** (lines ~1183-1510) — Sortable, filterable table with all projects and metrics
-5. **Project Cards** (lines ~1514-2185) — Collapsible detail cards per project with grid layout + docs table
-6. **Project Ideas** (lines ~2186-2297) — Collapsible idea cards for early-stage concepts
-7. **Synergies** (lines ~2298-2450) — Connection cards between projects
-8. **JavaScript** — Table sorting (org-grouped by default, global ranking when sorted), search/filter (hides empty org sections), column visibility toggle, freshness/activity bars, theme toggle, back-to-top, clipboard, last-viewed
+1. **Theme Tokens** — CSS Custom Properties for Dark/Light Mode via `data-theme="dark"|"light"` on `<html>`
+2. **Component Styles** — All CSS: layout, header, quicklinks, table, cards, agents, docs-tables, synergies, drag & drop, footer, responsive
+3. **Header** — Sticky full-width band: `h1.logo-home`, `nav#quicklinks` (JS-generated pills), `.header-actions` (tasks toggle + theme toggle)
+4. **Layout wrapper** — `<div class="layout">` with two columns:
+   - `<main class="main-col" id="main-col">` — Overview Table, About section, Project Details (project cards + Project Ideas as `.ideas-sub` inside the card)
+   - `<aside class="sidebar" id="sidebar">` — Tasks, Synergies (sticky, scrolls independently)
+5. **Footer** — Live stats (`#footer-stats`), layout reset button, last-viewed/last-update dates
+6. **JavaScript** — Table sorting (org-grouped by default, global ranking when sorted), search/filter with hit counter (hides empty org sections), column visibility toggle, freshness/activity bars, theme toggle, back-to-top, clipboard, quicklink pills (pin/unpin, drag reorder), star ("in progress") and completed toggles per row, view modes (flat/orgs/active), row drag & drop per organization, section drag & drop per column, footer stats, keyboard shortcuts (`/`, `t`, `a`, `1`/`2`/`3`), collapse/expand all cards
+
+Sections that can be reordered carry `class="sortable-section"` and a unique `data-section` attribute; the saved order is per column container (`main-col` / `sidebar`) in localStorage.
 
 ## Bootstrap: Setting Up Your Dashboard
 
@@ -246,7 +249,11 @@ The script walks through all project directories and collects five numbers per p
 
 After that, the **Docs Check** lists all documents in each project's root directory — with file size and date. This is the comparison basis: if a file appears here that isn't in the dashboard's docs table yet, it needs to be added.
 
-**Hours tracking (`time-log.md`):** scan.sh also maintains a `time-log.md` in each project root. It auto-writes the `## Claude Sessions` section from `.jsonl` session timestamps (active time only — gaps over 30 min are excluded) and leaves the `## Manual` section for the user. The per-project total (manual + claude) feeds the **Hours** column and the Σ total above the table. Each project card may also include an optional `<details>` time-log block. When adopting the dashboard, point the `PROJECTS` array at your real projects; estimate-only or showcase projects can keep manual entries instead of generated sessions.
+**Hours tracking (`time-log.md`):** scan.sh maintains a `time-log.md` in each project root. It auto-writes the `## Claude Sessions` section from `.jsonl` session timestamps (active time only — gaps over 30 min are excluded, 2 min tail buffer per burst) and leaves the `## Manual` section for the user. The per-project total (manual + claude) feeds the **Hours** column and the Σ info icon above the table. Each project card may also include an optional `<details>` time-log block. When adopting the dashboard, point the `PROJECTS` array at your real projects before running the script — it writes into each existing project directory.
+
+**Tasks check:** the script collects `todo_*.md` files from each project's Claude memory directory, parses the YAML frontmatter (id, title, status, priority), and prints a table plus an open count. Statuses `open`, `active`, and `blocked` count as open.
+
+**Link check:** every `href="file:///…"` link in `index.html` is verified; targets that no longer exist are listed with their line number — the basis for cleaning up moved or deleted documents.
 
 **Why so fast?** Previously, Radar spawned 10 AI agents in parallel — each agent read files individually, reasoned about them, read more files (~3 minutes). The script does the same with simple shell commands ("count all files", "find the newest date") — tasks the computer handles in milliseconds. The AI only comes in afterwards for interpretation: What changed? Which docs are missing?
 
@@ -320,7 +327,7 @@ When scanning a project directory, collect:
   <td class="table-hours" data-sort="3.0">3.0h</td>
   <td><span class="phase-badge phase-active">Active</span></td>
   <td><div class="table-links"><a class="table-link" href="file:///...">Local</a></div></td>
-  <td><button class="btn-claude" onclick="openClaude('project-dir')">claude</button></td>
+  <td><button class="btn-claude" onclick="openClaude('project-dir')"><span>claude</span><svg><!-- copy icon --></svg></button></td>
 </tr>
 ```
 
@@ -334,12 +341,16 @@ The table has 11 columns: name, type, organization, tech badges, scope (lines), 
 ```
 By default the table shows these groups. When the user sorts by a column, JS adds `class="is-sorted"` to the table, which hides the org-headers (CSS) and ranks all projects globally; a reset (third click) restores the grouping. Org-header rows are skipped by the sort, search (hidden when their section has no match), row counter, and column-toggle logic.
 
+**View modes:** a toggle next to the search sets `mode-orgs` (grouped, default) or `mode-active` (only rows with class `work`) on the table; the flat mode has no mode class and hides org-headers via CSS. The mode is persisted in localStorage.
+
+**Row action buttons:** JS injects three buttons into each project row before the claude button — `.ql-pin` (pin to header quicklinks), `.star-toggle` (adds class `work`, auto-pins), `.done-toggle` (adds class `completed`, dims the row and deactivates tasks that link to the project via `href="#project-id"`). Rows also get a `.row-grip` drag handle in the last cell for reordering within their organization; a main project drags its sub-rows along as a block.
+
 ### Icon Pattern
 
-Inline SVG as data-URI in the table. 32x32 ViewBox, rx=6 rounded corners, white 2-letter abbreviation:
+Inline SVG as data-URI in the table. 32x32 ViewBox, rx=0 square corners (the dashboard uses square corners throughout), white 2-letter abbreviation:
 
 ```
-data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8432a'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENf%3C/text%3E%3C/svg%3E
+data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23e8432a'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENf%3C/text%3E%3C/svg%3E
 ```
 
 Replace `%23e8432a` with the project's hex color (URL-encoded #) and `Nf` with the 2-letter abbreviation.
@@ -428,8 +439,11 @@ CSS Custom Properties in `:root[data-theme="dark"]` and `:root[data-theme="light
 - `--bg`, `--surface`, `--surface-2`, `--surface-3`: Background layers
 - `--border`, `--border-hover`: Borders
 - `--text`, `--text-muted`, `--text-dim`: Text colors
+- `--accent`, `--on-accent`: UI accent (pins, drag indicators, section icons) and its contrast color
 - `--table-header-bg`, `--table-stripe`: Table colors
 - `--shadow`: Box shadow color
+
+Global design constants in `:root`: `--radius`/`--radius-lg` are `0` — the dashboard uses square corners throughout; `--caret-mask` is the shared SVG mask for all collapse carets (summaries, cards, AI suggestions).
 
 Project accent colors in `:root` (theme-independent): `--accent-projectname: #hexcolor`
 

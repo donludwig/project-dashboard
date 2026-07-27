@@ -2,34 +2,59 @@
 
 I've been managing a few design system projects at the same time and kept losing track of what's where. I opened Claude Code and started building a dashboard. Just a single HTML file, nothing fancy.
 
-First it was only a table with project names and some numbers. But then I wanted to sort it. Then I wanted search. Project cards came next, then docs tables, then task management.
+First it was only a table with project names and some numbers. But then I wanted to sort it. Then I wanted search. Project cards came next, then docs tables, then task management. At some point the dashboard started tracking my hours from Claude Code session logs, grew a sidebar for tasks and synergies, and learned drag & drop so I could arrange it the way I think.
 
-Somewhere along the way I realized I was learning more about Claude Code than about dashboards. What works, what doesn't, how to structure things so the AI can actually help you. I ended up building three AI agents that now help me keep the dashboard up to date.
+Somewhere along the way I realized I was learning more about Claude Code than about dashboards. What works, what doesn't, how to structure things so the AI can actually help you. I ended up building three AI agents that now keep the dashboard up to date: a scanner collects the numbers in seconds, a bridge finds connections between projects, and a coordinator orchestrates both.
 
-If you're a designer trying to get into Claude Code and looking to understand better code and developers, fork it, swap in your own projects, and go from there.
+The whole thing is still a single HTML file with zero dependencies — no build step, no framework, no server. Open it in a browser and it works. Every feature you see was built in conversation with Claude Code, and the `CLAUDE.md` in this repo is the actual instruction set that makes the AI understand and maintain it.
 
-<img width="1733" height="1366" alt="Project Dashboard — Dark Mode" src="https://github.com/user-attachments/assets/e81e8298-f9fc-4692-ae3f-d5da91767909" />
+If you're a designer trying to get into Claude Code and looking to understand better code and developers, fork it, swap in your own projects, and go from there. The demo you're looking at ships with twelve fictional projects so you can click through every feature before wiring up your own.
+
+<img width="1833" height="1251" alt="Project Dashboard in dark mode: sortable project overview with hours, phases and freshness bars, pinned project quicklinks in the header, and a sidebar with tasks, AI recommendations, and synergy cards" src="screenshot.png" />
 
 ## Features
 
-- Sortable, filterable project table, collapsible sections
+**Overview table**
+
+- Sortable, filterable project table with full text search and hit counter
 - Grouped by organization with section sub-headings — sorting by a column switches to a flat global ranking
+- Three view modes: **Projects** (flat), **Organizations** (grouped), **Active** (starred only)
 - Sub-projects shown as indented sub-rows that stay attached to their parent
 - Freshness bar per project — green when recently updated, red (and short) when stale
-- Column visibility toggle — show/hide columns from the overview, persisted in localStorage
-- Hours tracking via per-project `time-log.md` (manual entries + auto Claude sessions)
-- Auto-generated color-coded favicons per project
-- Expandable project cards
-- Docs tables per project (research, project, code, Claude files)
-- Task management with status tracking
-- AI-generated task recommendations
-- Full text search
-- Three AI agents (scanner, bridge, coordinator)
-- Shell script that scans all projects and updates dashboard
-- Connections between projects
-- Zero dependencies, no build step, single HTML file
+- Column visibility toggle — show/hide columns, persisted in localStorage
 
-https://github.com/user-attachments/assets/3f0ea605-f076-4a26-8b56-edaf8c06cc2f
+**Organize your work**
+
+- Sticky header with **quicklink pills** — pin favorite projects, drag to reorder, click to copy the launch command
+- Star projects as "in progress", mark projects as completed (dims the row and deactivates their tasks)
+- Drag & drop everywhere — reorder sections and table rows, persisted in localStorage
+- Task management with status tracking, plus AI-generated task recommendations
+- Keyboard shortcuts: `/` search, `t` theme, `a` tasks, `1`/`2`/`3` view modes
+
+**Project knowledge**
+
+- Expandable project cards (with collapse/expand all)
+- Docs tables per project (research, project, code, Claude files)
+- Synergy cards — connections and transfer opportunities between projects
+- Idea cards for early-stage concepts
+
+**Time tracking**
+
+- Hours per project via `time-log.md` — manual entries plus Claude session hours computed from `.jsonl` logs
+- Hours column, Σ total, and per-card time-log breakdowns
+
+**AI tooling**
+
+- Three AI agents (scanner, bridge, coordinator) — the dashboard maintains itself via Claude Code
+- Shell script that scans all projects, updates time logs, collects tasks, and checks for dead links
+- Self-bootstrapping: `CLAUDE.md` contains everything the AI needs to set up and maintain your dashboard
+
+**Architecture**
+
+- Single HTML file, zero dependencies, no build step — works offline
+- Two-column layout: main column + sticky sidebar (tasks & synergies)
+- Dark/light theme, auto-generated color-coded favicons per project
+- Footer with live stats (projects, organizations, in progress, open tasks, hours) and a layout reset
 
 ## Quick Start
 
@@ -145,6 +170,10 @@ type: project
 
 By default, projects are **grouped by organization** with section sub-headings. Click any column header to sort — this collapses the grouping and ranks all projects **globally** across organizations (a third click resets to the grouped view). Sub-projects always stay attached to their parent, and search hides a section heading when nothing in it matches.
 
+A **view toggle** next to the search switches between three modes: **Projects** (flat list without organization headings), **Organizations** (grouped, the default), and **Active** (only starred projects). In Organizations mode, rows can be reordered per organization via a drag grip on the right edge.
+
+Each row also gets three action buttons (injected by JS): **+** pins the project to the header quicklinks, **★** marks it as "in progress" (bold name, amber edge, auto-pins it), and **✓** marks it as completed (dims the row and strikes through its tasks).
+
 Each row includes:
 - Project name with color-coded icon
 - Type, organization, tech stack badges
@@ -157,6 +186,16 @@ Each row includes:
 ### Column Visibility Toggle
 
 A **Display columns** dropdown next to the search input lets you hide columns you don't need. The button shows a `visible/total` counter when columns are hidden, and the state is saved to `localStorage` so it survives reloads. Useful when the table gets wider than your screen — hide what's not relevant for the moment.
+
+### Quicklinks, Layout & Shortcuts
+
+The sticky header holds a **quicklinks bar**: pin any project with the **+** button in its table row and it appears as a pill with its icon. Click a pill to copy the `cd … && claude` launch command, drag pills to reorder them, remove them with the ×. Starring a project as "in progress" pins it automatically.
+
+The page is a **two-column layout**: the main column holds the overview and project details, a sticky sidebar holds tasks and synergies. Every section has a drag handle in its header — reorder sections freely, even across columns' saved order. A reset button in the footer clears all layout customizations (sections, rows, quicklinks, stars, completed, view, columns) while keeping theme and task status.
+
+Keyboard shortcuts: `/` focuses the search, `t` toggles the theme, `a` toggles the tasks panel, `1`/`2`/`3` switch the view mode.
+
+The footer shows **live stats** — projects, organizations, in progress, completed, open tasks, ideas, and total hours — updating as you star, complete, or check things off.
 
 ### Hours Tracking (time-log.md)
 
@@ -206,17 +245,26 @@ Per project, the script collects: file count, lines of code, last modification d
 - `F`/`f` — favicon.svg exists
 - `M`/`m` — Claude memory index exists
 
+Beyond the metrics, the script:
+
+- **Writes each project's `time-log.md`** — computes active hours per Claude session from `.jsonl` timestamps (gaps over 30 minutes don't count) and rebuilds the auto section, preserving your manual entries
+- **Lists all root documents** per project with size and date — the basis for reconciling the dashboard's docs tables
+- **Scans tasks** — collects `todo_*.md` files from Claude memory directories with status, priority, and title
+- **Checks for dead links** — verifies every `file://` link in `index.html` and reports targets that no longer exist
+
 The Radar agent calls this script first, then only uses AI for interpretation: what changed, which docs are missing in the dashboard, what needs updating.
 
-Edit the `PROJECTS` array at the top of the script to match your projects.
+Edit the `PROJECTS` array at the top of the script to match your projects. Note that the script writes a `time-log.md` into each existing project directory, so point the array at your real projects before running it.
 
 ## Structure
 
 ```
 index.html      — The complete dashboard (HTML + CSS + JS)
-scan.sh         — Radar scanner script (collects project metrics)
+scan.sh         — Radar scanner script (metrics, time logs, tasks, link check)
+time-log.md     — Hours log for this repo (example of the format)
 favicon.svg     — Dashboard icon
 README.md       — This file
+CHANGELOG.md    — Release notes
 LICENSE         — MIT License
 CLAUDE.md       — AI assistant instructions (the brain of the project)
 ```
@@ -236,6 +284,19 @@ The `CLAUDE.md` is the key file — it contains all the conventions, scan logic,
 - The [Spine Pattern](https://tsoporan.com/blog/spine-pattern-multi-repo-ai-development/) — using a meta-repo as AI context anchor
 - Design System documentation patterns
 - Personal knowledge management tools
+
+## About
+
+Don Ludwig, freelance UX designer. I build design systems, support agile product development, and work on making the collaboration between design and dev better. My process: think user-centered, work iteratively, understand technical constraints instead of ignoring them.
+
+Feedback, questions, or just saying hi — happy to hear from you.
+
+[LinkedIn](https://www.linkedin.com/in/donludwig/) · [don@thinkrepeat.com](mailto:don@thinkrepeat.com) · [thinkrepeat.com](https://thinkrepeat.com/)
+
+**More projects:**
+
+- [Closer to Code](https://closer.thinkrepeat.com/) — resources for designers who want to get closer to AI, code, and developers.
+- [Local AI Guide](https://local.thinkrepeat.com/) — the complete journey from your first local inference to a properly fenced-in agent — written to be read, with built-in checklists.
 
 ## License
 

@@ -8,32 +8,36 @@
 <style>
   /* ── Theme tokens ── */
   :root[data-theme="dark"] {
-    --bg: #090a0e;
-    --surface: #11131a;
-    --surface-2: #181b24;
-    --surface-3: #1f2330;
-    --border: #252a38;
-    --border-hover: #344;
-    --text: #e0e4ef;
-    --text-muted: #8a90a8;
-    --text-dim: #5a6080;
-    --table-header-bg: #161820;
-    --table-stripe: #0e1018;
-    --shadow: rgba(10,15,40,0.35);
+    --bg: #0b141b;
+    --surface: #13212c;
+    --surface-2: #1b2c39;
+    --surface-3: #243947;
+    --border: #2b404e;
+    --border-hover: #3c5768;
+    --text: #dbe7ee;
+    --text-muted: #90a6b4;
+    --text-dim: #7d92a4;
+    --accent: #22d3ee;
+    --on-accent: #0b141b;
+    --table-header-bg: #101d26;
+    --table-stripe: #0e1a23;
+    --shadow: rgba(0,0,0,0.4);
   }
   :root[data-theme="light"] {
-    --bg: #f4f6fb;
-    --surface: #fff;
-    --surface-2: #edf0f8;
-    --surface-3: #e4e8f2;
-    --border: #d0d6e6;
-    --border-hover: #b0b8d0;
-    --text: #181c2a;
-    --text-muted: #4a5070;
-    --text-dim: #7880a0;
-    --table-header-bg: #e8ecf5;
-    --table-stripe: #f8fafd;
-    --shadow: rgba(20,30,80,0.06);
+    --bg: #e6eef2;
+    --surface: #f7fbfc;
+    --surface-2: #dfeaef;
+    --surface-3: #d2e0e7;
+    --border: #c4d5de;
+    --border-hover: #a6bcc8;
+    --text: #10222c;
+    --text-muted: #45606d;
+    --text-dim: #54697a;
+    --accent: #0891b2;
+    --on-accent: #fff;
+    --table-header-bg: #eef4f7;
+    --table-stripe: #f0f6f9;
+    --shadow: rgba(15,60,80,0.10);
   }
   :root {
     --accent-nova: #e8432a;
@@ -42,15 +46,16 @@
     --accent-leaf: #10b981;
     --accent-forge: #f59e0b;
     --accent-bloom: #ec4899;
-    --radius: 8px;
-    --radius-lg: 12px;
+    --radius: 0;
+    --radius-lg: 0;
+    --caret-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: 3.75rem; }
 
   body {
     font-family: var(--font);
@@ -58,21 +63,22 @@
     color: var(--text);
     line-height: 1.6;
     padding: 2rem;
-    max-width: 1600px;
-    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     transition: background 0.25s, color 0.25s;
   }
 
   /* ── Theme toggle ── */
   .theme-toggle {
-    grid-column: 2;
-    grid-row: 1;
-    background: var(--surface);
+    align-self: center;
+    flex: none;
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 0.35rem 0.75rem;
+    border-radius: 0;
+    padding: 0.35rem 0.6rem;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     display: flex;
     align-items: center;
@@ -80,39 +86,282 @@
     transition: all 0.2s;
   }
   .theme-toggle:hover { border-color: var(--border-hover); color: var(--text); }
-  .theme-toggle .icon { font-size: 1rem; line-height: 1; }
+  .theme-toggle .icon { display: flex; }
+  .theme-toggle .icon svg { width: 15px; height: 15px; display: block; }
 
-  /* ── Header ── */
-  header {
+  /* ── Layout: main column + sidebar (tasks, synergies) ── */
+  .layout {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) 540px;
+    gap: 1.5rem;
     align-items: start;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
+  }
+  .main-col, .sidebar { min-width: 0; }
+  .sidebar {
+    position: sticky;
+    top: 4.2rem; /* below the sticky header */
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; max-height: none; }
+  }
+
+  /* Accessibility: respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  /* ── Header (slim sticky full-width band with quicklinks nav) ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    /* Full bleed: breaks out of the centered body container */
+    width: 100vw;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    /* Full bleed via margins only (compatible with position: sticky) */
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    margin-top: -2rem;   /* cancel the body top padding -> flush at the top */
+    margin-bottom: 1.75rem;
+    box-sizing: border-box;
+    padding: 0.8rem 2rem;
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 6px var(--shadow);
   }
   header h1 {
-    font-size: 1.75rem;
+    font-size: 1.05rem;
     font-weight: 600;
     letter-spacing: -0.02em;
-    margin-bottom: 0.25rem;
+    margin: 0;
+    white-space: nowrap;
+    flex: none;
   }
-  header .subtitle {
+  .logo-home { cursor: pointer; transition: color 0.15s; }
+  .logo-home:hover { color: var(--accent); }
+
+  /* Quicklinks nav (generated by JS from the overview table) */
+  .quicklinks {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.1rem 0.15rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .quicklinks::-webkit-scrollbar { height: 5px; }
+  .quicklinks::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
+  .quicklinks::-webkit-scrollbar-track { background: transparent; }
+  .ql-empty {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    padding: 0 0.3rem;
+    white-space: nowrap;
+  }
+  /* Pill: icon + copy as one unit, with an X to remove */
+  .ql-pill {
+    display: inline-flex;
+    align-items: stretch;
+    flex: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+  }
+  .ql-pill.ql-dragging { opacity: 0.5; cursor: grabbing; }
+  .ql-pill-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 0.35rem 0.6rem 0.35rem 0.5rem;
+    font: inherit;
+    font-size: 0.72rem;
+    color: var(--text);
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+  }
+  .ql-pill-copy:hover { background: var(--surface-2); }
+  .ql-pill-icon { width: 15px; height: 15px; border-radius: 0; display: block; flex: none; }
+  .ql-pill-name { white-space: nowrap; }
+  .ql-pill-copy svg { width: 11px; height: 11px; opacity: 0.55; flex: none; }
+  .ql-pill-copy.copied { color: #10b981; }
+  .ql-pill-copy.copied svg { opacity: 1; }
+  .ql-pill-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    background: transparent;
+    border: 0;
+    border-left: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+  }
+  .ql-pill-remove:hover { background: #ef4444; color: #fff; }
+
+  /* Header actions: tasks + theme */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: none;
+  }
+  .tasks-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 0.35rem 0.6rem;
+    font-family: var(--font);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1;
     color: var(--text-muted);
-    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
   }
+  .tasks-btn > * { line-height: 1; }
+  .tasks-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .tasks-btn-icon { width: 14px; height: 14px; flex: none; display: block; color: var(--accent); }
+
+  /* ── Sortable sections (drag & drop) ── */
+  .sortable-section { position: relative; }
+  /* Handle sits inside the <summary> -> always visible, even when the section is closed */
+  .drag-handle {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.55rem;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 0;
+    color: var(--text-muted);
+    background: transparent;
+    cursor: grab;
+    opacity: 0.4;
+    touch-action: none;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .drag-handle svg { display: block; width: 15px; height: 15px; }
+  .sortable-section:hover > summary > .drag-handle { opacity: 0.7; }
+  .drag-handle:hover { opacity: 1; background: var(--border); color: var(--text); }
+  .drag-handle:active,
+  body.dnd-active .sortable-section.dragging .drag-handle { cursor: grabbing; }
+  .sortable-section.dragging { opacity: 0.4; outline: 2px dashed var(--accent); outline-offset: -2px; }
+  /* Drop line: its own element on <body> (NOT clipped by the cards' overflow:hidden) */
+  .drop-line {
+    position: absolute;
+    height: 2px;
+    border-radius: 0;
+    background: var(--accent);
+    z-index: 45;
+    pointer-events: none;
+  }
+  /* Generic drop line for pills (vertical) and table rows (horizontal) */
+  .dnd-drop-line {
+    position: absolute;
+    background: var(--accent);
+    z-index: 60;
+    pointer-events: none;
+  }
+  .drop-line::before {
+    content: "";
+    position: absolute;
+    left: -3px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 0;
+    background: var(--accent);
+    transform: translateY(-50%);
+  }
+  body.dnd-active { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+  .drag-ghost {
+    position: fixed;
+    z-index: 200;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0;
+    background: var(--accent);
+    color: var(--on-accent, #fff);
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    transform: translate(14px, 14px);
+    white-space: nowrap;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .drag-ghost svg { width: 13px; height: 13px; flex: none; }
+
+  /* Search hit count */
+  .search-count {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .search-count.none { color: var(--crit, #bb3a2c); }
+
+  /* Collapse/expand all (project details header) */
+  .collapse-all-btn {
+    position: absolute;
+    top: 50%;
+    right: 2.4rem;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 0.2rem 0.5rem;
+    font-family: var(--font);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .collapse-all-btn:hover { border-color: var(--border-hover); color: var(--text); }
 
   /* ── About section (collapsible) ── */
   .about-section {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    margin-bottom: 2.5rem;
+    border-radius: 0;
+    box-shadow: 0 2px 12px var(--shadow);
+    margin-bottom: 1.5rem;
     overflow: hidden;
   }
   .about-section > summary {
-    padding: 1rem 1.5rem;
-    font-size: 1rem;
+    padding: 1.05rem 1.35rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--text);
     cursor: pointer;
@@ -120,14 +369,28 @@
     list-style: none;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
   }
+  .about-section > summary::after {
+    content: "";
+    width: 10px; height: 10px;
+    flex: none;
+    margin-left: 0.15rem;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
+    transition: transform 0.15s;
+  }
+  .about-section[open] > summary::after { transform: rotate(90deg); }
   .about-section > summary::-webkit-details-marker { display: none; }
   .about-section > summary::before {
-    content: '\25B6';
-    font-size: 0.6rem;
-    color: var(--text-dim);
-    transition: transform 0.2s;
+    content: "";
+    width: 10px; height: 10px;
+    flex: none;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
+    transition: transform 0.15s;
   }
   .about-section[open] > summary::before { transform: rotate(90deg); }
   .about-section > summary:hover { color: var(--text); }
@@ -177,8 +440,8 @@
 
   /* ── Overview table ── */
   .overview-table-wrap {
-    margin-bottom: 2.5rem;
-    border-radius: var(--radius-lg);
+    margin-bottom: 1.5rem;
+    border-radius: 0;
     border: 1px solid var(--border);
     box-shadow: 0 2px 12px var(--shadow);
     overflow: hidden;
@@ -188,7 +451,7 @@
     -webkit-overflow-scrolling: touch;
   }
   .overview-table-wrap h2 {
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     margin: 0;
     display: inline;
@@ -247,7 +510,7 @@
     display: inline-block;
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: 0;
     margin-right: 6px;
     vertical-align: middle;
     flex-shrink: 0;
@@ -255,7 +518,7 @@
   .project-icon {
     width: 20px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 0;
     margin-right: 6px;
     flex-shrink: 0;
     vertical-align: middle;
@@ -292,7 +555,7 @@
   .table-badge {
     font-size: 0.6rem;
     padding: 0.1rem 0.4rem;
-    border-radius: 3px;
+    border-radius: 0;
     background: var(--surface-3);
     color: var(--text-dim);
     border: 1px solid var(--border);
@@ -313,7 +576,7 @@
     margin: 0.5rem 0;
     background: var(--surface-2);
     border-left: 3px solid var(--border);
-    border-radius: 0 var(--radius) var(--radius) 0;
+    border-radius: 0;
   }
   .time-log-summary strong { color: var(--text); font-family: var(--mono); font-weight: 600; }
   .time-log-label { color: var(--text-dim); font-weight: 500; margin-right: 0.25rem; }
@@ -326,7 +589,7 @@
     color: var(--text-dim);
     text-decoration: none;
     padding: 0.15rem 0.4rem;
-    border-radius: 3px;
+    border-radius: 0;
     background: var(--surface-2);
     transition: color 0.15s, background 0.15s;
     white-space: nowrap;
@@ -339,7 +602,9 @@
     margin-right: 3px;
     font-size: 0.65rem;
   }
-  .table-links { display: flex; flex-direction: row; gap: 0.4rem; white-space: nowrap; }
+  .table-links { display: flex; flex-direction: row; gap: 0.4rem; flex-wrap: wrap; }
+  table.overview tbody td:last-child { white-space: nowrap; }
+  tr.sub-sub-row td:first-child .table-name { padding-left: 1.4rem; }
   tr.sub-row td:first-child .table-name::before {
     content: '\2514';
     font-family: system-ui;
@@ -348,23 +613,127 @@
     margin-right: 0.35rem;
   }
   tr.org-header td {
-    background: var(--bg-subtle, rgba(127,127,127,0.06));
-    border-top: 2px solid var(--border, rgba(127,127,127,0.18));
-    padding: 0.5rem 0.75rem 0.3rem;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.85rem 1rem;
   }
+  tr.org-header td:first-child { position: relative; }
   tr.org-header:first-child td { border-top: none; }
   .org-header-label {
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
-    color: var(--text-muted, #888);
+    color: var(--text);
   }
   .overview tbody tr.org-header { counter-increment: none; }
-  .overview tbody tr.org-header td:first-child::before { content: none; }
+  .overview tbody tr.org-header td:first-child::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--org-color, var(--accent));
+  }
   .overview tbody tr.org-header td:first-child { white-space: normal; }
   /* When sorting by a column: hide org grouping and rank globally */
   .overview.is-sorted tr.org-header { display: none !important; }
+
+  /* View modes: "Projects" = flat list, "Organizations" = grouped, "Active" = starred only */
+  .overview:not(.mode-orgs) tbody tr.org-header { display: none; }
+  .overview.mode-active tbody tr:not(.org-header):not(.work) { display: none; }
+
+  /* Completed projects: strongly dimmed in the list */
+  .overview tbody tr.completed { opacity: 0.28; filter: grayscale(0.6); }
+  .overview tbody tr.completed:hover { opacity: 0.9; filter: none; }
+  /* Deactivated todos of completed projects */
+  .task-item.task-deactivated { opacity: 0.4; }
+  .task-item.task-deactivated .task-title { text-decoration: line-through; }
+  .done-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    margin-right: 5px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    vertical-align: middle;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .done-toggle:hover { border-color: var(--good, #1e7a45); color: var(--good, #1e7a45); }
+  .done-toggle.done { background: var(--good, #1e7a45); border-color: var(--good, #1e7a45); color: #fff; }
+  .done-toggle svg { width: 13px; height: 13px; display: block; }
+
+  /* Star: projects currently being worked on */
+  .star-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    margin-right: 5px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    vertical-align: middle;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .star-toggle:hover { border-color: #f59e0b; color: #f59e0b; }
+  .star-toggle.starred { background: #f59e0b; border-color: #f59e0b; color: #10222c; }
+  .star-toggle svg { width: 12px; height: 12px; display: block; }
+  .overview tbody tr.work .table-name { font-weight: 700; }
+  .overview tbody tr.work td:first-child { box-shadow: inset 2px 0 0 #f59e0b; }
+
+  /* Pin button in the table row (add project to quicklinks) */
+  .ql-pin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    margin-right: 5px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .ql-pin svg { width: 12px; height: 12px; display: block; }
+  .ql-pin:hover { border-color: var(--accent); color: var(--accent); }
+  .ql-pin.pinned { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #fff); }
+
+  /* Row reorder — grip on the right, appears on hover */
+  .row-grip {
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px; height: 20px;
+    color: var(--text-dim);
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    touch-action: none;
+  }
+  .overview tbody tr:hover .row-grip { opacity: 0.55; }
+  .row-grip:hover { opacity: 1 !important; color: var(--text); }
+  .row-grip:focus-visible { opacity: 1; outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row-grip:active { cursor: grabbing; }
+  .row-grip svg { width: 10px; height: 14px; display: block; }
+  .overview tbody tr.row-dragging { background: var(--surface-2); opacity: 0.9; }
 
   /* ── Section headings ── */
   .section-heading {
@@ -374,22 +743,25 @@
     letter-spacing: -0.01em;
     padding-top: 1rem;
   }
+  .section-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; color: var(--accent); transition: color 0.2s, background 0.2s; }
+  .section-icon svg { width: 17px; height: 17px; display: block; }
 
   /* ── Project cards ── */
   .projects {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: 1rem;
+    padding: 1.25rem;
   }
   .project {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     overflow: hidden;
-    transition: border-color 0.2s;
+    box-shadow: 0 1px 4px var(--shadow);
+    transition: box-shadow 0.2s;
   }
-  .project:hover { border-color: var(--border-hover); }
+  .project:hover { box-shadow: 0 3px 10px var(--shadow); }
   .project-header {
     display: flex;
     align-items: flex-start;
@@ -399,7 +771,7 @@
   .project-indicator {
     width: 4px;
     min-height: 2.5rem;
-    border-radius: 2px;
+    border-radius: 0;
     flex-shrink: 0;
   }
   .project-title-block { flex: 1; }
@@ -423,7 +795,7 @@
   .badge {
     font-size: 0.65rem;
     padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    border-radius: 0;
     background: var(--surface-3);
     color: var(--text-muted);
     border: 1px solid var(--border);
@@ -489,7 +861,7 @@
     color: var(--text-dim);
     background: var(--surface-2);
     padding: 0.15rem 0.5rem;
-    border-radius: 3px;
+    border-radius: 0;
   }
   a.path-tag.path-link {
     color: var(--text-muted);
@@ -509,17 +881,25 @@
     border: 1px dashed var(--border);
   }
   .btn-claude {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 0.6rem;
     font-family: var(--mono);
+    line-height: 1;
     color: var(--text-dim);
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 0.2rem 0.45rem;
+    border-radius: 0;
+    padding: 0.25rem 0.45rem;
     cursor: pointer;
     white-space: nowrap;
+    vertical-align: middle;
     transition: color 0.15s, border-color 0.15s;
   }
+  .btn-claude span { display: inline-block; min-width: 7ch; text-align: center; }
+  .btn-claude svg { width: 10px; height: 10px; display: block; opacity: 0.6; flex: none; }
+  .btn-claude.copied svg { opacity: 1; }
   .btn-claude:hover {
     color: var(--text);
     border-color: var(--border-hover);
@@ -556,7 +936,7 @@
     margin-top: 0.75rem;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     overflow: hidden;
   }
   table.docs-table thead th {
@@ -616,7 +996,7 @@
     display: inline-block;
     font-size: 0.6rem;
     padding: 0.1rem 0.4rem;
-    border-radius: 3px;
+    border-radius: 0;
     font-weight: 500;
     letter-spacing: 0.02em;
   }
@@ -677,7 +1057,7 @@
   .doc-link, .copy-btn {
     background: none;
     border: 1px solid var(--border);
-    border-radius: 3px;
+    border-radius: 0;
     color: var(--text-dim);
     font-size: 0.65rem;
     padding: 0.1rem 0.4rem;
@@ -708,7 +1088,7 @@
     gap: 0.6rem;
     padding: 0.6rem 0.75rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     background: var(--surface);
     margin-bottom: 0.5rem;
     font-size: 0.8rem;
@@ -719,7 +1099,7 @@
   .task-checkbox {
     width: 16px;
     height: 16px;
-    border-radius: 3px;
+    border-radius: 0;
     border: 2px solid var(--border-hover);
     flex-shrink: 0;
     margin-top: 1px;
@@ -752,7 +1132,7 @@
     color: var(--text-dim);
     background: var(--surface-3);
     padding: 0.05rem 0.35rem;
-    border-radius: 3px;
+    border-radius: 0;
     border: 1px solid var(--border);
     font-weight: 400;
   }
@@ -764,7 +1144,7 @@
   .task-status {
     font-size: 0.6rem;
     padding: 0.1rem 0.4rem;
-    border-radius: 3px;
+    border-radius: 0;
     font-weight: 500;
     white-space: nowrap;
   }
@@ -801,26 +1181,44 @@
 
   /* ── Global Tasks ── */
   .global-tasks {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     background: var(--surface);
     box-shadow: 0 2px 12px var(--shadow);
     overflow: hidden;
   }
   .global-tasks > summary {
-    padding: 1rem 1.25rem;
+    padding: 1.05rem 1.35rem;
     cursor: pointer;
+    user-select: none;
     list-style: none;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
   }
+  .global-tasks > summary::after {
+    content: "";
+    width: 10px; height: 10px;
+    flex: none;
+    margin-left: 0.15rem;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
+    transition: transform 0.15s;
+  }
+  .global-tasks[open] > summary::after { transform: rotate(90deg); }
   .global-tasks > summary::-webkit-details-marker { display: none; }
   .global-tasks > summary::before {
-    content: '\25B6';
-    font-size: 0.55rem;
-    color: var(--text-dim);
+    content: "";
+    width: 10px; height: 10px;
+    flex: none;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
     transition: transform 0.15s;
   }
   .global-tasks[open] > summary::before {
@@ -832,7 +1230,7 @@
     color: var(--text-dim);
     background: var(--surface-3);
     padding: 0.1rem 0.4rem;
-    border-radius: 3px;
+    border-radius: 0;
     border: 1px solid var(--border);
     font-family: var(--mono);
   }
@@ -843,7 +1241,7 @@
   .ai-recommendations {
     margin-top: 1rem;
     border: 1px dashed var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     overflow: hidden;
   }
   .ai-recommendations > .ai-summary {
@@ -859,9 +1257,12 @@
   }
   .ai-recommendations > .ai-summary::-webkit-details-marker { display: none; }
   .ai-recommendations > .ai-summary::before {
-    content: '\25B6';
-    font-size: 0.5rem;
-    color: var(--text-dim);
+    content: "";
+    width: 9px; height: 9px;
+    flex: none;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
     transition: transform 0.15s;
   }
   .ai-recommendations[open] > .ai-summary::before { transform: rotate(90deg); }
@@ -887,7 +1288,7 @@
   .ai-promote-btn {
     background: none;
     border: 1px solid var(--border);
-    border-radius: 3px;
+    border-radius: 0;
     color: var(--text-dim);
     font-size: 0.6rem;
     padding: 0.1rem 0.45rem;
@@ -909,7 +1310,7 @@
     color: var(--text-dim);
     background: var(--surface-3);
     padding: 0.05rem 0.35rem;
-    border-radius: 3px;
+    border-radius: 0;
     border: 1px dashed var(--border);
     font-weight: 400;
     white-space: nowrap;
@@ -927,7 +1328,7 @@
   .ai-demote-btn {
     background: none;
     border: 1px dashed var(--border);
-    border-radius: 3px;
+    border-radius: 0;
     color: var(--text-dim);
     font-size: 0.6rem;
     padding: 0.1rem 0.45rem;
@@ -939,61 +1340,47 @@
     flex-shrink: 0;
   }
   .ai-demote-btn:hover {
-    color: #ef4444;
-    border-color: #ef4444;
+    color: var(--crit, #bb3a2c);
+    border-color: var(--crit, #bb3a2c);
   }
-  /* Sticky Toggle-Button */
-  .tasks-toggle-sticky {
-    position: fixed;
-    top: 0.75rem;
-    right: 0.75rem;
-    z-index: 100;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.35rem 0.65rem;
-    font-size: 0.7rem;
-    font-family: var(--font);
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    box-shadow: 0 2px 8px var(--shadow);
-    transition: border-color 0.15s, color 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-  .tasks-toggle-sticky:hover {
-    border-color: var(--border-hover);
-    color: var(--text);
-  }
-  .tasks-toggle-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #60a5fa;
-  }
-  .tasks-toggle-dot.has-active { background: #fbbf24; }
 
   /* ── Collapsible sections ── */
   details.overview-table-wrap > summary {
-    padding: 1rem 1.25rem;
+    padding: 1.05rem 1.35rem;
     cursor: pointer;
+    user-select: none;
     list-style: none;
     background: var(--surface);
     border: none;
     outline: none;
-    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
   }
+  details.overview-table-wrap[open] > summary { margin-bottom: -1px; }
+  .overview-table-wrap > summary h2::after {
+    content: "";
+    display: inline-block;
+    width: 10px; height: 10px;
+    margin-left: 0.5rem;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
+    transition: transform 0.15s;
+  }
+  .overview-table-wrap[open] > summary h2::after { transform: rotate(90deg); }
   .overview-table-wrap > summary::-webkit-details-marker { display: none; }
   .overview-table-wrap > summary::before {
-    content: '\25B6';
-    font-size: 0.55rem;
-    color: var(--text-dim);
-    margin-right: 0.5rem;
-    display: inline-block;
+    content: "";
+    width: 10px; height: 10px;
+    flex: none;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
     transition: transform 0.15s;
-    vertical-align: middle;
   }
   .overview-table-wrap[open] > summary::before { transform: rotate(90deg); }
   .overview-table-wrap.synergies .synergy-grid {
@@ -1010,8 +1397,16 @@
   .synergy-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
+    border-radius: 0;
+    padding: 1.5rem;
+    box-shadow: 0 1px 4px var(--shadow);
+    transition: box-shadow 0.2s;
+  }
+  .synergy-card:hover { box-shadow: 0 3px 10px var(--shadow); }
+  .synergy-date {
+    margin-top: 0.7rem;
+    font-size: 0.65rem;
+    color: var(--text-dim);
   }
   .synergy-card h3 {
     font-size: 0.9rem;
@@ -1030,7 +1425,7 @@
   .synergy-dot {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: 0;
   }
   .synergy-potential {
     font-size: 0.7rem;
@@ -1050,7 +1445,7 @@
   .agent-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     padding: 1.5rem;
     position: relative;
     overflow: hidden;
@@ -1080,7 +1475,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius);
+    border-radius: 0;
     background: var(--surface-3);
   }
   .agent-name {
@@ -1122,7 +1517,7 @@
     font-size: 0.72rem;
     background: var(--surface-3);
     padding: 0.15rem 0.45rem;
-    border-radius: 3px;
+    border-radius: 0;
     color: var(--text);
     white-space: nowrap;
   }
@@ -1139,14 +1534,25 @@
 
   /* ── Ideas section ── */
   .ideas { margin-bottom: 3rem; }
+  .ideas-sub { padding: 0 1.25rem 1.25rem; }
+  .ideas-heading {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0.5rem 0 1rem;
+    color: var(--text);
+  }
+  .ideas-sub .idea-card + .idea-card { margin-top: 1rem; }
   .idea-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     padding: 1.5rem;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 1px 4px var(--shadow);
+    transition: box-shadow 0.2s;
   }
+  .idea-card:hover { box-shadow: 0 3px 10px var(--shadow); }
   .idea-card::before {
     content: '';
     position: absolute;
@@ -1168,16 +1574,21 @@
     cursor: pointer;
     user-select: none;
   }
+  .project-name.project-toggle::after,
   .idea-title::after {
-    content: '\25BC';
-    font-size: 0.55rem;
-    color: var(--text-dim);
-    margin-left: 0.5rem;
-    transition: transform 0.2s;
+    content: "";
     display: inline-block;
+    width: 10px; height: 10px;
+    margin-left: 0.55rem;
+    background: var(--text-dim);
+    -webkit-mask: var(--caret-mask) center/contain no-repeat;
+    mask: var(--caret-mask) center/contain no-repeat;
+    transform: rotate(90deg);
+    transition: transform 0.15s;
   }
+  .project.collapsed .project-name.project-toggle::after { transform: rotate(0deg); }
   .idea-card.collapsed .idea-title::after {
-    transform: rotate(-90deg);
+    transform: rotate(0deg);
   }
   .idea-card.collapsed .idea-desc,
   .idea-card.collapsed .idea-workflow,
@@ -1192,7 +1603,7 @@
   .idea-status {
     font-size: 0.6rem;
     padding: 0.15rem 0.45rem;
-    border-radius: 3px;
+    border-radius: 0;
     background: var(--surface-3);
     color: var(--text-dim);
     border: 1px solid var(--border);
@@ -1236,7 +1647,7 @@
     z-index: 99;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 50%;
+    border-radius: 0;
     width: 36px;
     height: 36px;
     display: flex;
@@ -1252,12 +1663,13 @@
   }
   .back-to-top.visible { opacity: 1; pointer-events: auto; }
   .back-to-top:hover { border-color: var(--border-hover); color: var(--text); }
+  .back-to-top svg { width: 16px; height: 16px; display: block; }
 
   /* ── Phase badges ── */
   .phase-badge {
     font-size: 0.6rem;
     padding: 0.15rem 0.45rem;
-    border-radius: 3px;
+    border-radius: 0;
     font-family: var(--mono);
     font-weight: 500;
     white-space: nowrap;
@@ -1278,6 +1690,7 @@
   .table-search {
     padding: 0.5rem 1.25rem 0.75rem;
     background: var(--surface);
+    border-top: none;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -1286,7 +1699,7 @@
     flex: 1;
     padding: 0.4rem 0.75rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     background: var(--surface-2);
     color: var(--text);
     font-size: 0.8rem;
@@ -1295,22 +1708,60 @@
   }
   .table-search input:focus { border-color: var(--border-hover); }
   .table-search input::placeholder { color: var(--text-dim); }
+
+  /* View toggle Projects / Organizations / Active (next to the search) */
+  .view-toggle {
+    display: inline-flex;
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .view-btn {
+    background: var(--bg);
+    border: 0;
+    padding: 0.4rem 0.75rem;
+    font-family: var(--font);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .view-btn + .view-btn { border-left: 1px solid var(--border); }
+  /* Active state: subtle lighter background + regular (readable) text color */
+  .view-btn.active {
+    background: var(--surface-3);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .view-btn:not(.active):hover { color: var(--text); background: var(--surface-2); }
+  .view-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .info-btn {
+    display: inline-flex;
+    color: var(--text-dim);
+    cursor: help;
+    transition: color 0.15s;
+  }
+  .info-btn:hover, .info-btn:focus-visible { color: var(--text); }
+  .info-btn svg { width: 13px; height: 13px; display: block; }
   .hours-total {
     font-size: 0.78rem;
     color: var(--text-dim);
     font-family: var(--mono);
     white-space: nowrap;
-    cursor: help;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
   }
   .hours-total strong { color: var(--text); font-weight: 600; }
-  .hours-breakdown { color: var(--text-dim); font-size: 0.72rem; margin-left: 0.25rem; }
 
   /* Column toggle dropdown */
   .col-toggle { position: relative; }
   .col-toggle-btn {
     padding: 0.4rem 0.75rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     background: var(--surface-2);
     color: var(--text);
     font-size: 0.78rem;
@@ -1320,27 +1771,22 @@
   }
   .col-toggle-btn:hover { border-color: var(--border-hover); }
   .col-toggle-btn .caret { width: 12px; height: 12px; margin-left: 0.4rem; vertical-align: -1px; opacity: 0.8; }
-  .col-toggle-btn .col-icon { width: 12px; height: 12px; margin-right: 0.4rem; vertical-align: -1px; opacity: 0.8; }
   .col-toggle-btn .col-count {
     display: none;
-    margin-left: 0.4rem;
-    padding: 0.05rem 0.4rem;
-    background: var(--surface-3, var(--surface));
-    border-radius: 999px;
+    margin-left: 0.35rem;
     font-size: 0.7rem;
     font-variant-numeric: tabular-nums;
-    color: var(--text-dim);
+    color: var(--text-muted);
   }
   .col-toggle-btn.has-filter {
     border-color: var(--text-dim);
     color: var(--text);
   }
-  .col-toggle-btn.has-filter .col-icon { opacity: 1; }
   .col-toggle-btn.has-filter .col-count {
     display: inline-block;
-    background: var(--text);
-    color: var(--surface);
-    font-weight: 600;
+    background: none;
+    color: var(--text-muted);
+    font-weight: 500;
   }
   .col-toggle-panel {
     position: absolute;
@@ -1349,7 +1795,7 @@
     z-index: 100;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     padding: 0.4rem 0;
     min-width: 220px;
@@ -1433,51 +1879,436 @@
     width: 100%;
     height: 3px;
     background: var(--surface-3);
-    border-radius: 2px;
+    border-radius: 0;
     margin-top: 0.3rem;
     overflow: hidden;
   }
   .activity-bar-fill {
     height: 100%;
-    border-radius: 2px;
+    border-radius: 0;
     transition: width 0.3s;
   }
 
   /* ── Footer ── */
   footer {
+    margin-top: auto;   /* sticks to the bottom of the page, even with little content */
     padding-top: 2rem;
-    border-top: 1px solid var(--border);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-dim);
+    opacity: 0.75;
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.35rem;
   }
+  .footer-top { display: flex; align-items: center; gap: 0.6rem; }
+  .footer-stats strong { color: var(--text-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .footer-meta { opacity: 0.8; }
+  .reset-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    padding: 0;
+    flex: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .reset-btn svg { width: 11px; height: 11px; display: block; }
 </style>
 </head>
 <body>
 
-<button class="tasks-toggle-sticky" id="tasks-toggle" onclick="document.getElementById('global-tasks').scrollIntoView({behavior:'smooth'}); document.getElementById('global-tasks').open = !document.getElementById('global-tasks').open;">
-  <span class="tasks-toggle-dot has-active"></span>
-  <span id="tasks-toggle-label">2 Tasks</span>
-</button>
-
 <!-- Header -->
 <header>
-  <div>
-    <h1>Project Dashboard</h1>
-    <p class="subtitle">Alex Sample &mdash; Design Systems, Fluid Typography, UX Engineering</p>
+  <h1 class="logo-home" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'}); if(location.hash) history.replaceState(null,'',location.pathname+location.search);">Project Dashboard</h1>
+  <nav class="quicklinks" id="quicklinks" aria-label="Project quicklinks"></nav>
+  <div class="header-actions">
+    <button class="tasks-btn" id="tasks-toggle" title="Expand/collapse tasks" aria-expanded="true"
+      onclick="var t=document.getElementById('global-tasks'); t.open=!t.open; this.setAttribute('aria-expanded', t.open);">
+      <svg class="tasks-btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="0"/><path d="M5.6 8.1l1.7 1.7 3.3-3.6"/></svg>
+      <span id="tasks-toggle-label">2 Tasks</span>
+    </button>
+    <button class="theme-toggle" id="theme-toggle-btn" type="button" aria-label="Toggle theme">
+      <span class="icon" id="theme-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 9.3A5.4 5.4 0 1 1 6.7 2.5 4.5 4.5 0 0 0 13.5 9.3z"/></svg></span>
+      <span id="theme-label">Light</span>
+    </button>
   </div>
-  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-    <span class="icon" id="theme-icon">&#9790;</span>
-    <span id="theme-label">Light</span>
-  </button>
 </header>
 
+<!-- Layout: main column + sidebar -->
+<div class="layout">
+<main class="main-col" id="main-col">
+
+<!-- Overview Table -->
+<details class="overview-table-wrap sortable-section" data-section="overview" open>
+  <summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="0"/><path d="M2.5 6.4h11"/><path d="M6.4 6.4v7.1"/></svg></span><h2>Project Overview</h2></summary>
+  <div class="table-search">
+    <input type="text" id="table-search" placeholder="Filter projects..." autocomplete="off">
+    <span class="search-count" id="search-count" aria-live="polite"></span>
+    <div class="view-toggle" role="group" aria-label="View (Organizations mode enables row reordering)">
+      <button type="button" class="view-btn" data-mode="flat" aria-pressed="false">Projects</button>
+      <button type="button" class="view-btn active" data-mode="orgs" aria-pressed="true">Organizations</button>
+      <button type="button" class="view-btn" data-mode="active" aria-pressed="false" title="Only starred projects (in progress)">Active</button>
+    </div>
+    <div class="col-toggle">
+      <button class="col-toggle-btn" id="col-toggle-btn" type="button" aria-expanded="false">Columns<span class="col-count" id="col-toggle-count"></span><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
+      <div class="col-toggle-panel" id="col-toggle-panel" role="menu">
+        <div class="col-toggle-panel-header">Visible columns</div>
+        <label><input type="checkbox" data-col="1" checked><span>Type</span></label>
+        <label><input type="checkbox" data-col="2" checked><span>Organization</span></label>
+        <label><input type="checkbox" data-col="3" checked><span>Tech Stack</span></label>
+        <label><input type="checkbox" data-col="4" checked><span>Scope</span></label>
+        <label><input type="checkbox" data-col="5" checked><span>Files</span></label>
+        <label><input type="checkbox" data-col="6" checked><span>Last Update</span></label>
+        <label><input type="checkbox" data-col="7" checked><span>Hours</span></label>
+        <label><input type="checkbox" data-col="8" checked><span>Phase</span></label>
+        <label><input type="checkbox" data-col="9" checked><span>Links</span></label>
+        <hr>
+        <button class="col-toggle-reset" type="button" id="col-toggle-reset">Show all columns</button>
+      </div>
+    </div>
+    <span class="hours-total"><span class="info-btn" id="hours-total-value" tabindex="0" role="img" aria-label="Total hours: 62.8h invested" title="&Sigma; 62.8h invested &mdash; sum of all time-log.md: manual 12.0 + claude 50.8. Active time excluding pauses, rough orientation, not exact tracking."><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 7.3v3.4"/><path d="M8 5.2h.01"/></svg></span></span>
+  </div>
+  <div class="overview-scroll">
+  <table class="overview" id="overview-table">
+    <thead>
+      <tr>
+        <th data-col="0">Project</th>
+        <th data-col="1">Type</th>
+        <th data-col="2">Organization</th>
+        <th data-col="3">Tech Stack</th>
+        <th data-col="4" data-type="number">Scope</th>
+        <th data-col="5" data-type="number">Files</th>
+        <th data-col="6" data-type="date">Last Update</th>
+        <th data-col="7" data-type="number">Hours</th>
+        <th data-col="8">Phase</th>
+        <th data-col="9">Links</th>
+        <th data-col="10"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="org-header" style="--org-color:#e8432a"><td colspan="11"><span class="org-header-label">Redleaf NGO</span></td></tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#nova-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23e8432a'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENf%3C/text%3E%3C/svg%3E" alt="">Nova Fluid Type</a>
+        </td>
+        <td>Design System</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Lit</span>
+            <span class="table-badge">Vite</span>
+            <span class="table-badge">TS</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="23820">~24k lines</td>
+        <td data-sort="637">637</td>
+        <td class="table-date" data-sort="2026-07-23T08:32">23.07.2026, 08:32</td>
+        <td class="table-hours" data-sort="4.2">4.2h</td>
+        <td><span class="phase-badge phase-migration">Migration</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-viewer.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('nova-fluid-type')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#nova-social-proof"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENs%3C/text%3E%3C/svg%3E" alt="">Nova Social Proof</a>
+        </td>
+        <td>Components</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Lit</span>
+            <span class="table-badge">Vite</span>
+            <span class="table-badge">Research</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="27273">~27k lines</td>
+        <td data-sort="655">655</td>
+        <td class="table-date" data-sort="2026-07-25T10:05">25.07.2026, 10:05</td>
+        <td class="table-hours" data-sort="8.5">8.5h</td>
+        <td><span class="phase-badge phase-prototyp">Prototype</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/nova-social-proof/prototype-standalone/index.html">Local</a>
+            <a class="table-link" href="https://example.com/upload/prototype-social-proof/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('nova-social-proof')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#forge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EFg%3C/text%3E%3C/svg%3E" alt="">Forge</a>
+        </td>
+        <td>Tool</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Vanilla JS</span>
+            <span class="table-badge">Node.js</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1189">~1,2k lines</td>
+        <td data-sort="10">10</td>
+        <td class="table-date" data-sort="2026-07-25T10:05">25.07.2026, 10:05</td>
+        <td class="table-hours" data-sort="0">&mdash;</td>
+        <td><span class="phase-badge phase-stabil">Stable</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/forge/forge.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('forge')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr class="sub-row">
+        <td>
+          <a class="table-name" href="#forge-mobile-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='14' font-weight='700' fill='%23fff' text-anchor='middle'%3EFm%3C/text%3E%3C/svg%3E" alt="">Forge Mobile Type</a>
+        </td>
+        <td>Tool</td>
+        <td>Redleaf NGO</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">HTML</span>
+            <span class="table-badge">CSS</span>
+            <span class="table-badge">JS</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1343">~1,3k lines</td>
+        <td data-sort="8">8</td>
+        <td class="table-date" data-sort="2026-07-25T10:06">25.07.2026, 10:06</td>
+        <td class="table-hours" data-sort="6.8">6.8h</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('forge-mobile-type')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr class="org-header" style="--org-color:#005b8e"><td colspan="11"><span class="org-header-label">Prism UX</span></td></tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#prism-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23005b8e'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E" alt="">Prism Fluid Type</a>
+        </td>
+        <td>Design System</td>
+        <td>Prism UX</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">SCSS</span>
+            <span class="table-badge">Vite</span>
+            <span class="table-badge">BEM</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="18588">~19k lines</td>
+        <td data-sort="230">230</td>
+        <td class="table-date" data-sort="2026-07-25T09:23">25.07.2026, 09:23</td>
+        <td class="table-hours" data-sort="0.3">0.3h</td>
+        <td><span class="phase-badge phase-migration">Migration</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/prism-fluid-type/static/prism-utopia-viewer.html">Local</a>
+            <a class="table-link" href="https://example.com/upload/prism-fluid-type/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('prism-fluid-type')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr class="org-header" style="--org-color:#7c3aed"><td colspan="11"><span class="org-header-label">Pinnacle Inc.</span></td></tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#helix-typography"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%237c3aed'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EHx%3C/text%3E%3C/svg%3E" alt="">Helix Typography</a>
+        </td>
+        <td>Platform</td>
+        <td>Pinnacle Inc.</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">React</span>
+            <span class="table-badge">Next.js</span>
+            <span class="table-badge">Kotlin</span>
+            <span class="table-badge">GraphQL</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1077831">~1.1M lines</td>
+        <td data-sort="7317">7317</td>
+        <td class="table-date" data-sort="2026-07-25T10:05">25.07.2026, 10:05</td>
+        <td class="table-hours" data-sort="0">&mdash;</td>
+        <td><span class="phase-badge phase-migration">Migration</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/helix-typography/static/helix-utopia.html">Local</a>
+            <a class="table-link" href="https://example.com/upload/helix-typography/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('helix-typography')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr class="org-header" style="--org-color:#ec4899"><td colspan="11"><span class="org-header-label">Bloom Health</span></td></tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#bloom-components"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EBl%3C/text%3E%3C/svg%3E" alt="">Bloom Components</a>
+        </td>
+        <td>Design System</td>
+        <td>Bloom Health</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Svelte</span>
+            <span class="table-badge">Tailwind</span>
+            <span class="table-badge">Storybook</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="14200">~14k lines</td>
+        <td data-sort="182">182</td>
+        <td class="table-date" data-sort="2026-07-20T14:48">20.07.2026, 14:48</td>
+        <td class="table-hours" data-sort="0.5">0.5h</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/bloom-components/storybook-static/index.html">Local</a>
+            <a class="table-link" href="https://bloom-ds.example.com/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('bloom-components')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr class="org-header" style="--org-color:#888"><td colspan="11"><span class="org-header-label">Personal</span></td></tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#design-bridge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%2310b981'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3E%26lt;/%26gt;%3C/text%3E%3C/svg%3E" alt="">Design Bridge</a>
+        </td>
+        <td>Learning Platform</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Vanilla JS</span>
+            <span class="table-badge">Open Props</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="4125">~4,1k lines</td>
+        <td data-sort="27">27</td>
+        <td class="table-date" data-sort="2026-07-25T08:17">25.07.2026, 08:17</td>
+        <td class="table-hours" data-sort="12.4">12.4h</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/design-bridge/deploy/index.html">Local</a>
+            <a class="table-link" href="https://design-bridge.example.com/">Live</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('design-bridge')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#token-workshop"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%230ea5e9'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETw%3C/text%3E%3C/svg%3E" alt="">Token Workshop</a>
+        </td>
+        <td>Methodology</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Astro</span>
+            <span class="table-badge">MDX</span>
+            <span class="table-badge">Style Dictionary</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="3400">~3,4k lines</td>
+        <td data-sort="42">42</td>
+        <td class="table-date" data-sort="2026-07-18T16:30">18.07.2026, 16:30</td>
+        <td class="table-hours" data-sort="1.2">1.2h</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="file:///Users/you/projects/token-workshop/dist/index.html">Local</a>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('token-workshop')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#the-handoff"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETH%3C/text%3E%3C/svg%3E" alt="">The Handoff</a>
+        </td>
+        <td>Methodology</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Claude Code</span>
+            <span class="table-badge">Figma MCP</span>
+            <span class="table-badge">Markdown</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="0">&mdash;</td>
+        <td data-sort="5">5</td>
+        <td class="table-date" data-sort="2026-07-23T08:22">23.07.2026, 08:22</td>
+        <td class="table-hours" data-sort="0.2">0.2h</td>
+        <td><span class="phase-badge phase-idee">Idea</span></td>
+        <td>
+          <div class="table-links">
+            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('the-handoff')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#spectrum-color"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ESC%3C/text%3E%3C/svg%3E" alt="">Spectrum Color</a>
+        </td>
+        <td>Color System</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">OKLCH</span>
+            <span class="table-badge">CSS</span>
+            <span class="table-badge">Leonardo</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="0">&mdash;</td>
+        <td data-sort="3">3</td>
+        <td class="table-date" data-sort="2026-07-23T08:22">23.07.2026, 08:22</td>
+        <td class="table-hours" data-sort="0.1">0.1h</td>
+        <td><span class="phase-badge phase-idee">Idea</span></td>
+        <td>
+          <div class="table-links">
+            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('spectrum-color')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <tr>
+        <td>
+          <a class="table-name" href="#project-dashboard"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23888'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EPD%3C/text%3E%3C/svg%3E" alt="">Project Dashboard</a>
+        </td>
+        <td>Meta Project</td>
+        <td>Personal</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">HTML</span>
+            <span class="table-badge">CSS</span>
+            <span class="table-badge">JS</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="2640">~2,6k lines</td>
+        <td data-sort="15">15</td>
+        <td class="table-date" data-sort="2026-07-25T16:00">25.07.2026, 16:00</td>
+        <td class="table-hours" data-sort="28.6">28.6h</td>
+        <td><span class="phase-badge phase-aktiv">Active</span></td>
+        <td>
+          <div class="table-links">
+            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
+          </div>
+        </td>
+        <td><button class="btn-claude" onclick="openClaude('project-dashboard')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</details>
+
 <!-- About: Projekt + Agents -->
-<details class="about-section">
-  <summary>About this Project &amp; Agents</summary>
+<details class="about-section sortable-section" data-section="about">
+  <summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 7.3v3.4"/><path d="M8 5.2h.01"/></svg></span>About this Project &amp; Agents</summary>
   <div class="about-body">
 
     <!-- Was ist das Projekt -->
@@ -1641,529 +2472,9 @@
   </div>
 </details>
 
-<!-- Tasks -->
-<details class="global-tasks" id="global-tasks" open>
-  <summary class="section-heading">Tasks <span class="task-count" id="task-counter"></span></summary>
-  <div class="global-tasks-body">
-    <div class="task-list" id="manual-tasks">
-      <div class="task-item">
-        <input type="checkbox" class="task-checkbox">
-        <div class="task-content">
-          <div class="task-title">
-            <span>Migrate typography tokens to fluid scale</span>
-            <span class="task-id">DEMO-001</span>
-            <span class="task-status offen">Open</span>
-          </div>
-          <div class="task-meta">
-            <a href="#nova-fluid-type" style="color:#e8432a;text-decoration:none;font-weight:500;">Nova Fluid Type</a> &middot; Define clamp() values for all 9 font-size steps across breakpoints
-          </div>
-        </div>
-      </div>
-      <div class="task-item">
-        <input type="checkbox" class="task-checkbox">
-        <div class="task-content">
-          <div class="task-title">
-            <span>Component audit for consistent active states</span>
-            <span class="task-id">DEMO-002</span>
-            <span class="task-status aktiv">Active</span>
-          </div>
-          <div class="task-meta">
-            <a href="#helix-typography" style="color:#7c3aed;text-decoration:none;font-weight:500;">Helix Typography</a> &middot; 10 components need token-based active state styling with WCAG AA contrast
-          </div>
-        </div>
-      </div>
-    </div>
-    <details class="ai-recommendations" id="ai-recommendations">
-      <summary class="ai-summary">AI Recommendations <span class="task-count" id="ai-counter"></span></summary>
-      <p class="ai-disclaimer">Automatically generated suggestions based on project analysis. Not binding tasks.</p>
-      <div class="task-list">
-        <div class="task-item ai-task" data-project="nova-social-proof">
-          <div class="task-content">
-            <div class="task-title">
-              <span>Finalize activity feed variant selection after stakeholder review</span>
-              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
-            </div>
-            <div class="task-meta"><a href="#nova-social-proof" style="color:#ec4899;text-decoration:none;font-weight:500;">Nova Social Proof</a> &middot; Prototype ready but variant selection blocks transition to component implementation</div>
-          </div>
-        </div>
-        <div class="task-item ai-task" data-project="prism-fluid-type">
-          <div class="task-content">
-            <div class="task-title">
-              <span>WCAG 1.4.4 resize text verification for fluid typography</span>
-              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
-            </div>
-            <div class="task-meta"><a href="#prism-fluid-type" style="color:#005b8e;text-decoration:none;font-weight:500;">Prism Fluid Type</a> &middot; Viewport-based scaling may break text zoom; WCAG check mentioned but not confirmed as passing</div>
-          </div>
-        </div>
-        <div class="task-item ai-task" data-project="design-bridge">
-          <div class="task-content">
-            <div class="task-title">
-              <span>Define UX concept for resources &amp; learnings card grid</span>
-              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
-            </div>
-            <div class="task-meta"><a href="#design-bridge" style="color:#10b981;text-decoration:none;font-weight:500;">Design Bridge</a> &middot; Card interaction model (search, filter, navigation depth) still undefined</div>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
-</details>
-
-<!-- Overview Table -->
-<details class="overview-table-wrap" open>
-  <summary><h2>Project Overview</h2></summary>
-  <div class="table-search">
-    <input type="text" id="table-search" placeholder="Filter projects..." autocomplete="off">
-    <div class="col-toggle">
-      <button class="col-toggle-btn" id="col-toggle-btn" type="button" aria-expanded="false"><svg class="col-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2.5" height="10" rx="0.5"/><rect x="6.75" y="3" width="2.5" height="10" rx="0.5"/><rect x="11.5" y="3" width="2.5" height="10" rx="0.5"/></svg>Display columns<span class="col-count" id="col-toggle-count"></span><svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
-      <div class="col-toggle-panel" id="col-toggle-panel" role="menu">
-        <div class="col-toggle-panel-header">Visible columns</div>
-        <label><input type="checkbox" data-col="1" checked><span>Type</span></label>
-        <label><input type="checkbox" data-col="2" checked><span>Organization</span></label>
-        <label><input type="checkbox" data-col="3" checked><span>Tech Stack</span></label>
-        <label><input type="checkbox" data-col="4" checked><span>Scope</span></label>
-        <label><input type="checkbox" data-col="5" checked><span>Files</span></label>
-        <label><input type="checkbox" data-col="6" checked><span>Last Update</span></label>
-        <label><input type="checkbox" data-col="7" checked><span>Hours</span></label>
-        <label><input type="checkbox" data-col="8" checked><span>Phase</span></label>
-        <label><input type="checkbox" data-col="9" checked><span>Links</span></label>
-        <hr>
-        <button class="col-toggle-reset" type="button" id="col-toggle-reset">Show all columns</button>
-      </div>
-    </div>
-    <span class="hours-total" title="Sum of all time-log.md (manual + Claude sessions, active time excluding pauses). Rough orientation, not exact tracking.">&Sigma; <strong id="hours-total-value">62.8h</strong> invested <span class="hours-breakdown">(manual: 12.0 + claude: 50.8)</span></span>
-  </div>
-  <div class="overview-scroll">
-  <table class="overview" id="overview-table">
-    <thead>
-      <tr>
-        <th data-col="0">Project</th>
-        <th data-col="1">Type</th>
-        <th data-col="2">Organization</th>
-        <th data-col="3">Tech Stack</th>
-        <th data-col="4" data-type="number">Scope</th>
-        <th data-col="5" data-type="number">Files</th>
-        <th data-col="6" data-type="date">Last Update</th>
-        <th data-col="7" data-type="number">Hours</th>
-        <th data-col="8">Phase</th>
-        <th data-col="9">Links</th>
-        <th data-col="10"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="org-header"><td colspan="11"><span class="org-header-label">Redleaf NGO</span></td></tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#nova-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8432a'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENf%3C/text%3E%3C/svg%3E" alt="">Nova Fluid Type</a>
-        </td>
-        <td>Design System</td>
-        <td>Redleaf NGO</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Lit</span>
-            <span class="table-badge">Vite</span>
-            <span class="table-badge">TS</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="23820">~24k lines</td>
-        <td data-sort="637">637</td>
-        <td class="table-date" data-sort="2026-03-23T08:32">23.03.2026, 08:32</td>
-        <td class="table-hours" data-sort="4.2">4.2h</td>
-        <td><span class="phase-badge phase-migration">Migration</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-viewer.html">Local</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('nova-fluid-type')">claude</button></td>
-      </tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#nova-social-proof"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENs%3C/text%3E%3C/svg%3E" alt="">Nova Social Proof</a>
-        </td>
-        <td>Components</td>
-        <td>Redleaf NGO</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Lit</span>
-            <span class="table-badge">Vite</span>
-            <span class="table-badge">Research</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="27273">~27k lines</td>
-        <td data-sort="655">655</td>
-        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
-        <td class="table-hours" data-sort="8.5">8.5h</td>
-        <td><span class="phase-badge phase-prototyp">Prototype</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/nova-social-proof/prototype-standalone/index.html">Local</a>
-            <a class="table-link" href="https://example.com/upload/prototype-social-proof/">Live</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('nova-social-proof')">claude</button></td>
-      </tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#forge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EFg%3C/text%3E%3C/svg%3E" alt="">Forge</a>
-        </td>
-        <td>Tool</td>
-        <td>Redleaf NGO</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Vanilla JS</span>
-            <span class="table-badge">Node.js</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="1189">~1,2k lines</td>
-        <td data-sort="10">10</td>
-        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
-        <td class="table-hours" data-sort="0">&mdash;</td>
-        <td><span class="phase-badge phase-stabil">Stable</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/forge/forge.html">Local</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('forge')">claude</button></td>
-      </tr>
-      <tr class="sub-row">
-        <td>
-          <a class="table-name" href="#forge-mobile-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f59e0b'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='14' font-weight='700' fill='%23fff' text-anchor='middle'%3EFm%3C/text%3E%3C/svg%3E" alt="">Forge Mobile Type</a>
-        </td>
-        <td>Tool</td>
-        <td>Redleaf NGO</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">HTML</span>
-            <span class="table-badge">CSS</span>
-            <span class="table-badge">JS</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="1343">~1,3k lines</td>
-        <td data-sort="8">8</td>
-        <td class="table-date" data-sort="2026-03-25T10:06">25.03.2026, 10:06</td>
-        <td class="table-hours" data-sort="6.8">6.8h</td>
-        <td><span class="phase-badge phase-aktiv">Active</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('forge-mobile-type')">claude</button></td>
-      </tr>
-      <tr class="org-header"><td colspan="11"><span class="org-header-label">Prism UX</span></td></tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#prism-fluid-type"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23005b8e'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E" alt="">Prism Fluid Type</a>
-        </td>
-        <td>Design System</td>
-        <td>Prism UX</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">SCSS</span>
-            <span class="table-badge">Vite</span>
-            <span class="table-badge">BEM</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="18588">~19k lines</td>
-        <td data-sort="230">230</td>
-        <td class="table-date" data-sort="2026-03-25T09:23">25.03.2026, 09:23</td>
-        <td class="table-hours" data-sort="0.3">0.3h</td>
-        <td><span class="phase-badge phase-migration">Migration</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/prism-fluid-type/static/prism-utopia-viewer.html">Local</a>
-            <a class="table-link" href="https://example.com/upload/prism-fluid-type/">Live</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('prism-fluid-type')">claude</button></td>
-      </tr>
-      <tr class="org-header"><td colspan="11"><span class="org-header-label">Pinnacle Inc.</span></td></tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#helix-typography"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%237c3aed'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EHx%3C/text%3E%3C/svg%3E" alt="">Helix Typography</a>
-        </td>
-        <td>Platform</td>
-        <td>Pinnacle Inc.</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">React</span>
-            <span class="table-badge">Next.js</span>
-            <span class="table-badge">Kotlin</span>
-            <span class="table-badge">GraphQL</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="1077831">~1.1M lines</td>
-        <td data-sort="7317">7317</td>
-        <td class="table-date" data-sort="2026-03-25T10:05">25.03.2026, 10:05</td>
-        <td class="table-hours" data-sort="0">&mdash;</td>
-        <td><span class="phase-badge phase-migration">Migration</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/helix-typography/static/helix-utopia.html">Local</a>
-            <a class="table-link" href="https://example.com/upload/helix-typography/">Live</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('helix-typography')">claude</button></td>
-      </tr>
-      <tr class="org-header"><td colspan="11"><span class="org-header-label">Bloom Health</span></td></tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#bloom-components"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ec4899'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EBl%3C/text%3E%3C/svg%3E" alt="">Bloom Components</a>
-        </td>
-        <td>Design System</td>
-        <td>Bloom Health</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Svelte</span>
-            <span class="table-badge">Tailwind</span>
-            <span class="table-badge">Storybook</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="14200">~14k lines</td>
-        <td data-sort="182">182</td>
-        <td class="table-date" data-sort="2026-03-20T14:48">20.03.2026, 14:48</td>
-        <td class="table-hours" data-sort="0.5">0.5h</td>
-        <td><span class="phase-badge phase-aktiv">Active</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/bloom-components/storybook-static/index.html">Local</a>
-            <a class="table-link" href="https://bloom-ds.example.com/">Live</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('bloom-components')">claude</button></td>
-      </tr>
-      <tr class="org-header"><td colspan="11"><span class="org-header-label">Personal</span></td></tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#design-bridge"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2310b981'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3E%26lt;/%26gt;%3C/text%3E%3C/svg%3E" alt="">Design Bridge</a>
-        </td>
-        <td>Learning Platform</td>
-        <td>Personal</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Vanilla JS</span>
-            <span class="table-badge">Open Props</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="4125">~4,1k lines</td>
-        <td data-sort="27">27</td>
-        <td class="table-date" data-sort="2026-03-25T08:17">25.03.2026, 08:17</td>
-        <td class="table-hours" data-sort="12.4">12.4h</td>
-        <td><span class="phase-badge phase-aktiv">Active</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/design-bridge/deploy/index.html">Local</a>
-            <a class="table-link" href="https://design-bridge.example.com/">Live</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('design-bridge')">claude</button></td>
-      </tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#token-workshop"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230ea5e9'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETw%3C/text%3E%3C/svg%3E" alt="">Token Workshop</a>
-        </td>
-        <td>Methodology</td>
-        <td>Personal</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Astro</span>
-            <span class="table-badge">MDX</span>
-            <span class="table-badge">Style Dictionary</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="3400">~3,4k lines</td>
-        <td data-sort="42">42</td>
-        <td class="table-date" data-sort="2026-03-18T16:30">18.03.2026, 16:30</td>
-        <td class="table-hours" data-sort="1.2">1.2h</td>
-        <td><span class="phase-badge phase-aktiv">Active</span></td>
-        <td>
-          <div class="table-links">
-            <a class="table-link" href="file:///Users/you/projects/token-workshop/dist/index.html">Local</a>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('token-workshop')">claude</button></td>
-      </tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#the-handoff"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETH%3C/text%3E%3C/svg%3E" alt="">The Handoff</a>
-        </td>
-        <td>Methodology</td>
-        <td>Personal</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">Claude Code</span>
-            <span class="table-badge">Figma MCP</span>
-            <span class="table-badge">Markdown</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="0">&mdash;</td>
-        <td data-sort="5">5</td>
-        <td class="table-date" data-sort="2026-03-23T08:22">23.03.2026, 08:22</td>
-        <td class="table-hours" data-sort="0.2">0.2h</td>
-        <td><span class="phase-badge phase-idee">Idea</span></td>
-        <td>
-          <div class="table-links">
-            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('the-handoff')">claude</button></td>
-      </tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#spectrum-color"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ESC%3C/text%3E%3C/svg%3E" alt="">Spectrum Color</a>
-        </td>
-        <td>Color System</td>
-        <td>Personal</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">OKLCH</span>
-            <span class="table-badge">CSS</span>
-            <span class="table-badge">Leonardo</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="0">&mdash;</td>
-        <td data-sort="3">3</td>
-        <td class="table-date" data-sort="2026-03-23T08:22">23.03.2026, 08:22</td>
-        <td class="table-hours" data-sort="0.1">0.1h</td>
-        <td><span class="phase-badge phase-idee">Idea</span></td>
-        <td>
-          <div class="table-links">
-            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('spectrum-color')">claude</button></td>
-      </tr>
-      <tr>
-        <td>
-          <a class="table-name" href="#project-dashboard"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23888'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EPD%3C/text%3E%3C/svg%3E" alt="">Project Dashboard</a>
-        </td>
-        <td>Meta Project</td>
-        <td>Personal</td>
-        <td>
-          <div class="table-badges">
-            <span class="table-badge">HTML</span>
-            <span class="table-badge">CSS</span>
-            <span class="table-badge">JS</span>
-          </div>
-        </td>
-        <td class="table-scope" data-sort="2640">~2,6k lines</td>
-        <td data-sort="15">15</td>
-        <td class="table-date" data-sort="2026-03-25T16:00">25.03.2026, 16:00</td>
-        <td class="table-hours" data-sort="28.6">28.6h</td>
-        <td><span class="phase-badge phase-aktiv">Active</span></td>
-        <td>
-          <div class="table-links">
-            <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
-          </div>
-        </td>
-        <td><button class="btn-claude" onclick="openClaude('project-dashboard')">claude</button></td>
-      </tr>
-    </tbody>
-  </table>
-  </div>
-</details>
-
-<!-- Synergies -->
-<details class="overview-table-wrap synergies" open>
-  <summary><h2>Synergies &amp; Collaboration</h2></summary>
-  <div class="synergy-grid">
-
-    <div class="synergy-card">
-      <h3>
-        <span class="synergy-dots">
-          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
-          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
-          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
-        </span>
-        Utopia Fluid Type &mdash; Shared Methodology
-      </h3>
-      <p>
-        All three design systems (Nova, Prism, Helix) are migrating to Utopia-based fluid typography with CSS clamp(). Insights from one project (e.g., token override strategy in Prism) can be directly transferred to the others.
-      </p>
-      <div class="synergy-potential">Potential: Shared Utopia config generator, cross-system best practices, common viewport viewer component</div>
-    </div>
-
-    <div class="synergy-card">
-      <h3>
-        <span class="synergy-dots">
-          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
-          <span class="synergy-dot" style="background: var(--accent-bloom);"></span>
-          <span class="synergy-dot" style="background: var(--accent-forge);"></span>
-        </span>
-        Redleaf Ecosystem &mdash; Nova + Social Proof + Forge
-      </h3>
-      <p>
-        Three projects working on the same design system: Nova Fluid Type modernizes the typography, Social Proof extends the component library, Forge enables live preview.
-      </p>
-      <div class="synergy-potential">Potential: Forge as a universal preview tool, Social Proof with fluid type values, unified prototyping workflow</div>
-    </div>
-
-    <div class="synergy-card">
-      <h3>
-        <span class="synergy-dots">
-          <span class="synergy-dot" style="background: var(--accent-leaf);"></span>
-          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
-          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
-        </span>
-        Design Bridge &mdash; Documenting All Learnings
-      </h3>
-      <p>
-        Experiences from fluid type migrations, token architectures, and AI workflows can be prepared as learning resources on the platform.
-      </p>
-      <div class="synergy-potential">Potential: Case studies, Token Workshop content, AI workflow documentation as learning cards</div>
-    </div>
-
-    <div class="synergy-card">
-      <h3>
-        <span class="synergy-dots">
-          <span class="synergy-dot" style="background: var(--accent-forge);"></span>
-          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
-          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
-        </span>
-        Viewport Viewer &mdash; Universal Preview Tool
-      </h3>
-      <p>
-        Forge, Prism Utopia Viewer, and Helix all use their own viewport preview tools. A generic tool could serve all three design systems.
-      </p>
-      <div class="synergy-potential">Potential: Generic fluid type viewer tool, open source, design-system-agnostic</div>
-    </div>
-
-    <div class="synergy-card">
-      <h3>
-        <span class="synergy-dots">
-          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
-          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
-        </span>
-        Token Architecture &mdash; Primitive vs. Semantic
-      </h3>
-      <p>
-        Prism and Helix share the same challenge: overriding semantic tokens for fluid type without breaking primitives and line heights.
-      </p>
-      <div class="synergy-potential">Potential: Shared token override pattern, documented architecture pattern</div>
-    </div>
-
-    <div class="synergy-card">
-      <h3>
-        <span class="synergy-dots">
-          <span class="synergy-dot" style="background: var(--accent-leaf);"></span>
-          <span class="synergy-dot" style="background: var(--accent-bloom);"></span>
-        </span>
-        Prototyping-Workflow &mdash; AI + Figma MCP
-      </h3>
-      <p>
-        Nova Social Proof uses Claude Code + Figma MCP for research-to-prototype workflows. Experiences can be documented as a learning card on Design Bridge.
-      </p>
-      <div class="synergy-potential">Potential: Design Bridge workflow card &ldquo;From Research to Prototype with AI&rdquo;</div>
-    </div>
-
-  </div>
-</details>
-
 <!-- Project Details -->
-<details open>
-<summary><h2 class="section-heading" style="display:inline;cursor:pointer;">Project Details</h2></summary>
+<details class="overview-table-wrap sortable-section" data-section="details" open>
+<summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5l5.5 3-5.5 3-5.5-3z"/><path d="M2.5 8.5l5.5 3 5.5-3"/></svg></span><h2 style="display:inline;cursor:pointer;">Project Details</h2></summary>
 <div class="projects">
 
   <!-- 1. Nova Fluid Type -->
@@ -2916,9 +3227,9 @@
 
 </div>
 
-<!-- Projektideen -->
-<section class="ideas">
-  <h2 class="section-heading">Project Ideas</h2>
+<!-- Project Ideas -->
+<div class="ideas-sub">
+  <h3 class="ideas-heading">Project Ideas</h3>
 
   <div class="idea-card" id="the-handoff">
     <div class="idea-header">
@@ -3026,15 +3337,197 @@
     </div>
   </div>
 
-</section>
+</div>
 </details>
 
+</main>
+
+<aside class="sidebar" id="sidebar">
+
+<!-- Tasks -->
+<details class="global-tasks sortable-section" id="global-tasks" data-section="tasks" open>
+  <summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="0"/><path d="M5.6 8.1l1.7 1.7 3.3-3.6"/></svg></span>Tasks <span class="task-count" id="task-counter"></span></summary>
+  <div class="global-tasks-body">
+    <div class="task-list" id="manual-tasks">
+      <div class="task-item">
+        <input type="checkbox" class="task-checkbox">
+        <div class="task-content">
+          <div class="task-title">
+            <span>Migrate typography tokens to fluid scale</span>
+            <span class="task-id">DEMO-001</span>
+            <span class="task-status offen">Open</span>
+          </div>
+          <div class="task-meta">
+            <a href="#nova-fluid-type" style="color:#e8432a;text-decoration:none;font-weight:500;">Nova Fluid Type</a> &middot; Define clamp() values for all 9 font-size steps across breakpoints
+          </div>
+        </div>
+      </div>
+      <div class="task-item">
+        <input type="checkbox" class="task-checkbox">
+        <div class="task-content">
+          <div class="task-title">
+            <span>Component audit for consistent active states</span>
+            <span class="task-id">DEMO-002</span>
+            <span class="task-status aktiv">Active</span>
+          </div>
+          <div class="task-meta">
+            <a href="#helix-typography" style="color:#7c3aed;text-decoration:none;font-weight:500;">Helix Typography</a> &middot; 10 components need token-based active state styling with WCAG AA contrast
+          </div>
+        </div>
+      </div>
+    </div>
+    <details class="ai-recommendations" id="ai-recommendations">
+      <summary class="ai-summary">AI Recommendations <span class="task-count" id="ai-counter"></span></summary>
+      <p class="ai-disclaimer">Automatically generated suggestions based on project analysis. Not binding tasks.</p>
+      <div class="task-list">
+        <div class="task-item ai-task" data-project="nova-social-proof">
+          <div class="task-content">
+            <div class="task-title">
+              <span>Finalize activity feed variant selection after stakeholder review</span>
+              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
+            </div>
+            <div class="task-meta"><a href="#nova-social-proof" style="color:#ec4899;text-decoration:none;font-weight:500;">Nova Social Proof</a> &middot; Prototype ready but variant selection blocks transition to component implementation</div>
+          </div>
+        </div>
+        <div class="task-item ai-task" data-project="prism-fluid-type">
+          <div class="task-content">
+            <div class="task-title">
+              <span>WCAG 1.4.4 resize text verification for fluid typography</span>
+              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
+            </div>
+            <div class="task-meta"><a href="#prism-fluid-type" style="color:#005b8e;text-decoration:none;font-weight:500;">Prism Fluid Type</a> &middot; Viewport-based scaling may break text zoom; WCAG check mentioned but not confirmed as passing</div>
+          </div>
+        </div>
+        <div class="task-item ai-task" data-project="design-bridge">
+          <div class="task-content">
+            <div class="task-title">
+              <span>Define UX concept for resources &amp; learnings card grid</span>
+              <span class="ai-tag">AI</span><span class="task-status offen">Suggestion</span>
+            </div>
+            <div class="task-meta"><a href="#design-bridge" style="color:#10b981;text-decoration:none;font-weight:500;">Design Bridge</a> &middot; Card interaction model (search, filter, navigation depth) still undefined</div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+</details>
+
+<!-- Synergies -->
+<details class="overview-table-wrap synergies sortable-section" data-section="synergies" open>
+  <summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.8 9.2a2.4 2.4 0 0 0 3.6.3l1.8-1.8a2.4 2.4 0 0 0-3.4-3.4l-1 1"/><path d="M9.2 6.8a2.4 2.4 0 0 0-3.6-.3L3.8 8.3a2.4 2.4 0 0 0 3.4 3.4l1-1"/></svg></span><h2>Synergies &amp; Collaboration</h2></summary>
+  <div class="synergy-grid">
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
+        </span>
+        Utopia Fluid Type &mdash; Shared Methodology
+      </h3>
+      <p>
+        All three design systems (Nova, Prism, Helix) are migrating to Utopia-based fluid typography with CSS clamp(). Insights from one project (e.g., token override strategy in Prism) can be directly transferred to the others.
+      </p>
+      <div class="synergy-potential">Potential: Shared Utopia config generator, cross-system best practices, common viewport viewer component</div>
+      <div class="synergy-date">As of 2026-07-10</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
+          <span class="synergy-dot" style="background: var(--accent-bloom);"></span>
+          <span class="synergy-dot" style="background: var(--accent-forge);"></span>
+        </span>
+        Redleaf Ecosystem &mdash; Nova + Social Proof + Forge
+      </h3>
+      <p>
+        Three projects working on the same design system: Nova Fluid Type modernizes the typography, Social Proof extends the component library, Forge enables live preview.
+      </p>
+      <div class="synergy-potential">Potential: Forge as a universal preview tool, Social Proof with fluid type values, unified prototyping workflow</div>
+      <div class="synergy-date">As of 2026-07-10</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-leaf);"></span>
+          <span class="synergy-dot" style="background: var(--accent-nova);"></span>
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+        </span>
+        Design Bridge &mdash; Documenting All Learnings
+      </h3>
+      <p>
+        Experiences from fluid type migrations, token architectures, and AI workflows can be prepared as learning resources on the platform.
+      </p>
+      <div class="synergy-potential">Potential: Case studies, Token Workshop content, AI workflow documentation as learning cards</div>
+      <div class="synergy-date">As of 2026-07-10</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-forge);"></span>
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
+        </span>
+        Viewport Viewer &mdash; Universal Preview Tool
+      </h3>
+      <p>
+        Forge, Prism Utopia Viewer, and Helix all use their own viewport preview tools. A generic tool could serve all three design systems.
+      </p>
+      <div class="synergy-potential">Potential: Generic fluid type viewer tool, open source, design-system-agnostic</div>
+      <div class="synergy-date">As of 2026-07-10</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-prism);"></span>
+          <span class="synergy-dot" style="background: var(--accent-helix);"></span>
+        </span>
+        Token Architecture &mdash; Primitive vs. Semantic
+      </h3>
+      <p>
+        Prism and Helix share the same challenge: overriding semantic tokens for fluid type without breaking primitives and line heights.
+      </p>
+      <div class="synergy-potential">Potential: Shared token override pattern, documented architecture pattern</div>
+      <div class="synergy-date">As of 2026-07-10</div>
+    </div>
+
+    <div class="synergy-card">
+      <h3>
+        <span class="synergy-dots">
+          <span class="synergy-dot" style="background: var(--accent-leaf);"></span>
+          <span class="synergy-dot" style="background: var(--accent-bloom);"></span>
+        </span>
+        Prototyping-Workflow &mdash; AI + Figma MCP
+      </h3>
+      <p>
+        Nova Social Proof uses Claude Code + Figma MCP for research-to-prototype workflows. Experiences can be documented as a learning card on Design Bridge.
+      </p>
+      <div class="synergy-potential">Potential: Design Bridge workflow card &ldquo;From Research to Prototype with AI&rdquo;</div>
+      <div class="synergy-date">As of 2026-07-10</div>
+    </div>
+
+  </div>
+</details>
+
+</aside>
+</div>
+
 <!-- Back to top -->
-<button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0})" aria-label="Back to top">&#8593;</button>
+<button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12.5V3.5M4 7l4-4 4 4"/></svg></button>
 
 <footer>
-  <span>Generated by Claude Code &mdash; Meta Project Dashboard</span>
-  <span id="footer-date"></span>
+  <div class="footer-top">
+    <button class="reset-btn" id="layout-reset" type="button" title="Reset layout &amp; ordering (sections, rows, quicklinks, stars, completed, view, columns)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.5 1.8v2.7h-2.7"/></svg>
+    </button>
+    <div class="footer-stats" id="footer-stats"></div>
+  </div>
+  <div class="footer-meta">Generated by Claude Code &mdash; Meta Project Dashboard &middot; <span id="footer-date"></span> &middot; <span id="footer-updated"></span></div>
 </footer>
 
 <script>
@@ -3049,10 +3542,12 @@
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    const btn = event.target;
-    btn.textContent = 'copied';
+    // The click can land on the span/svg -> walk up to the button; only swap the label (icon stays)
+    const btn = event.target.closest('.btn-claude') || event.target;
+    const label = btn.querySelector('span');
+    if (label) label.textContent = 'copied';
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'claude'; btn.classList.remove('copied'); }, 1500);
+    setTimeout(() => { if (label) label.textContent = 'claude'; btn.classList.remove('copied'); }, 1500);
   }
 
   // ── 0b. Copy doc path to clipboard ──
@@ -3276,13 +3771,31 @@
     });
   })();
 
+  // ── 2b. Toggle the whole card header (not just the headline) ──
+  (function() {
+    document.querySelectorAll('.project-header, .idea-header').forEach(function(hd) {
+      hd.addEventListener('click', function(e) {
+        // Don't double-handle links/buttons and the headline itself (has its own inline toggle)
+        if (e.target.closest('a, button, .project-toggle, .idea-title')) return;
+        var card = hd.closest('.project, .idea-card');
+        if (card) card.classList.toggle('collapsed');
+      });
+    });
+  })();
+
   // ── 3. Footer auto-date ──
   (function() {
     const el = document.getElementById('footer-date');
     if (!el) return;
-    const d = new Date();
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    el.textContent = 'Last viewed: ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    const fmt = d => months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + ', '
+      + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    el.textContent = 'Last viewed: ' + fmt(new Date());
+    const up = document.getElementById('footer-updated');
+    if (up) {
+      const lm = new Date(document.lastModified);
+      up.textContent = 'Last update: ' + (isNaN(lm) ? '—' : fmt(lm));
+    }
   })();
 
   // ── 4. Theme toggle ──
@@ -3290,22 +3803,35 @@
     const html = document.documentElement;
     const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
-    localStorage.setItem('dashboard-theme', next);
+    try { localStorage.setItem('dashboard-theme', next); } catch (e) {}
     updateToggleUI(next);
   }
+  var THEME_MOON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 9.3A5.4 5.4 0 1 1 6.7 2.5 4.5 4.5 0 0 0 13.5 9.3z"/></svg>';
+  var THEME_SUN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M12.8 3.2l-1.1 1.1M4.3 11.7l-1.1 1.1"/></svg>';
   function updateToggleUI(theme) {
-    document.getElementById('theme-icon').innerHTML = theme === 'dark' ? '&#9790;' : '&#9728;';
+    document.getElementById('theme-icon').innerHTML = theme === 'dark' ? THEME_MOON : THEME_SUN;
     document.getElementById('theme-label').textContent = theme === 'dark' ? 'Light' : 'Dark';
   }
+  // Bind the button FIRST — independent of whether the theme detection below throws
   (function() {
-    const saved = localStorage.getItem('dashboard-theme');
+    var tb = document.getElementById('theme-toggle-btn');
+    if (tb) tb.addEventListener('click', toggleTheme);
+  })();
+  // Determine initial theme (defensive: matchMedia can be missing/throw in some environments)
+  (function() {
+    let saved = null;
+    try { saved = localStorage.getItem('dashboard-theme'); } catch (e) {}
     if (saved) {
       document.documentElement.setAttribute('data-theme', saved);
       updateToggleUI(saved);
-    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      document.documentElement.setAttribute('data-theme', 'light');
-      updateToggleUI('light');
+      return;
     }
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+        updateToggleUI('light');
+      }
+    } catch (e) {}
   })();
 
   // ── 5. Table search ──
@@ -3335,11 +3861,13 @@
   // ── 8. Relative dates + 9. Activity bars ──
   (function() {
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     document.querySelectorAll('.table-date[data-sort]').forEach(td => {
       const dateStr = td.dataset.sort;
       if (!dateStr) return;
       const d = new Date(dateStr);
-      const diff = Math.floor((now - d) / 86400000);
+      const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const diff = Math.round((today - dDay) / 86400000);
       let rel;
       if (diff === 0) rel = 'today';
       else if (diff === 1) rel = 'yesterday';
@@ -3418,14 +3946,16 @@
     function updateCounts() {
       var manualAll = manual ? manual.querySelectorAll('.task-item') : [];
       var aiItems = document.querySelectorAll('#ai-recommendations .ai-task:not(.promoted)');
-      var checkedCount = 0;
+      var openCount = 0;
       manualAll.forEach(function(el) {
         var cb = el.querySelector('.task-checkbox');
-        if (cb && cb.checked) checkedCount++;
+        // Open = neither checked NOR deactivated (project completed)
+        if ((!cb || !cb.checked) && !el.classList.contains('task-deactivated')) openCount++;
       });
-      var openCount = manualAll.length - checkedCount;
       var hasActive = Array.from(manualAll).some(function(el) {
-        return el.querySelector('.task-status.aktiv') && !el.querySelector('.task-checkbox:checked');
+        return el.querySelector('.task-status.aktiv')
+          && !el.querySelector('.task-checkbox:checked')
+          && !el.classList.contains('task-deactivated');
       });
 
       if (counter) counter.textContent = openCount + ' open';
@@ -3433,6 +3963,7 @@
       if (toggleLabel) toggleLabel.textContent = openCount + ' Tasks';
       if (toggleDot) toggleDot.classList.toggle('has-active', hasActive);
     }
+    window.refreshTaskCounts = updateCounts;
 
     // Global AI recommendations container
     var aiListContainer = document.querySelector('#ai-recommendations > .task-list');
@@ -3651,6 +4182,784 @@
     });
 
     updateCounts();
+
+    // Precaution: warn if two tasks in the global list share the same title.
+    // The checkbox sync couples via the title — duplicate titles would mark each other.
+    (function warnDuplicateTasks(){
+      if (!manual) return;
+      var seen = {}, dups = [];
+      manual.querySelectorAll('.task-item').forEach(function(el){
+        var k = getTaskKey(el);
+        if (!k) return;
+        if (seen[k]) { if (dups.indexOf(k) === -1) dups.push(k); } else seen[k] = true;
+      });
+      if (dups.length && window.console) {
+        console.warn('[Dashboard] Duplicate task titles in the global list — sync conflict possible:', dups);
+      }
+    })();
+  })();
+
+  /* ── Quicklinks nav: curated pills (icon + copy) with pin/remove ── */
+  (function(){
+    var STORAGE = 'dashboard-quicklinks';
+    var nav = document.getElementById('quicklinks');
+    var table = document.getElementById('overview-table');
+    if (!nav || !table) return;
+
+    var COPY_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" '
+      + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + '<rect x="5.5" y="5.5" width="8" height="8" rx="0"/>'
+      + '<path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg>';
+
+    function copyText(t){
+      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t); return; }
+      var ta = document.createElement('textarea');
+      ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch(e){}
+      document.body.removeChild(ta);
+    }
+
+    // Registry of all projects from the overview table
+    var registry = [];
+    var byDir = {};
+    Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(tr){
+      if (tr.classList.contains('org-header')) return;
+      var link = tr.querySelector('a.table-name');
+      if (!link) return;
+      var img = link.querySelector('img.project-icon');
+      var href = link.getAttribute('href') || '';
+      var dir = href.replace('#', '');
+      var claudeBtn = tr.querySelector('.btn-claude');
+      if (claudeBtn){
+        var m = /openClaude\('([^']+)'\)/.exec(claudeBtn.getAttribute('onclick') || '');
+        if (m) dir = m[1];
+      }
+      var item = { dir: dir, name: link.textContent.trim(), href: href,
+                   iconSrc: img ? img.getAttribute('src') : '', tr: tr, pinBtn: null };
+      registry.push(item);
+      byDir[dir] = item;
+    });
+
+    // Selected quicklinks (curated, persisted) — default: empty
+    var selected;
+    try { selected = JSON.parse(localStorage.getItem(STORAGE) || 'null'); } catch(e){ selected = null; }
+    if (!Array.isArray(selected)) selected = [];
+    selected = selected.filter(function(d){ return byDir[d]; });
+
+    function save(){ try { localStorage.setItem(STORAGE, JSON.stringify(selected)); } catch(e){} }
+    function isPinned(dir){ return selected.indexOf(dir) !== -1; }
+    function pin(dir){ if (!isPinned(dir)){ selected.push(dir); save(); render(); } }
+    function unpin(dir){ var i = selected.indexOf(dir); if (i !== -1){ selected.splice(i, 1); save(); render(); } }
+
+    // ── Drag & drop reordering of the pills (horizontal, with click threshold) ──
+    var dragPill = null, dragStartX = 0, dragMoved = false, justDragged = false;
+    var pillLine = null, pillTarget = null;
+    function onPillDown(e){
+      if (e.button != null && e.button !== 0) return;
+      if (e.target.closest('.ql-pill-remove')) return; // the X is not a drag handle
+      dragPill = e.currentTarget; dragStartX = e.clientX; dragMoved = false; pillTarget = null;
+      document.addEventListener('pointermove', onPillMove);
+      document.addEventListener('pointerup', onPillUp);
+      document.addEventListener('pointercancel', onPillUp);
+    }
+    function onPillMove(e){
+      if (!dragPill) return;
+      if (!dragMoved && Math.abs(e.clientX - dragStartX) < 5) return;
+      if (!dragMoved){
+        dragMoved = true;
+        dragPill.classList.add('ql-dragging');
+        document.body.classList.add('dnd-active');
+        pillLine = document.createElement('div');
+        pillLine.className = 'dnd-drop-line';
+        document.body.appendChild(pillLine);
+      }
+      e.preventDefault();
+      // The pill stays in place; only the vertical line shows the target
+      var pills = Array.prototype.slice.call(nav.querySelectorAll('.ql-pill')).filter(function(p){ return p !== dragPill; });
+      var target = null;
+      for (var i = 0; i < pills.length; i++){
+        var r = pills[i].getBoundingClientRect();
+        if (e.clientX < r.left + r.width / 2){ target = pills[i]; break; }
+      }
+      pillTarget = target;
+      var pr = dragPill.getBoundingClientRect();
+      var x;
+      if (target) x = target.getBoundingClientRect().left - 2;
+      else if (pills.length) x = pills[pills.length - 1].getBoundingClientRect().right + 1;
+      else x = pr.left;
+      pillLine.style.left = (x + window.scrollX) + 'px';
+      pillLine.style.top = (pr.top + window.scrollY) + 'px';
+      pillLine.style.width = '2px';
+      pillLine.style.height = pr.height + 'px';
+    }
+    function onPillUp(e){
+      document.removeEventListener('pointermove', onPillMove);
+      document.removeEventListener('pointerup', onPillUp);
+      document.removeEventListener('pointercancel', onPillUp);
+      if (!dragPill) return;
+      var pill = dragPill; dragPill = null;
+      pill.classList.remove('ql-dragging');
+      document.body.classList.remove('dnd-active');
+      if (pillLine && pillLine.parentNode) pillLine.parentNode.removeChild(pillLine);
+      pillLine = null;
+      if (dragMoved){
+        if (pillTarget) nav.insertBefore(pill, pillTarget);
+        else nav.appendChild(pill);
+        justDragged = true;
+        setTimeout(function(){ justDragged = false; }, 0);
+        selected = Array.prototype.slice.call(nav.querySelectorAll('.ql-pill'))
+          .map(function(p){ return p.getAttribute('data-dir'); });
+        save();
+      }
+    }
+
+    function makePill(item){
+      var pill = document.createElement('span');
+      pill.className = 'ql-pill';
+      pill.setAttribute('data-dir', item.dir);
+      pill.addEventListener('pointerdown', onPillDown);
+
+      var main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'ql-pill-copy';
+      main.title = '"' + item.name + '" — drag to reorder, click to copy';
+      var icon = item.iconSrc ? '<img class="ql-pill-icon" src="' + item.iconSrc + '" alt="">' : '';
+      main.innerHTML = icon + '<span class="ql-pill-name"></span>' + COPY_SVG;
+      main.querySelector('.ql-pill-name').textContent = item.name;
+      main.addEventListener('click', function(){
+        if (justDragged) return; // don't copy right after a drag
+        copyText('cd ~/projects/' + item.dir + ' && claude');
+        main.classList.add('copied');
+        setTimeout(function(){ main.classList.remove('copied'); }, 1200);
+      });
+
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'ql-pill-remove';
+      rm.title = 'Remove from quicklinks';
+      rm.setAttribute('aria-label', 'Remove');
+      rm.innerHTML = '&times;';
+      rm.addEventListener('click', function(){ unpin(item.dir); });
+
+      pill.appendChild(main);
+      pill.appendChild(rm);
+      return pill;
+    }
+
+    function updatePins(){
+      registry.forEach(function(item){
+        if (!item.pinBtn) return;
+        var p = isPinned(item.dir);
+        item.pinBtn.classList.toggle('pinned', p);
+        item.pinBtn.innerHTML = p
+          ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5"/></svg>'
+          : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>';
+        item.pinBtn.title = p ? 'In quicklinks — click removes' : 'Add to quicklinks';
+      });
+    }
+
+    function render(){
+      nav.innerHTML = '';
+      if (!selected.length){
+        var e = document.createElement('span');
+        e.className = 'ql-empty';
+        e.textContent = 'Pin projects here with + below';
+        nav.appendChild(e);
+      } else {
+        selected.forEach(function(d){ if (byDir[d]) nav.appendChild(makePill(byDir[d])); });
+      }
+      updatePins();
+    }
+
+    // Pin button per project row (next to the claude button)
+    registry.forEach(function(item){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ql-pin';
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if (isPinned(item.dir)) unpin(item.dir); else pin(item.dir);
+      });
+      var claudeBtn = item.tr.querySelector('.btn-claude');
+      if (claudeBtn && claudeBtn.parentNode){
+        claudeBtn.parentNode.insertBefore(btn, claudeBtn);
+      } else {
+        item.tr.appendChild(btn);
+      }
+      item.pinBtn = btn;
+    });
+
+    // Couple star <-> quicklinks: "in progress" pins the project at the top, unstarring removes it
+    // (capture phase: the star handler stops propagation)
+    document.addEventListener('click', function(e){
+      var st = e.target.closest('.star-toggle');
+      if (!st) return;
+      setTimeout(function(){
+        var tr = st.closest('tr');
+        var item = registry.filter(function(it){ return it.tr === tr; })[0];
+        if (!item) return;
+        if (tr.classList.contains('work')) pin(item.dir); else unpin(item.dir);
+      }, 0);
+    }, true);
+
+    render();
+  })();
+
+  /* ── Mark projects as "completed" (dimmed in the list) ── */
+  (function(){
+    var KEY = 'dashboard-completed';
+    var table = document.getElementById('overview-table');
+    if (!table) return;
+    var done;
+    try { done = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ done = null; }
+    if (!Array.isArray(done)) done = [];
+    function save(){ try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e){} }
+    // Also deactivate todos that reference this project
+    function applyTasks(dir, on){
+      try {
+        var links = document.querySelectorAll('.task-item a[href="#' + dir + '"]');
+        Array.prototype.slice.call(links).forEach(function(a){
+          var item = a.closest('.task-item');
+          if (item) item.classList.toggle('task-deactivated', on);
+        });
+      } catch(e){}
+    }
+    var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M5.5 8.2l1.7 1.7 3.3-3.6"/></svg>';
+
+    Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(tr){
+      if (tr.classList.contains('org-header')) return;
+      var link = tr.querySelector('a.table-name');
+      if (!link) return;
+      // href identifier (todos link the same way) — NOT the claude arg (sometimes differs)
+      var dir = (link.getAttribute('href') || '').replace('#', '');
+      var claudeBtn = tr.querySelector('.btn-claude');
+      var isDone = done.indexOf(dir) !== -1;
+      if (isDone){ tr.classList.add('completed'); applyTasks(dir, true); }
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'done-toggle' + (isDone ? ' done' : '');
+      btn.title = isDone ? 'Mark as open' : 'Mark as completed';
+      btn.innerHTML = CHECK;
+      btn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        var i = done.indexOf(dir);
+        if (i === -1){ done.push(dir); tr.classList.add('completed'); btn.classList.add('done'); btn.title = 'Mark as open'; applyTasks(dir, true); }
+        else { done.splice(i, 1); tr.classList.remove('completed'); btn.classList.remove('done'); btn.title = 'Mark as completed'; applyTasks(dir, false); }
+        save();
+        if (window.refreshTaskCounts) window.refreshTaskCounts();
+      });
+
+      if (claudeBtn && claudeBtn.parentNode) claudeBtn.parentNode.insertBefore(btn, claudeBtn);
+      else tr.appendChild(btn);
+    });
+    // Refresh the counter after initially applying completed projects
+    if (window.refreshTaskCounts) window.refreshTaskCounts();
+  })();
+
+  /* ── Star: mark projects currently being worked on ── */
+  (function(){
+    var KEY = 'dashboard-starred';
+    var table = document.getElementById('overview-table');
+    if (!table) return;
+    var starred;
+    try { starred = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ starred = null; }
+    if (!Array.isArray(starred)) starred = [];
+    function save(){ try { localStorage.setItem(KEY, JSON.stringify(starred)); } catch(e){} }
+    var STAR = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg>';
+
+    Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(tr){
+      if (tr.classList.contains('org-header')) return;
+      var link = tr.querySelector('a.table-name');
+      if (!link) return;
+      var dir = (link.getAttribute('href') || '').replace('#', '');
+      var isStar = starred.indexOf(dir) !== -1;
+      if (isStar) tr.classList.add('work');
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'star-toggle' + (isStar ? ' starred' : '');
+      btn.title = isStar ? 'No longer in progress' : 'Currently working on this';
+      btn.setAttribute('aria-pressed', isStar ? 'true' : 'false');
+      btn.innerHTML = STAR;
+      btn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        var i = starred.indexOf(dir);
+        var on = i === -1;
+        if (on) starred.push(dir); else starred.splice(i, 1);
+        tr.classList.toggle('work', on);
+        btn.classList.toggle('starred', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.title = on ? 'No longer in progress' : 'Currently working on this';
+        save();
+      });
+
+      var doneBtn = tr.querySelector('.done-toggle');
+      if (doneBtn && doneBtn.parentNode) doneBtn.parentNode.insertBefore(btn, doneBtn);
+      else {
+        var claudeBtn = tr.querySelector('.btn-claude');
+        if (claudeBtn && claudeBtn.parentNode) claudeBtn.parentNode.insertBefore(btn, claudeBtn);
+        else tr.appendChild(btn);
+      }
+    });
+  })();
+
+  /* ── View toggle: Projects / Organizations / Active ── */
+  (function(){
+    var KEY = 'dashboard-view-mode';
+    var table = document.getElementById('overview-table');
+    var btns = document.querySelectorAll('.view-btn');
+    if (!table || !btns.length) return;
+    function setMode(mode){
+      table.classList.toggle('mode-orgs', mode === 'orgs');
+      table.classList.toggle('mode-active', mode === 'active');
+      Array.prototype.slice.call(btns).forEach(function(b){
+        var on = b.getAttribute('data-mode') === mode;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      try { localStorage.setItem(KEY, mode); } catch(e){}
+    }
+    var saved = null; try { saved = localStorage.getItem(KEY); } catch(e){}
+    setMode(saved === 'flat' || saved === 'active' ? saved : 'orgs');
+    Array.prototype.slice.call(btns).forEach(function(b){
+      b.addEventListener('click', function(){ setMode(b.getAttribute('data-mode')); });
+    });
+  })();
+
+  /* ── Reorder table rows per organization via drag & drop ── */
+  (function(){
+    var KEY = 'dashboard-row-order';
+    var table = document.getElementById('overview-table');
+    if (!table) return;
+    var tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    var GRIP = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">'
+      + '<circle cx="5.5" cy="3" r="1.4"/><circle cx="10.5" cy="3" r="1.4"/>'
+      + '<circle cx="5.5" cy="8" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/>'
+      + '<circle cx="5.5" cy="13" r="1.4"/><circle cx="10.5" cy="13" r="1.4"/></svg>';
+
+    function rowKey(tr){
+      if (tr.classList.contains('org-header')){
+        var lbl = tr.querySelector('.org-header-label');
+        return 'ORG:' + (lbl ? lbl.textContent.trim() : '');
+      }
+      var link = tr.querySelector('a.table-name');
+      return link ? (link.getAttribute('href') || '').replace('#', '') : null;
+    }
+    function save(){
+      var order = Array.prototype.slice.call(tbody.children).map(rowKey).filter(Boolean);
+      try { localStorage.setItem(KEY, JSON.stringify(order)); } catch(e){}
+    }
+    function applyOrder(){
+      var saved; try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ saved = null; }
+      if (!Array.isArray(saved) || !saved.length) return;
+      var map = {};
+      Array.prototype.slice.call(tbody.children).forEach(function(tr){ var k = rowKey(tr); if (k) map[k] = tr; });
+      saved.forEach(function(k){ if (map[k]) tbody.appendChild(map[k]); });
+    }
+    applyOrder();
+
+    // Level: -1 = org-header, 0 = main project, 1 = sub-row, 2 = sub-sub-row
+    function level(r){
+      if (r.classList.contains('org-header')) return -1;
+      if (r.classList.contains('sub-sub-row')) return 2;
+      if (r.classList.contains('sub-row')) return 1;
+      return 0;
+    }
+    // Block = row + all directly following rows of a deeper level
+    // (a main project drags its sub-projects along)
+    function blockOf(tr){
+      var rows = Array.prototype.slice.call(tbody.children);
+      var lv = level(tr), idx = rows.indexOf(tr), out = [tr];
+      for (var i = idx + 1; i < rows.length; i++){
+        if (level(rows[i]) > lv) out.push(rows[i]); else break;
+      }
+      return out;
+    }
+    // Sort siblings of the same level:
+    // level 0 -> all main projects of the same org group (between org-headers)
+    // level 1/2 -> contiguous block of the same level (deeper nesting doesn't interrupt)
+    function groupSiblings(tr){
+      var rows = Array.prototype.slice.call(tbody.children);
+      var lv = level(tr);
+      if (lv < 0) return [];
+      var idx = rows.indexOf(tr), start = idx, end = idx;
+      if (lv === 0){
+        for (var i = idx - 1; i >= 0 && level(rows[i]) !== -1; i--) start = i;
+        for (var j = idx + 1; j < rows.length && level(rows[j]) !== -1; j++) end = j;
+      } else {
+        for (var i2 = idx - 1; i2 >= 0 && level(rows[i2]) >= lv; i2--) start = i2;
+        for (var j2 = idx + 1; j2 < rows.length && level(rows[j2]) >= lv; j2++) end = j2;
+      }
+      return rows.slice(start, end + 1).filter(function(r){ return level(r) === lv; });
+    }
+
+    var dragRow = null, startY = 0, moved = false, rowLine = null, rowTarget = null, rowAfter = false;
+    function onDown(e){
+      if (e.button != null && e.button !== 0) return;
+      e.preventDefault();
+      dragRow = e.currentTarget.closest('tr');
+      startY = e.clientY; moved = false; rowTarget = null; rowAfter = false;
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    }
+    function onMove(e){
+      if (!dragRow) return;
+      if (!moved && Math.abs(e.clientY - startY) < 5) return;
+      if (!moved){
+        moved = true;
+        dragRow.classList.add('row-dragging');
+        document.body.classList.add('dnd-active');
+        rowLine = document.createElement('div');
+        rowLine.className = 'dnd-drop-line';
+        document.body.appendChild(rowLine);
+      }
+      e.preventDefault();
+      // The row stays in place; a horizontal line shows the target (only within the org group)
+      var sibs = groupSiblings(dragRow).filter(function(r){ return r !== dragRow; });
+      var target = null, after = false;
+      for (var i = 0; i < sibs.length; i++){
+        var r = sibs[i].getBoundingClientRect();
+        if (e.clientY < r.top + r.height / 2){ target = sibs[i]; after = false; break; }
+      }
+      if (!target && sibs.length){ target = sibs[sibs.length - 1]; after = true; }
+      rowTarget = target; rowAfter = after;
+      var dr = dragRow.getBoundingClientRect();
+      // Line: "after" points behind the complete target block (incl. its sub-rows)
+      var y = dr.top;
+      if (target){
+        if (after){ var tb = blockOf(target); y = tb[tb.length - 1].getBoundingClientRect().bottom; }
+        else y = target.getBoundingClientRect().top;
+      }
+      rowLine.style.top = (y - 1 + window.scrollY) + 'px';
+      rowLine.style.left = (dr.left + window.scrollX) + 'px';
+      rowLine.style.width = dr.width + 'px';
+      rowLine.style.height = '2px';
+    }
+    function onUp(){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      if (!dragRow) return;
+      var r = dragRow; dragRow = null;
+      r.classList.remove('row-dragging');
+      document.body.classList.remove('dnd-active');
+      if (rowLine && rowLine.parentNode) rowLine.parentNode.removeChild(rowLine);
+      rowLine = null;
+      if (moved && rowTarget && rowTarget !== r){
+        // Move the whole block (row + its sub-rows), before/after the target block
+        var dragBlock = blockOf(r);
+        var ref;
+        if (rowAfter){ var tb = blockOf(rowTarget); ref = tb[tb.length - 1].nextSibling; }
+        else ref = rowTarget;
+        // Guard: if ref points into the dragged block itself (position unchanged), do NOT insert —
+        // otherwise the sub-rows would flip in front of their parent
+        if (dragBlock.indexOf(ref) === -1){
+          dragBlock.forEach(function(row){ tbody.insertBefore(row, ref); });
+          save();
+        }
+      }
+    }
+
+    Array.prototype.slice.call(tbody.children).forEach(function(tr){
+      // All project rows are draggable (main projects drag their subs along as a block)
+      if (tr.classList.contains('org-header')) return;
+      var cells = tr.querySelectorAll('td');
+      var cell = cells[cells.length - 1]; // last (actions) cell -> grip on the right
+      if (!cell) return;
+      cell.style.position = 'relative';
+      var grip = document.createElement('span');
+      grip.className = 'row-grip';
+      grip.title = 'Move row within its organization';
+      grip.innerHTML = GRIP;
+      grip.addEventListener('pointerdown', onDown);
+      cell.appendChild(grip);
+    });
+  })();
+
+  /* ── Drag & drop: section order (pointer-based, with auto-scroll) ── */
+  (function(){
+    var STORAGE_KEY = 'dashboard-section-order';
+    var sections = Array.prototype.slice.call(document.querySelectorAll('.sortable-section'));
+    if (!sections.length) return;
+
+    var GRIP_SVG = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">'
+      + '<circle cx="5.5" cy="3" r="1.4"/><circle cx="10.5" cy="3" r="1.4"/>'
+      + '<circle cx="5.5" cy="8" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/>'
+      + '<circle cx="5.5" cy="13" r="1.4"/><circle cx="10.5" cy="13" r="1.4"/></svg>';
+
+    // Order is saved PER column (main-col / sidebar)
+    function saveOrder(){
+      var data = {};
+      Array.prototype.slice.call(document.querySelectorAll('.sortable-section')).forEach(function(s){
+        var col = (s.parentNode && s.parentNode.id) || 'root';
+        (data[col] || (data[col] = [])).push(s.getAttribute('data-section'));
+      });
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+    }
+
+    function applyOrder(){
+      var saved;
+      try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch(e){ saved = null; }
+      if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
+      Object.keys(saved).forEach(function(col){
+        var container = document.getElementById(col);
+        if (!container) return;
+        saved[col].forEach(function(id){
+          var el = container.querySelector(':scope > .sortable-section[data-section="' + id + '"]');
+          if (el) container.appendChild(el);
+        });
+      });
+    }
+
+    applyOrder();
+
+    // Target section + before/after — ONLY within the dragged element's own column (container)
+    function computeDrop(y, dragged){
+      var container = dragged.parentNode;
+      var ordered = Array.prototype.slice.call(container.querySelectorAll(':scope > .sortable-section'))
+        .filter(function(s){ return s !== dragged; });
+      if (!ordered.length) return null;
+      for (var i = 0; i < ordered.length; i++){
+        var r = ordered[i].getBoundingClientRect();
+        if (y < r.top + r.height / 2) return { target: ordered[i], after: false };
+      }
+      return { target: ordered[ordered.length - 1], after: true };
+    }
+
+    function sectionTitle(section){
+      var s = section.querySelector(':scope > summary');
+      var t = s ? s.textContent.replace(/\s+/g, ' ').trim() : '';
+      return t || section.getAttribute('data-section') || 'Section';
+    }
+
+    var drag = null;
+    var lastX = 0, lastY = 0;
+    var raf = null;
+
+    function positionGhost(){
+      if (drag && drag.ghost){
+        drag.ghost.style.left = lastX + 'px';
+        drag.ghost.style.top = lastY + 'px';
+      }
+    }
+
+    function frame(){
+      if (!drag){ raf = null; return; }
+      // Auto-scroll near the viewport edges
+      var margin = 90, vh = window.innerHeight, speed = 0;
+      if (lastY < margin) speed = -Math.ceil((margin - lastY) / 6);
+      else if (lastY > vh - margin) speed = Math.ceil((lastY - (vh - margin)) / 6);
+      if (speed) window.scrollBy(0, speed);
+      positionGhost();
+      // Position the drop line live (also during auto-scroll)
+      var d = computeDrop(lastY, drag.section);
+      if (d && d.target){
+        var r = d.target.getBoundingClientRect();
+        var lineTop = d.after ? (r.bottom + window.scrollY + 4) : (r.top + window.scrollY - 8);
+        drag.dropLine.style.top = lineTop + 'px';
+        drag.dropLine.style.left = (r.left + window.scrollX) + 'px';
+        drag.dropLine.style.width = r.width + 'px';
+        drag.dropLine.style.display = 'block';
+        drag.target = d.target;
+        drag.after = d.after;
+      } else {
+        drag.dropLine.style.display = 'none';
+        drag.target = null;
+      }
+      raf = requestAnimationFrame(frame);
+    }
+
+    sections.forEach(function(section){
+      var summary = section.querySelector(':scope > summary');
+      if (!summary) return;
+
+      var handle = document.createElement('span');
+      handle.className = 'drag-handle';
+      handle.title = 'Move section — drag to reorder';
+      handle.innerHTML = GRIP_SVG;
+      summary.appendChild(handle);
+
+      handle.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); });
+
+      handle.addEventListener('pointerdown', function(e){
+        if (e.button != null && e.button !== 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        var ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        ghost.innerHTML = GRIP_SVG + '<span></span>';
+        ghost.querySelector('span').textContent = sectionTitle(section);
+        document.body.appendChild(ghost);
+
+        var dropLine = document.createElement('div');
+        dropLine.className = 'drop-line';
+        dropLine.style.display = 'none';
+        document.body.appendChild(dropLine);
+
+        drag = { section: section, pointerId: e.pointerId, target: null, after: false, ghost: ghost, dropLine: dropLine };
+        lastX = e.clientX; lastY = e.clientY;
+        positionGhost();
+        section.classList.add('dragging');
+        document.body.classList.add('dnd-active');
+        try { handle.setPointerCapture(e.pointerId); } catch(_){}
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', endDrag);
+        handle.addEventListener('pointercancel', endDrag);
+        if (!raf) raf = requestAnimationFrame(frame);
+      });
+
+      function onMove(e){
+        if (!drag) return;
+        lastX = e.clientX; lastY = e.clientY;
+        positionGhost();
+      }
+
+      function endDrag(){
+        if (!drag) return;
+        try { handle.releasePointerCapture(drag.pointerId); } catch(_){}
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', endDrag);
+        handle.removeEventListener('pointercancel', endDrag);
+        if (raf){ cancelAnimationFrame(raf); raf = null; }
+        var d = drag;
+        drag = null;
+        if (d.ghost && d.ghost.parentNode) d.ghost.parentNode.removeChild(d.ghost);
+        if (d.dropLine && d.dropLine.parentNode) d.dropLine.parentNode.removeChild(d.dropLine);
+        d.section.classList.remove('dragging');
+        document.body.classList.remove('dnd-active');
+        if (d.target && d.target !== d.section){
+          if (d.after) d.target.parentNode.insertBefore(d.section, d.target.nextSibling);
+          else d.target.parentNode.insertBefore(d.section, d.target);
+          saveOrder();
+        }
+      }
+    });
+  })();
+
+  /* ── Footer statistics (computed live) ── */
+  (function(){
+    var el = document.getElementById('footer-stats');
+    if (!el) return;
+    function calc(){
+      var rows = Array.prototype.slice.call(document.querySelectorAll('#overview-table tbody tr'))
+        .filter(function(t){ return t.querySelector('a.table-name'); });
+      var projects = rows.length;
+      var orgs = document.querySelectorAll('#overview-table tbody tr.org-header').length;
+      var inProgress = rows.filter(function(t){ return t.classList.contains('work'); }).length;
+      var completed = rows.filter(function(t){ return t.classList.contains('completed'); }).length;
+      var open = 0;
+      document.querySelectorAll('#manual-tasks .task-item').forEach(function(t){
+        var cb = t.querySelector('.task-checkbox');
+        if ((!cb || !cb.checked) && !t.classList.contains('task-deactivated')) open++;
+      });
+      var ideas = document.querySelectorAll('.idea-card').length;
+      var hours = '';
+      var hv = document.getElementById('hours-total-value');
+      if (hv){ var m = /([0-9.,]+h)/.exec(hv.getAttribute('aria-label') || ''); if (m) hours = m[1]; }
+      var parts = [
+        '<strong>' + projects + '</strong> projects',
+        '<strong>' + orgs + '</strong> organizations',
+        '<strong>' + inProgress + '</strong> in progress',
+        '<strong>' + completed + '</strong> completed',
+        '<strong>' + open + '</strong> open tasks',
+        '<strong>' + ideas + '</strong> ideas'
+      ];
+      if (hours) parts.push('<strong>' + hours + '</strong> invested');
+      el.innerHTML = parts.join(' &middot; ');
+    }
+    calc();
+    // Recompute live when stars/completions/checkboxes change
+    // (capture phase: the button handlers stop propagation, capture runs first)
+    document.addEventListener('click', function(e){
+      if (e.target.closest('.star-toggle, .done-toggle')) setTimeout(calc, 0);
+    }, true);
+    document.addEventListener('change', function(e){
+      if (e.target.classList && e.target.classList.contains('task-checkbox')) setTimeout(calc, 0);
+    });
+  })();
+
+  /* ── Quick wins: reset, shortcuts, collapse all, search count, active count ── */
+  (function(){
+    // 1) Layout reset
+    var rb = document.getElementById('layout-reset');
+    if (rb) rb.addEventListener('click', function(){
+      if (!confirm('Reset layout & ordering? (sections, rows, quicklinks, stars, completed, view, columns — theme and task status are kept)')) return;
+      ['dashboard-section-order','dashboard-row-order','dashboard-quicklinks',
+       'dashboard-starred','dashboard-completed','dashboard-view-mode','dashboard-hidden-cols']
+        .forEach(function(k){ try { localStorage.removeItem(k); } catch(e){} });
+      location.reload();
+    });
+
+    // 2) Keyboard shortcuts: / search, t theme, a tasks, 1/2/3 view
+    document.addEventListener('keydown', function(e){
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      var search = document.getElementById('table-search');
+      if (e.key === '/' && search){ e.preventDefault(); search.focus(); search.select(); }
+      else if (e.key === 't'){ var b = document.getElementById('theme-toggle-btn'); if (b) b.click(); }
+      else if (e.key === 'a'){ var tb = document.getElementById('tasks-toggle'); if (tb) tb.click(); }
+      else if (e.key === '1' || e.key === '2' || e.key === '3'){
+        var mode = { '1': 'flat', '2': 'orgs', '3': 'active' }[e.key];
+        var vb = document.querySelector('.view-btn[data-mode="' + mode + '"]');
+        if (vb) vb.click();
+      }
+    });
+
+    // 3) Collapse/expand all project cards (button in the project details header)
+    var detSummary = document.querySelector('[data-section="details"] > summary');
+    if (detSummary){
+      var cab = document.createElement('button');
+      cab.type = 'button';
+      cab.className = 'collapse-all-btn';
+      function anyOpen(){ return !!document.querySelector('.projects .project:not(.collapsed)'); }
+      function labelCab(){ cab.textContent = anyOpen() ? 'Collapse all' : 'Expand all'; }
+      cab.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        var collapse = anyOpen();
+        document.querySelectorAll('.projects .project').forEach(function(p){ p.classList.toggle('collapsed', collapse); });
+        labelCab();
+      });
+      // Keep the label current when individual cards are toggled
+      document.addEventListener('click', function(e){
+        if (e.target.closest('.project-header')) setTimeout(labelCab, 0);
+      });
+      labelCab();
+      detSummary.appendChild(cab);
+    }
+
+    // 4) Search hit count
+    var search2 = document.getElementById('table-search');
+    var count = document.getElementById('search-count');
+    if (search2 && count){
+      search2.addEventListener('input', function(){
+        var q = search2.value.trim();
+        if (!q){ count.textContent = ''; count.classList.remove('none'); return; }
+        var n = Array.prototype.slice.call(document.querySelectorAll('#overview-table tbody tr'))
+          .filter(function(t){ return t.querySelector('a.table-name') && t.style.display !== 'none'; }).length;
+        count.textContent = n ? n + (n === 1 ? ' match' : ' matches') : 'No matches';
+        count.classList.toggle('none', n === 0);
+      });
+    }
+
+    // 5) Active count in the view toggle
+    var activeBtn = document.querySelector('.view-btn[data-mode="active"]');
+    function updateActive(){
+      if (!activeBtn) return;
+      var n = document.querySelectorAll('#overview-table tbody tr.work').length;
+      activeBtn.textContent = n ? 'Active (' + n + ')' : 'Active';
+    }
+    document.addEventListener('click', function(e){
+      if (e.target.closest('.star-toggle')) setTimeout(updateActive, 0);
+    }, true);
+    updateActive();
   })();
 </script>
 
