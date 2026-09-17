@@ -12,7 +12,7 @@ The whole thing is still a single HTML file with zero dependencies — no build 
 
 If you're a designer trying to get into Claude Code and looking to understand better code and developers, fork it, swap in your own projects, and go from there. The demo you're looking at ships with twelve fictional projects so you can click through every feature before wiring up your own.
 
-<img width="1600" height="1268" alt="Project Dashboard demo in dark mode: sortable project overview with hours, phases and freshness bars, pinned project quicklinks in the header, and a sidebar with tasks, AI recommendations, and synergy cards — a single HTML file with zero dependencies" src="screenshot.png" />
+<img width="1600" height="1268" alt="Project Dashboard demo in dark mode: focus section with two pinned projects above the project overview grouped by organization (one group collapsed, a Claude Design section at the end), smart search field, freshness bars, hours and phases, pinned project quicklinks in the header, and a sidebar with task cards (details, star, hide) and synergy cards" src="screenshot.png" />
 
 ---
 
@@ -22,9 +22,11 @@ If you're a designer trying to get into Claude Code and looking to understand be
 
 **Overview table**
 
-- Sortable, filterable project table with full text search and hit counter
+- Sortable project table with a **smart search** — weighted index over rows, project cards, synergies and tasks, with filter chips (`tool:` `org:` `tag:` `in:`), a results panel with highlighted snippets, and a hit counter
+- **Focus section** — pin up to 3 projects above the table
 - Grouped by organization with section sub-headings — sorting by a column switches to a flat global ranking
-- Three view modes: **Projects** (flat), **Organizations** (grouped), **Active** (starred only)
+- Three view modes: **Projects** (flat, with **tool bands** showing where a project lives), **Organizations** (grouped, sections collapsible and movable), **Active** (starred only)
+- **Open only** toggle hides completed projects
 - Sub-projects shown as indented sub-rows that stay attached to their parent
 - Freshness bar per project — green when recently updated, red (and short) when stale
 - Column visibility toggle — show/hide columns, persisted in localStorage
@@ -33,7 +35,9 @@ If you're a designer trying to get into Claude Code and looking to understand be
 
 - Sticky header with **quicklink pills** — pin favorite projects, drag to reorder, click to copy the launch command
 - Star projects as "in progress", mark projects as completed (dims the row and deactivates their tasks)
-- Drag & drop everywhere — reorder sections and table rows, persisted in localStorage
+- Drag & drop everywhere — reorder sections, organizations and table rows; the saved order heals itself when projects are renamed, added or moved
+- Resizable sidebar (drag the gap; drag far right to hide it) and an organization filter for tasks
+- Remembers what you collapsed — sections, organization groups and project cards
 - Task management with status tracking, plus AI-generated task recommendations
 - Keyboard shortcuts: `/` search, `t` theme, `a` tasks, `1`/`2`/`3` view modes
 
@@ -72,7 +76,7 @@ If you're a designer trying to get into Claude Code and looking to understand be
 
 ```bash
 git clone https://github.com/donludwig/project-dashboard.git
-cd project-dashboard
+cd personal-project-dashboard
 open index.html
 ```
 
@@ -118,6 +122,10 @@ Ask Claude Code anytime:
 
 Everything lives in one `index.html` — no build step, no framework, no dependencies. Just open it in a browser.
 
+### Card Previews
+
+A project card can show a preview image above its path tags: `<figure class="card-preview"><img src="assets/previews/<project-id>.png" …></figure>`. The demo ships schematic SVG placeholders; drop a screenshot (PNG/JPG/WebP/SVG) into `assets/previews/` and point the `src` at it.
+
 ### Document Tables
 
 Each project card includes a sortable table of relevant files, categorized by type:
@@ -150,7 +158,32 @@ Create a /radar skill that scans my projects and updates the dashboard
 
 A global task section sits above the overview table, combining manual tasks and AI-generated suggestions.
 
-**Manual tasks** have a checkbox, ticket ID badge, and status (Open/Active/Done). They also appear in their project card for context.
+**Manual tasks** have a checkbox, ticket ID badge, and status (Open/Active/Done). They also appear in their project card for context. Each card has three small actions: **details** (opens a dialog with the full ticket), **star**, and **hide** (view only — a "restore" link brings hidden tasks back). Drag a card to reorder the list. All of this is view state in `localStorage`; the task itself is never changed from the browser.
+
+**Tasks from files (optional).** Write task cards by hand, or keep each task as a Markdown file with frontmatter — the same format `scan.sh` reads from `todo_*.md`:
+
+```markdown
+---
+id: APP-12
+title: "Short task title"
+status: open          # open | active | blocked are shown
+priority: high
+project: my-app       # anchor id of the project row
+deadline: 2026-10-01  # optional
+summary: "One line for the card"
+---
+Free-form notes — shown in the detail dialog.
+```
+
+`python3 sync-tasks.py` (standard library only) rewrites the block between the `AUTO-TASKS` markers in `index.html`; project name and color come from the overview table. Point `SOURCES` at your ticket folders (`tasks/*.md` in a project, `todo_*.md` in a Claude memory directory). The dashboard never needs the script to run — it is a convenience, not a build step.
+
+There are two ways to work with ticket files:
+
+| | Without Obsidian | With Obsidian |
+|---|---|---|
+| Setup | nothing | keep tickets inside your vault, set `OBSIDIAN` in `index.html` |
+| "Open ticket file" | opens the `.md` via `file://` | opens the ticket in Obsidian |
+| Editing | any editor, then `sync-tasks.py` | in Obsidian, then `sync-tasks.py` |
 
 **AI recommendations** are generated during a Radar scan — the AI analyzes all projects and suggests actionable next steps. Each suggestion has:
 - An `AI` tag to distinguish it from manual tasks
@@ -186,7 +219,7 @@ By default, projects are **grouped by organization** with section sub-headings. 
 
 A **view toggle** next to the search switches between three modes: **Projects** (flat list without organization headings), **Organizations** (grouped, the default), and **Active** (only starred projects). In Organizations mode, rows can be reordered per organization via a drag grip on the right edge.
 
-Each row also gets three action buttons (injected by JS): **+** pins the project to the header quicklinks, **★** marks it as "in progress" (bold name, amber edge, auto-pins it), and **✓** marks it as completed (dims the row and strikes through its tasks).
+Each row also gets four action buttons (injected by JS): the **bookmark** adds the project to the header quicklinks, the **arrow** pins it into the **Focus** section above the table (max. 3 — the original row is hidden below while pinned, and the focus rows can be reordered by drag), **★** marks it as "in progress" (bold name, amber edge, auto-pins it), and **✓** marks it as completed (dims the row and strikes through its tasks).
 
 Each row includes:
 - Project name with color-coded icon
@@ -197,13 +230,37 @@ Each row includes:
 - Phase badge (Active, Stable, Migration, Prototype, Idea)
 - Direct links to local files and live sites
 
+### Smart Search
+
+The search field builds a weighted index on first use: project name, table row, badges, the project card (subtitle, description, sections, documents, tasks, paths) and every synergy that mentions the project. A results panel lists the best matches with the fields that matched and a highlighted snippet, plus matching synergies and tasks.
+
+| Syntax | Meaning |
+|---|---|
+| `word word` | AND — every word must match |
+| `-word` | exclude |
+| `"exact phrase"` | phrase match |
+| `org:redleaf` | only projects of an organization |
+| `tool:design` | only projects of a tool band |
+| `tag:vite` | match tech badges only |
+| `in:task audit` | search one field only (`in:synergy`, `in:document`, `in:description`, …) |
+
+Completed filters turn into **chips inside the search box** (remove with ×, or Backspace in the empty field; `Esc` clears everything). Focusing the field shows clickable suggestions built from your organizations and tool bands.
+
+### Tool Bands & Cloud Projects
+
+Not every project is a local folder. Rows marked `class="cloud-row"` live under a tool band (`<tr class="org-header tool-header">`, e.g. "Claude Design") and carry a link instead of the `claude` button. In the **Projects** view the bands replace the organization headings — "where does this live?" — while the **Organizations** view shows each band as its own section. The first band (`tool-code`) wraps all local projects. The footer adds stacked bars with the project share per tool band and per organization.
+
+### Obsidian Integration (optional)
+
+If your code directory is an Obsidian vault, set `OBSIDIAN = { vault: 'name', root: '/absolute/path/to/vault/' }` in the script. All `.md` links inside the vault then open in Obsidian without leaving the page, and `Cmd/Ctrl+Enter` in the search field runs a full-text vault search. Left empty (the default), links stay plain `file://` links.
+
 ### Column Visibility Toggle
 
 A **Display columns** dropdown next to the search input lets you hide columns you don't need. The button shows a `visible/total` counter when columns are hidden, and the state is saved to `localStorage` so it survives reloads. Useful when the table gets wider than your screen — hide what's not relevant for the moment.
 
 ### Quicklinks, Layout & Shortcuts
 
-The sticky header holds a **quicklinks bar**: pin any project with the **+** button in its table row and it appears as a pill with its icon. Click a pill to copy the `cd … && claude` launch command, drag pills to reorder them, remove them with the ×. Starring a project as "in progress" pins it automatically.
+The sticky header holds a **quicklinks bar**: add any project with the **bookmark** button in its table row and it appears as a pill with its icon. Click a pill to copy the `cd … && claude` launch command, drag pills to reorder them, remove them with the ×. Starring a project as "in progress" pins it automatically.
 
 The page is a **two-column layout**: the main column holds the overview and project details, a sticky sidebar holds tasks and synergies. Every section has a drag handle in its header — reorder sections freely, even across columns' saved order. A reset button in the footer clears all layout customizations (sections, rows, quicklinks, stars, completed, view, columns) while keeping theme and task status.
 
@@ -279,9 +336,11 @@ Edit the `PROJECTS` array at the top of the script to match your projects. Note 
 ```
 index.html      — The complete dashboard (HTML + CSS + JS)
 scan.sh         — Radar scanner script (metrics, time logs, tasks, link check)
+sync-tasks.py   — Optional helper: task cards from ticket files (standard library only)
+tasks/          — Demo tickets (Markdown + frontmatter)
 time-log.md     — Hours log for this repo (example of the format)
 favicon.svg     — Dashboard icon
-assets/         — Visuals (README header, section banners, social preview, LinkedIn)
+assets/         — Visuals (README header, section banners, social preview, LinkedIn) and card previews (`previews/`)
 README.md       — This file
 CHANGELOG.md    — Release notes
 LICENSE         — MIT License

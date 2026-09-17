@@ -8,8 +8,10 @@ Communication language: English.
 
 - **index.html** (~4.9k lines): Complete dashboard in a single file (HTML + CSS + JS, no build step)
 - **scan.sh**: Radar scanner — collects all project metrics in ~3 seconds (see below)
+- **sync-tasks.py**: Optional helper (Python standard library) — rewrites the task cards between the `AUTO-TASKS` markers in index.html from ticket files (`SOURCES` globs). The dashboard never depends on it
+- **tasks/**: Demo tickets (Markdown + frontmatter: id, title, status, priority, project, deadline, summary)
 - **favicon.svg**: Dashboard icon (abstract dashboard glyph — cyan header bar + panel blocks on dark ground)
-- **assets/**: Visuals — README header (`header.png`), section banners (`banners/01-06`, placed above the `##` headings in README.md; keep the `##` lines for anchors), GitHub social preview (`social-preview.png`), LinkedIn image (`linkedin.png`)
+- **assets/**: Card previews (`previews/<project-id>.svg|png`, see Card Preview Pattern) and visuals — README header (`header.png`), section banners (`banners/01-06`, placed above the `##` headings in README.md; keep the `##` lines for anchors), GitHub social preview (`social-preview.png`), LinkedIn image (`linkedin.png`)
 - **README.md**: Public documentation
 - **CHANGELOG.md**: Release notes — add an entry for every feature release
 - **LICENSE**: MIT
@@ -22,10 +24,11 @@ The HTML follows a strict section order:
 2. **Component Styles** — All CSS: layout, header, quicklinks, table, cards, agents, docs-tables, synergies, drag & drop, footer, responsive
 3. **Header** — Sticky full-width band: `h1.logo-home`, `nav#quicklinks` (JS-generated pills), `.header-actions` (tasks toggle + theme toggle)
 4. **Layout wrapper** — `<div class="layout">` with two columns:
-   - `<main class="main-col" id="main-col">` — Overview Table, About section, Project Details (project cards + Project Ideas as `.ideas-sub` inside the card)
+   - `<main class="main-col" id="main-col">` — Focus section (`#pin-section`, first and deliberately not sortable, hidden without pins), Overview Table, About section, Project Details (project cards + Project Ideas as `.ideas-sub` inside the card)
+   - `<div class="col-resizer" id="col-resizer">` — drag handle in the gap: sets `--sidebar-w` (380–860px), hides the sidebar when dragged far right (`.layout.sidebar-hidden`)
    - `<aside class="sidebar" id="sidebar">` — Tasks, Synergies (sticky, scrolls independently)
 5. **Footer** — Live stats (`#footer-stats`), layout reset button, last-viewed/last-update dates
-6. **JavaScript** — Table sorting (org-grouped by default, global ranking when sorted), search/filter with hit counter (hides empty org sections), column visibility toggle, freshness/activity bars, theme toggle, back-to-top, clipboard, quicklink pills (pin/unpin, drag reorder), star ("in progress") and completed toggles per row, view modes (flat/orgs/active), row drag & drop per organization, section drag & drop per column, footer stats, keyboard shortcuts (`/`, `t`, `a`, `1`/`2`/`3`), collapse/expand all cards
+6. **JavaScript** — Table sorting (org-grouped by default, global ranking when sorted), smart search (weighted index over rows, cards, synergies, tasks; filter chips `tool:` `org:` `tag:` `in:`; results panel; hit counter), "open only" toggle, focus section (pin up to 3 projects), collapsible/movable org sections, tool bands, sidebar resize, task org filter, optional Obsidian links (`OBSIDIAN` config), column visibility toggle, freshness/activity bars, theme toggle, back-to-top, clipboard, quicklink pills (pin/unpin, drag reorder), star ("in progress") and completed toggles per row, view modes (flat/orgs/active), row drag & drop per organization, section drag & drop per column, footer stats, keyboard shortcuts (`/`, `t`, `a`, `1`/`2`/`3`), collapse/expand all cards
 
 Sections that can be reordered carry `class="sortable-section"` and a unique `data-section` attribute; the saved order is per column container (`main-col` / `sidebar`) in localStorage.
 
@@ -344,7 +347,17 @@ By default the table shows these groups. When the user sorts by a column, JS add
 
 **View modes:** a toggle next to the search sets `mode-orgs` (grouped, default) or `mode-active` (only rows with class `work`) on the table; the flat mode has no mode class and hides org-headers via CSS. The mode is persisted in localStorage.
 
-**Row action buttons:** JS injects three buttons into each project row before the claude button — `.ql-pin` (pin to header quicklinks), `.star-toggle` (adds class `work`, auto-pins), `.done-toggle` (adds class `completed`, dims the row and deactivates tasks that link to the project via `href="#project-id"`). Rows also get a `.row-grip` drag handle in the last cell for reordering within their organization; a main project drags its sub-rows along as a block.
+**Row action buttons:** JS injects four buttons into each project row before the claude button — `.ql-pin` (bookmark: add to header quicklinks), `.pin-toggle` (arrow: pin into the Focus section, max. 3; the original row gets `.pinned-away` and a clone appears in `#pin-tbody`, clicks on the clone's other buttons are forwarded to the original), `.star-toggle` (adds class `work`, auto-pins to quicklinks), `.done-toggle` (adds class `completed`, dims the row and deactivates tasks that link to the project via `href="#project-id"`). Rows also get a `.row-grip` drag handle in the last cell for reordering within their group; a main project drags its sub-rows along as a block, an org header drags its whole section.
+
+**Project key = anchor id:** every row-based JS feature (quicklinks, focus, star, done, row order, search, task filter) keys a project by the `href="#project-id"` of its `.table-name` link — never by the `openClaude('…')` argument, which sub-projects without their own folder share with their parent.
+
+**Tool bands & cloud projects:** `<tr class="org-header tool-header" style="--org-color:…">` groups the rows below it by where they live. Bands are the headings of the Projects (flat) view; in the Organizations view a band acts as its own section. The first band carries `tool-code`, wraps all local projects and is hidden in the Organizations view. Projects without a local folder use `<tr class="cloud-row">` and an `<a class="btn-claude" href="…">` link in the last cell instead of the claude button.
+
+**Collapsible org sections:** clicking an org header toggles `.org-collapsed` on it and `.org-collapsed-row` on its rows (state per `ORG:<label>` key in localStorage); ignored while sorting or searching.
+
+**Row order is self-healing:** the saved order (`dashboard-row-order` for Organizations, `dashboard-row-order-flat` for the flat views) is only a ranking of siblings applied to the HTML structure. Unknown keys are ignored, new rows go to the end of their group, sub-rows always stay under their parent — no storage key bump needed after structural edits.
+
+**Tasks org filter:** the select in the tasks header is built from the organizations of the projects that tasks link to; add `data-org="Name"` to a `.task-item` to override.
 
 ### Icon Pattern
 
@@ -382,6 +395,32 @@ Replace `%23e8432a` with the project's hex color (URL-encoded #) and `Nf` with t
 ```
 
 Collapsible: `.collapsed` class toggles `.project-body` visibility via CSS `display: none`.
+
+### Card Preview Pattern
+
+Optional, directly above `.project-paths` inside the card body:
+
+```html
+<figure class="card-preview"><img src="assets/previews/project-id.png" width="640" height="400" loading="lazy" alt="Preview: Project Name"><figcaption>Preview &middot; as of 2026-09-17</figcaption></figure>
+```
+
+The demo uses schematic SVG placeholders. For real projects use a screenshot (640px wide is enough); keep files in `assets/previews/`, never embed them as base64.
+
+### Task Card Pattern
+
+Task cards live in `#manual-tasks`. Cards between `<!-- AUTO-TASKS:BEGIN -->` and `<!-- AUTO-TASKS:END -->` are generated by `sync-tasks.py` — edit the ticket file, not the HTML. Hand-written cards go outside the markers and use the same markup:
+
+```html
+<div class="task-item" data-file="tasks/app-12.md" data-priority="high" data-body="…base64…">
+  <input type="checkbox" class="task-checkbox">
+  <div class="task-content">
+    <div class="task-title"><span>Title</span><span class="task-id">APP-12</span><span class="task-status offen">Open</span></div>
+    <div class="task-meta"><a href="#project-id" style="color:#hex;…">Project</a> &middot; One-line summary</div>
+  </div>
+</div>
+```
+
+`data-file`, `data-priority`, `data-deadline`, `data-created` and `data-body` are optional and only feed the detail dialog. The task title is the key for checkbox sync, star, order and hide — keep titles unique. Status classes: `offen` (open/blocked), `aktiv` (active or has a deadline), `erledigt`. JS adds the details/star/hide buttons and drag ordering; all of it is view state in localStorage, the browser never writes to ticket files. With the `OBSIDIAN` option set, `data-file` links inside the vault open in Obsidian.
 
 ### Docs Table Pattern
 
@@ -452,7 +491,7 @@ Theme toggle button in header switches `data-theme` attribute. System preference
 
 ## Constraints
 
-- No external dependencies — no npm, no CDN, no build tools
+- No external dependencies — no npm, no CDN, no build tools, no server. `scan.sh` and `sync-tasks.py` are optional maintenance helpers; `index.html` must always work when simply opened in a browser
 - All project data is maintained via Claude Code scans or manual updates
 - File paths use file:// protocol for local access
 - Works offline (except external links)
