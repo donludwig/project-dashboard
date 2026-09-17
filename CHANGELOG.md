@@ -2,6 +2,33 @@
 
 All notable changes to the Project Dashboard.
 
+## 2.1.0 — 2026-09-17
+
+Focus, smart search and a more forgiving layout.
+
+### Added
+
+- **Focus section** — pin up to 3 projects above the overview table (arrow button per row). Pinned rows are cloned on top and hidden below, stay fully operable (quicklink, star, done) and can be reordered by drag; a 4th pin is declined with a short hint
+- **Smart search** — weighted index over table rows, project cards, synergies and tasks. AND by default, `-word`, `"phrase"`, and the filters `tool:` `org:` `tag:` `in:`; filters become removable chips inside the search box, suggestions appear on focus, a results panel shows matched fields with highlighted snippets
+- **Tool bands & cloud projects** — `tool-header` rows group projects by where they live (e.g. Claude Code / Claude Design) in the Projects view; `cloud-row` projects carry a link instead of the `claude` button, and their quicklink pill opens that link
+- **Collapsible, movable organizations** — click an organization header to fold its rows (with project count), drag its grip to move the whole section
+- **"Open only" toggle** — hides completed projects
+- **Resizable sidebar** — drag the gap between the columns (380–860px), double-click resets, drag far right hides the sidebar; the header tasks button brings it back
+- **Organization filter for tasks** — derived from the project each task links to (`data-org` on a task overrides); counters respect the filter
+- **Remembered state** — open/closed sections, collapsed organizations and collapsed project cards survive reloads
+- **Footer bars** — stacked ASCII bars with the project share per tool band and per organization; hidden projects are noted in the stats
+- **Task cards** — details dialog (native `<dialog>` with the full ticket), star, hide with restore, drag to reorder; view state only, nothing is written from the browser
+- **Tasks from files (optional)** — `sync-tasks.py` builds the task cards from Markdown tickets with frontmatter (same format as `todo_*.md`), project name and color are read from the overview table; works without Obsidian (file link) and with it (ticket opens in the vault). Demo tickets in `tasks/`
+- **Card previews** — optional preview image per project card (`assets/previews/`), schematic SVG placeholders for the demo projects
+- **Optional Obsidian integration** — `.md` links inside a configured vault open in Obsidian, `Cmd/Ctrl+Enter` searches the vault
+
+### Changed
+
+- **Self-healing row order** — a saved order is now only a ranking applied to the HTML structure: renamed anchors, new organizations or moved rows no longer strand sub-rows or require a storage key bump. Projects and Organizations views keep separate orders
+- **Quicklinks are keyed by the row's anchor id** instead of the `openClaude` argument, so sub-projects sharing a folder with their parent can be pinned independently (existing quicklinks are migrated)
+- Row buttons: bookmark = quicklink, arrow = focus, star = in progress, check box = completed; active buttons are filled. The completed icon is now square like the rest of the UI
+- Accessibility & typography: visible keyboard focus on all controls, tabular figures with slashed zero, balanced headings, hyphenated body copy, links inherit the accent color; deactivated tasks are labelled "Project completed"
+
 ## 2.0.0 — 2026-07-27
 
 A major release: new two-column layout with quicklinks, view modes, drag & drop everywhere, a full visual overhaul, and a much more capable Radar scanner.

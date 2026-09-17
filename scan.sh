@@ -27,7 +27,7 @@ PROJECTS=(
   "design-sys|my-design-system|-Users-jane-projects-my-design-system|#005b8e|DS"
   "app|my-app|-Users-jane-projects-my-app|#10b981|Ma"
   "docs|my-docs|-Users-jane-projects-my-docs|#f59e0b|Md"
-  "dashboard|project-dashboard|-Users-jane-projects-project-dashboard|#888|PD"
+  "dashboard|personal-project-dashboard|-Users-jane-projects-personal-project-dashboard|#888|PD"
 )
 
 # Code file extensions (for line counting)

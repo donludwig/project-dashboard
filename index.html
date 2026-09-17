@@ -22,6 +22,8 @@
     --table-header-bg: #101d26;
     --table-stripe: #0e1a23;
     --shadow: rgba(0,0,0,0.4);
+    --pin-hl: #8b7cf6;
+    --pin-hl-bg: #171335;
   }
   :root[data-theme="light"] {
     --bg: #e6eef2;
@@ -38,6 +40,8 @@
     --table-header-bg: #eef4f7;
     --table-stripe: #f0f6f9;
     --shadow: rgba(15,60,80,0.10);
+    --pin-hl: #6d28d9;
+    --pin-hl-bg: #efeafa;
   }
   :root {
     --accent-nova: #e8432a;
@@ -92,8 +96,8 @@
   /* ── Layout: main column + sidebar (tasks, synergies) ── */
   .layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 540px;
-    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr) 1.5rem var(--sidebar-w, 540px);
+    gap: 0;
     align-items: start;
   }
   .main-col, .sidebar { min-width: 0; }
@@ -104,12 +108,73 @@
     overflow-y: auto;
     scrollbar-width: thin;
   }
+  /* Sidebar width handle: lives in the 1.5rem gap, the grip appears on hover */
+  .col-resizer {
+    align-self: stretch;
+    cursor: col-resize;
+    position: relative;
+    touch-action: none;
+  }
+  .col-resizer::after {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 3px;
+    transform: translateX(-50%);
+    background: var(--border-hover);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .col-resizer:hover::after, .col-resizer.dragging::after { opacity: 1; }
+  .col-resizer.dragging::after { background: var(--accent); }
+  /* Sidebar dragged all the way to the right = hidden; the grip stays at the right edge to pull it back */
+  @media (min-width: 961px) {
+    .layout.sidebar-hidden { grid-template-columns: minmax(0, 1fr) 1.5rem 0; }
+    .layout.sidebar-hidden > .sidebar { display: none; }
+    .layout.sidebar-hidden > .col-resizer::after { opacity: 0.45; left: auto; right: 0; transform: none; }
+    .layout.sidebar-hidden > .col-resizer:hover::after,
+    .layout.sidebar-hidden > .col-resizer.dragging::after { opacity: 1; width: 5px; background: var(--accent); }
+  }
   @media (max-width: 960px) {
     .layout { grid-template-columns: 1fr; }
+    .col-resizer { display: none; }
     .sidebar { position: static; max-height: none; }
+  }
+  /* Organization filter in the tasks header */
+  #global-tasks { position: relative; }
+  .tasks-headbar { position: absolute; top: 0.35rem; right: 2.2rem; display: flex; gap: 0.5rem; align-items: center; z-index: 3; }
+  .task-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.45rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 0.72rem;
+  }
+  .task-filter:hover { border-color: var(--border-hover); }
+  .task-filter-dot { width: 8px; height: 8px; flex: none; background: var(--text-dim); }
+  .task-filter select {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 0.72rem;
+    cursor: pointer;
+    outline: none;
   }
 
   /* Accessibility: respect reduced motion */
+  /* Accessibility: visible keyboard focus everywhere */
+  summary:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid var(--pin-hl); outline-offset: 2px; }
+  /* Typography: balanced headings, hyphenated body copy, tabular figures with slashed zero where values are compared */
+  h1, h2, h3, h4, .project-name { text-wrap: balance; }
+  .project-description, .project-section li, .synergy-card p, .task-meta { hyphens: auto; -webkit-hyphens: auto; }
+  table, .footer-stats, .footer-bars, .task-id, .table-date, .table-hours, .doc-size, .doc-date { font-variant-numeric: tabular-nums slashed-zero; }
+  /* Links without their own class inherit the accent instead of browser blue/violet */
+  a, a:visited { color: var(--accent); }
+  a:hover { text-decoration: underline; }
+
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -638,9 +703,22 @@
   .overview tbody tr.org-header td:first-child { white-space: normal; }
   /* When sorting by a column: hide org grouping and rank globally */
   .overview.is-sorted tr.org-header { display: none !important; }
+  /* Collapse/expand organization sections (click the header) and move them (grip) */
+  .overview:not(.is-sorted):not(.is-searching) tbody tr.org-collapsed-row { display: none !important; }
+  tr.org-header:not(.tool-code) td { cursor: pointer; user-select: none; }
+  .org-toggle { display: inline-block; width: 0.9rem; height: 0.9rem; vertical-align: -0.15rem; margin-right: 0.45rem; color: var(--text-dim); transition: transform .15s; }
+  tr.org-header.org-collapsed .org-toggle { transform: rotate(-90deg); }
+  .org-count { font-size: 0.72rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-dim); margin-left: 0.6rem; display: none; }
+  tr.org-header.org-collapsed .org-count { display: inline; }
+  .overview:not(.mode-orgs) tr.org-header .row-grip { display: none; }
+  tr.org-header .row-grip { top: 50%; transform: translateY(-50%); }
 
   /* View modes: "Projects" = flat list, "Organizations" = grouped, "Active" = starred only */
   .overview:not(.mode-orgs) tbody tr.org-header { display: none; }
+  /* Projects view: tool bands as headings instead of organizations (where a project lives) */
+  .overview:not(.mode-orgs):not(.mode-active) tbody tr.tool-header { display: table-row; }
+  .overview.mode-orgs tbody tr.tool-code { display: none; }
+  .overview.mode-orgs tbody tr.tool-code + tr.org-header td { border-top: none; }
   .overview.mode-active tbody tr:not(.org-header):not(.work) { display: none; }
 
   /* Completed projects: strongly dimmed in the list */
@@ -649,6 +727,12 @@
   /* Deactivated todos of completed projects */
   .task-item.task-deactivated { opacity: 0.4; }
   .task-item.task-deactivated .task-title { text-decoration: line-through; }
+  .task-item.task-deactivated .task-title::after {
+    content: "Project completed";
+    font-size: 0.7rem; font-weight: 400; letter-spacing: 0.02em;
+    color: var(--text-muted); border: 1px solid var(--border);
+    padding: 0 0.35rem; margin-left: 0.4rem; text-decoration: none; display: inline-block;
+  }
   .done-toggle {
     display: inline-flex;
     align-items: center;
@@ -711,6 +795,55 @@
   .ql-pin svg { width: 12px; height: 12px; display: block; }
   .ql-pin:hover { border-color: var(--accent); color: var(--accent); }
   .ql-pin.pinned { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #fff); }
+  /* Active = color fill + filled icon */
+  .ql-pin.pinned svg path, .star-toggle.starred svg path { fill: currentColor; }
+
+  /* Focus: pin up to 3 projects into their own section above the table.
+     Fixed pin colors (not var(--accent)) — contrast measured against WCAG 1.4.11 in both themes. */
+  .pin-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    margin-right: 13px; /* the wider gap separates filing (quicklink, focus) from status (star, done) */
+    padding: 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    vertical-align: middle;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .pin-toggle:not(.pinned):hover { border-color: var(--pin-hl); color: var(--pin-hl); }
+  .pin-toggle.pinned { background: var(--pin-hl); border-color: var(--pin-hl); color: #fff; }
+  .pin-toggle svg { width: 12px; height: 12px; display: block; }
+  .pin-section[hidden] { display: none; }
+  .pin-section:not([hidden]) { border: 2px solid var(--pin-hl); background: var(--pin-hl-bg); }
+  /* Transparent table so the tint fills the COMPLETE focus area */
+  .pin-section table.overview { background: transparent; }
+  .pin-section table.overview tbody tr:nth-child(even) td { background: transparent; }
+  details.overview-table-wrap.pin-section > summary { background: transparent; }
+  .pin-section > summary .section-icon { color: var(--pin-hl); }
+  .pin-table tbody tr td:first-child { box-shadow: inset 3px 0 0 var(--pin-hl); }
+  .pin-section-count { font-size: 0.7rem; font-weight: 400; color: var(--text-muted); margin-left: 0.4rem; align-self: center; }
+  /* Pinned original rows are hidden below (they stay in the DOM as the data source);
+     !important wins against the inline display set by the table search */
+  #overview-table tbody tr.pinned-away { display: none !important; }
+  .pin-hint {
+    position: absolute;
+    z-index: 200;
+    padding: 0.3rem 0.55rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    white-space: nowrap;
+    box-shadow: 0 2px 12px var(--shadow);
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+  .pin-hint.out { opacity: 0; }
 
   /* Row reorder — grip on the right, appears on hover */
   .row-grip {
@@ -897,6 +1030,7 @@
     vertical-align: middle;
     transition: color 0.15s, border-color 0.15s;
   }
+  a.btn-claude { text-decoration: none; } /* cloud projects: link instead of button */
   .btn-claude span { display: inline-block; min-width: 7ch; text-align: center; }
   .btn-claude svg { width: 10px; height: 10px; display: block; opacity: 0.6; flex: none; }
   .btn-claude.copied svg { opacity: 1; }
@@ -1095,6 +1229,52 @@
     transition: border-color 0.15s;
   }
   .task-item:last-child { margin-bottom: 0; }
+  /* Task cards: actions (details, star, hide), drag order, detail dialog */
+  #manual-tasks .task-item { cursor: grab; }
+  #manual-tasks .task-item a, #manual-tasks .task-item button, #manual-tasks .task-item input { cursor: pointer; }
+  #manual-tasks .task-item.starred { box-shadow: inset 3px 0 0 #f59e0b; }
+  #manual-tasks .task-item.task-dragging { opacity: 0.6; background: var(--surface-2); }
+  .task-open { cursor: pointer; }
+  .task-open:hover { text-decoration: underline; text-decoration-color: var(--text-dim); }
+  .task-actions { display: flex; gap: 4px; flex: none; opacity: 0.55; transition: opacity 0.15s; }
+  .task-item:hover .task-actions, .task-actions:focus-within { opacity: 1; }
+  .task-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; padding: 0;
+    border: 1px solid var(--border); border-radius: 0;
+    background: transparent; color: var(--text-muted);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .task-btn svg { width: 12px; height: 12px; display: block; }
+  .task-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .task-star:hover { border-color: #f59e0b; color: #f59e0b; }
+  .task-star.on { background: #f59e0b; border-color: #f59e0b; color: #10222c; }
+  .task-star.on svg path { fill: currentColor; }
+  .task-restore { margin-top: 0.5rem; background: none; border: 0; padding: 0; font-family: var(--font); font-size: 0.72rem; color: var(--text-dim); cursor: pointer; text-decoration: underline; }
+  .task-restore:hover { color: var(--accent); }
+  .task-restore[hidden] { display: none; }
+  .task-dialog {
+    width: min(640px, calc(100vw - 2rem)); max-height: min(80vh, 720px);
+    margin: auto; /* the global reset zeroes the UA margin that centers a modal dialog */
+    padding: 1.1rem 1.25rem; overflow-y: auto;
+    border: 1px solid var(--border-hover); border-radius: 0;
+    background: var(--surface); color: var(--text);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.45);
+    font-size: 0.82rem;
+  }
+  .task-dialog::backdrop { background: rgba(5, 12, 18, 0.6); }
+  .task-dialog .td-head { display: flex; align-items: flex-start; gap: 1rem; }
+  .task-dialog h3 { flex: 1; margin: 0; font-size: 1.05rem; line-height: 1.3; }
+  .task-dialog .td-close { flex: none; background: transparent; border: 1px solid var(--border); border-radius: 0; color: var(--text-muted); padding: 0.1rem 0.45rem; cursor: pointer; font-size: 0.8rem; }
+  .task-dialog .td-close:hover { border-color: var(--accent); color: var(--accent); }
+  .task-dialog .td-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.7rem 0; }
+  .task-dialog .td-chip { font-size: 0.7rem; color: var(--text-muted); border: 1px solid var(--border); padding: 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .task-dialog .td-meta { color: var(--text-muted); line-height: 1.5; }
+  .task-dialog .td-body { margin: 0.9rem 0 0; padding: 0.75rem 0.9rem; background: var(--surface-2); border-left: 3px solid var(--border-hover); white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 0.74rem; line-height: 1.55; color: var(--text); }
+  .task-dialog .td-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem; margin-top: 0.9rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+  .task-dialog .td-file { border: 1px solid var(--accent); padding: 0.25rem 0.6rem; text-decoration: none; font-size: 0.76rem; }
+  .task-dialog .td-file:hover { background: var(--accent); color: var(--on-accent); text-decoration: none; }
+  .task-dialog .td-hint { font-size: 0.7rem; color: var(--text-dim); }
   .task-item:hover { border-color: var(--border-hover); }
   .task-checkbox {
     width: 16px;
@@ -1695,19 +1875,96 @@
     align-items: center;
     gap: 1rem;
   }
-  .table-search input {
+  /* Token field: filter chips live INSIDE the search box, free text stays in the input */
+  .table-search .search-box {
     flex: 1;
-    padding: 0.4rem 0.75rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.15rem 0.5rem;
+    min-height: 2.05rem;
     border: 1px solid var(--border);
-    border-radius: 0;
+    border-radius: var(--radius);
     background: var(--surface-2);
+    cursor: text;
+  }
+  .table-search .search-box:focus-within { border-color: var(--border-hover); }
+  .table-search .search-clear { margin-left: auto; flex: none; background: transparent; border: 0; color: var(--text-muted); font-size: 1.05rem; line-height: 1; padding: 0.1rem 0.35rem; cursor: pointer; }
+  .table-search .search-clear:hover { color: var(--accent); }
+  .table-search .search-clear[hidden] { display: none; }
+  .table-search input {
+    flex: 1 1 8rem;
+    min-width: 8rem;
+    padding: 0.25rem 0.25rem;
+    border: 0;
+    background: transparent;
     color: var(--text);
     font-size: 0.8rem;
     font-family: var(--font);
     outline: none;
   }
-  .table-search input:focus { border-color: var(--border-hover); }
   .table-search input::placeholder { color: var(--text-dim); }
+  /* "Open only" toggle: hides completed projects */
+  .open-only-btn {
+    align-self: stretch; /* exactly the search box height in the flex row */
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 0 0.6rem;
+    font-family: var(--font);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .open-only-btn:hover, .open-only-btn.is-on { border-color: var(--accent); color: var(--accent); }
+  #overview-table.open-only tbody tr.completed { display: none !important; }
+  /* Card preview: screenshot (or placeholder) of the project, above the path tags */
+  .card-preview { margin: 1rem 0 0; }
+  .card-preview img { display: block; width: 100%; max-width: 640px; height: auto; border: 1px solid var(--border); border-radius: 0; background: var(--surface-2); }
+  .card-preview figcaption { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.35rem; }
+  /* Links that open in Obsidian (optional integration, see OBSIDIAN in the script) */
+  a.obsidian-target { color: var(--accent); }
+
+  /* Active filter chips inside the search box (removable via x) */
+  .search-active { display: contents; }
+  .search-active[hidden] { display: none; }
+  .search-active .sa-chip { --chip: var(--accent); display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--chip); color: var(--chip); background: var(--surface); padding: 0.1rem 0.25rem 0.1rem 0.4rem; font-size: 0.7rem; border-radius: 0; white-space: nowrap; }
+  .search-active .sa-chip.sa-neg { border-style: dashed; }
+  .search-active .sa-chip svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: square; stroke-linejoin: miter; }
+  .search-active .sa-x { background: transparent; border: 0; color: inherit; cursor: pointer; font-size: 0.7rem; padding: 0 0.15rem; line-height: 1; }
+  .search-active .sa-x:hover { color: var(--text); }
+  /* Smart search: results panel + suggestion chips (square, icons as inline SVG) */
+  .search-results, .search-hints { margin: 0 1.25rem 0.75rem; border: 1px solid var(--border); background: var(--surface-2); padding: 0.45rem 0.75rem; font-size: 0.78rem; border-radius: 0; }
+  .search-results[hidden], .search-hints[hidden] { display: none; }
+  .search-results svg, .search-hints svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: square; stroke-linejoin: miter; vertical-align: -2px; flex: none; }
+  .search-results .sr-head { display: flex; gap: 0.9rem; align-items: center; flex-wrap: wrap; color: var(--text-muted); font-size: 0.72rem; margin-bottom: 0.3rem; font-variant-numeric: tabular-nums; }
+  .search-results .sr-stat { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .search-results .sr-clear { margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 0; padding: 0 0.4rem; cursor: pointer; font-size: 0.7rem; }
+  .search-results .sr-clear:hover { border-color: var(--accent); color: var(--accent); }
+  .search-results .sr-item { display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; padding: 0.3rem 0; border-top: 1px solid var(--border); }
+  .search-results .sr-type { color: var(--text-muted); display: inline-flex; }
+  .search-results .sr-dot { width: 8px; height: 8px; display: inline-block; flex: none; }
+  .search-results .sr-name { font-weight: 600; color: var(--text); text-decoration: none; }
+  .search-results a.sr-name:hover { color: var(--accent); }
+  .search-results .sr-org { color: var(--text-dim); }
+  .search-results .sr-field { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; color: var(--text-muted); border: 1px solid var(--border); padding: 0 0.35rem; border-radius: 0; white-space: nowrap; }
+  .search-results .sr-snip { color: var(--text-muted); flex: 1 1 100%; padding-left: 1.3rem; }
+  .search-results .sr-more { color: var(--text-dim); padding-top: 0.3rem; }
+  .search-results mark { background: var(--accent); color: var(--on-accent, #000); padding: 0 0.1em; }
+  .search-hints .sh-row { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; padding: 0.2rem 0; }
+  .search-hints .sh-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); width: 3.6rem; flex: none; }
+  .search-hints .sh-chip { --chip: var(--text-muted); display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; border: 1px solid color-mix(in srgb, var(--chip) 55%, var(--border)); color: var(--chip); border-radius: 0; padding: 0.15rem 0.45rem; font-size: 0.7rem; font-family: var(--font); cursor: pointer; }
+  .search-hints .sh-chip:hover { border-color: var(--chip); background: color-mix(in srgb, var(--chip) 12%, transparent); }
+  .search-hints .sh-chip.sh-active { background: color-mix(in srgb, var(--chip) 18%, transparent); border-color: var(--chip); }
+  .search-hints .sh-chip.sh-active:hover { background: transparent; text-decoration: line-through; }
+  .search-hints .sh-dot { width: 8px; height: 8px; background: var(--chip); display: inline-block; }
+  .search-hints .sh-syntax { color: var(--text-muted); font-size: 0.7rem; }
+  .search-hints code { font-size: 0.74rem; }
+  /* Organization colors as text: lifted in the dark theme for contrast */
+  :root[data-theme="dark"] .search-hints .sh-chip, :root[data-theme="dark"] .search-active .sa-chip { filter: brightness(1.35) saturate(0.9); }
 
   /* View toggle Projects / Organizations / Active (next to the search) */
   .view-toggle {
@@ -1901,6 +2158,16 @@
     gap: 0.35rem;
   }
   .footer-top { display: flex; align-items: center; gap: 0.6rem; }
+  /* Stacked ASCII bars (square blocks): share of projects per tool and per organization */
+  .footer-bars { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.7rem; color: var(--text-dim); }
+  .footer-bars .fb-line { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .footer-bars .fb-bar { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.62rem; letter-spacing: -1px; line-height: 1; white-space: nowrap; }
+  .footer-bars .fb-legend { display: inline-flex; gap: 0.9rem; flex-wrap: wrap; }
+  .footer-bars .fb-key { display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+  .footer-bars .fb-key strong { color: var(--text-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .footer-bars .fb-sw { width: 8px; height: 8px; display: inline-block; }
+  .footer-bars .fb-pct { opacity: 0.7; font-variant-numeric: tabular-nums; }
+  .footer-stats .footer-sub { opacity: 0.75; }
   .footer-stats strong { color: var(--text-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
   .footer-meta { opacity: 0.8; }
   .reset-btn {
@@ -1929,7 +2196,7 @@
   <nav class="quicklinks" id="quicklinks" aria-label="Project quicklinks"></nav>
   <div class="header-actions">
     <button class="tasks-btn" id="tasks-toggle" title="Expand/collapse tasks" aria-expanded="true"
-      onclick="var t=document.getElementById('global-tasks'); t.open=!t.open; this.setAttribute('aria-expanded', t.open);">
+      onclick="var t=document.getElementById('global-tasks'), l=document.querySelector('.layout'); if (l.classList.contains('sidebar-hidden') && window.showSidebar) { window.showSidebar(); t.open=true; } else t.open=!t.open; this.setAttribute('aria-expanded', t.open);">
       <svg class="tasks-btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="0"/><path d="M5.6 8.1l1.7 1.7 3.3-3.6"/></svg>
       <span id="tasks-toggle-label">2 Tasks</span>
     </button>
@@ -1944,11 +2211,21 @@
 <div class="layout">
 <main class="main-col" id="main-col">
 
+<!-- Focus: rows are cloned from the overview table via JS; the section is only visible with >= 1 pin.
+     Deliberately NOT a .sortable-section: section sorting only moves sortable elements, so it always stays on top. -->
+<details class="overview-table-wrap pin-section" id="pin-section" open hidden>
+  <summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 2.8h9"/><path d="M8 13.2V5.8"/><path d="M4.6 9L8 5.6 11.4 9"/></svg></span><h2>Focus</h2><span class="pin-section-count" id="pin-section-count">max. 3</span></summary>
+  <div class="overview-scroll">
+    <table class="overview pin-table" aria-label="Focus projects"><tbody id="pin-tbody"></tbody></table>
+  </div>
+</details>
+
 <!-- Overview Table -->
 <details class="overview-table-wrap sortable-section" data-section="overview" open>
   <summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="0"/><path d="M2.5 6.4h11"/><path d="M6.4 6.4v7.1"/></svg></span><h2>Project Overview</h2></summary>
   <div class="table-search">
-    <input type="text" id="table-search" placeholder="Filter projects..." autocomplete="off">
+    <input type="text" id="table-search" placeholder="Search &hellip; (focus shows suggestions: tool: org: tag: in:)" autocomplete="off">
+    <button type="button" class="open-only-btn" id="projects-open-only" aria-pressed="false" title="Hide completed projects (&#10003;)">open only</button>
     <span class="search-count" id="search-count" aria-live="polite"></span>
     <div class="view-toggle" role="group" aria-label="View (Organizations mode enables row reordering)">
       <button type="button" class="view-btn" data-mode="flat" aria-pressed="false">Projects</button>
@@ -1992,6 +2269,8 @@
       </tr>
     </thead>
     <tbody>
+      <!-- Tool bands (Projects view only): where a project lives. The first band wraps all local projects. -->
+      <tr class="org-header tool-header tool-code"><td colspan="11"><span class="org-header-label">Claude Code</span></td></tr>
       <tr class="org-header" style="--org-color:#e8432a"><td colspan="11"><span class="org-header-label">Redleaf NGO</span></td></tr>
       <tr>
         <td>
@@ -2228,7 +2507,7 @@
       </tr>
       <tr>
         <td>
-          <a class="table-name" href="#the-handoff"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETH%3C/text%3E%3C/svg%3E" alt="">The Handoff</a>
+          <a class="table-name" href="#personal-the-handoff"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23666'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ETH%3C/text%3E%3C/svg%3E" alt="">The Handoff</a>
         </td>
         <td>Methodology</td>
         <td>Personal</td>
@@ -2249,7 +2528,7 @@
             <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
           </div>
         </td>
-        <td><button class="btn-claude" onclick="openClaude('the-handoff')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+        <td><button class="btn-claude" onclick="openClaude('personal-the-handoff')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
       </tr>
       <tr>
         <td>
@@ -2278,7 +2557,7 @@
       </tr>
       <tr>
         <td>
-          <a class="table-name" href="#project-dashboard"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23888'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EPD%3C/text%3E%3C/svg%3E" alt="">Project Dashboard</a>
+          <a class="table-name" href="#personal-project-dashboard"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23888'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EPD%3C/text%3E%3C/svg%3E" alt="">Project Dashboard</a>
         </td>
         <td>Meta Project</td>
         <td>Personal</td>
@@ -2299,7 +2578,60 @@
             <span style="font-size:0.65rem;color:var(--text-dim);">&mdash;</span>
           </div>
         </td>
-        <td><button class="btn-claude" onclick="openClaude('project-dashboard')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+        <td><button class="btn-claude" onclick="openClaude('personal-project-dashboard')"><span>claude</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="0"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg></button></td>
+      </tr>
+      <!-- Tool band + section for cloud projects (no local folder): shown as a band in the Projects view,
+           as its own section at the end of the Organizations view -->
+      <tr class="org-header tool-header" style="--org-color:#d97757"><td colspan="11"><span class="org-header-label">Claude Design</span></td></tr>
+      <tr class="cloud-row">
+        <td>
+          <a class="table-name" href="#cd-nova-campaign-visuals"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23d97757'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3ENv%3C/text%3E%3C/svg%3E" alt="">Nova Campaign Visuals</a>
+        </td>
+        <td>Visual</td>
+        <td>Claude Design</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Claude Design</span>
+            <span class="table-badge">3 canvases</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="1843200">1.8 MB</td>
+        <td data-sort="14">14</td>
+        <td class="table-date" data-sort="2026-07-22T16:05">22.07.2026, 16:05</td>
+        <td class="table-hours" data-sort="0">&mdash;</td>
+        <td><span class="phase-badge phase-prototyp">Prototype</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="https://example.com/design/cd-nova-campaign-visuals" target="_blank" rel="noopener">Design</a>
+            <a class="table-link" href="#nova-social-proof">Local: Nova Social Proof</a>
+          </div>
+        </td>
+        <td><a class="btn-claude" href="https://example.com/design/cd-nova-campaign-visuals" target="_blank" rel="noopener" title="Open in Claude Design"><span>design</span></a></td>
+      </tr>
+      <tr class="cloud-row">
+        <td>
+          <a class="table-name" href="#cd-bloom-onboarding"><img class="project-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23d97757'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EBo%3C/text%3E%3C/svg%3E" alt="">Bloom Onboarding Flow</a>
+        </td>
+        <td>Prototype</td>
+        <td>Claude Design</td>
+        <td>
+          <div class="table-badges">
+            <span class="table-badge">Claude Design</span>
+            <span class="table-badge">1 canvas</span>
+          </div>
+        </td>
+        <td class="table-scope" data-sort="912400">0.9 MB</td>
+        <td data-sort="9">9</td>
+        <td class="table-date" data-sort="2026-07-24T10:40">24.07.2026, 10:40</td>
+        <td class="table-hours" data-sort="0">&mdash;</td>
+        <td><span class="phase-badge phase-prototyp">Prototype</span></td>
+        <td>
+          <div class="table-links">
+            <a class="table-link" href="https://example.com/design/cd-bloom-onboarding" target="_blank" rel="noopener">Design</a>
+            <a class="table-link" href="#bloom-components">Local: Bloom Components</a>
+          </div>
+        </td>
+        <td><a class="btn-claude" href="https://example.com/design/cd-bloom-onboarding" target="_blank" rel="noopener" title="Open in Claude Design"><span>design</span></a></td>
       </tr>
     </tbody>
   </table>
@@ -2562,6 +2894,7 @@
         <span class="time-log-breakdown">(manual: 1.0 + claude active: 3.2)</span>
         &middot; <a class="time-log-link" href="file:///Users/you/projects/nova-fluid-type/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/nova-fluid-type.svg" width="640" height="400" loading="lazy" alt="Preview: Nova Fluid Type"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-viewer.html">Viewer (local)</a>
         <a class="path-tag path-link" href="file:///Users/you/projects/nova-fluid-type/prototype/fluid-type-demo.html">Demo (local)</a>
@@ -2640,6 +2973,7 @@
         <span class="time-log-breakdown">(manual: 2.5 + claude active: 6.0)</span>
         &middot; <a class="time-log-link" href="file:///Users/you/projects/nova-social-proof/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/nova-social-proof.svg" width="640" height="400" loading="lazy" alt="Preview: Nova Social Proof"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/nova-social-proof/prototype-standalone/index.html">Prototype (local)</a>
         <a class="path-tag path-link" href="https://example.com/upload/prototype-social-proof/">Prototype (Live)</a>
@@ -2720,6 +3054,7 @@
         <span class="time-log-breakdown">(manual: 0.0 + claude active: 0.3)</span>
         &middot; <a class="time-log-link" href="file:///Users/you/projects/prism-fluid-type/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/prism-fluid-type.svg" width="640" height="400" loading="lazy" alt="Preview: Prism Fluid Type"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="https://example.com/upload/prism-fluid-type/">Live</a>
         <a class="path-tag path-link" href="file:///Users/you/projects/prism-fluid-type/static/prism-utopia-viewer.html">Viewer</a>
@@ -2817,6 +3152,7 @@
           </div>
         </div>
       </div>
+      <figure class="card-preview"><img src="assets/previews/helix-typography.svg" width="640" height="400" loading="lazy" alt="Preview: Helix Typography"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="https://example.com/upload/helix-typography/">Live</a>
         <a class="path-tag path-link" href="file:///Users/you/projects/helix-typography/static/helix-utopia.html">Utopia Demo</a>
@@ -2885,6 +3221,7 @@
         <span class="time-log-breakdown">(manual: 0.0 + claude active: 0.5)</span>
         &middot; <a class="time-log-link" href="file:///Users/you/projects/bloom-components/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/bloom-components.svg" width="640" height="400" loading="lazy" alt="Preview: Bloom Components"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/bloom-components/storybook-static/index.html">Storybook (local)</a>
         <a class="path-tag path-link" href="https://bloom-ds.example.com/">Storybook (Live)</a>
@@ -2962,6 +3299,7 @@
         <span class="time-log-breakdown">(manual: 3.0 + claude active: 9.4)</span>
         &middot; <a class="time-log-link" href="file:///Users/you/projects/design-bridge/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/design-bridge.svg" width="640" height="400" loading="lazy" alt="Preview: Design Bridge"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="https://design-bridge.example.com/">Live</a>
         <a class="path-tag path-link" href="file:///Users/you/projects/design-bridge/deploy/index.html">Site (local)</a>
@@ -3029,6 +3367,7 @@
         <span class="time-log-breakdown">(manual: 0.3 + claude active: 0.9)</span>
         &middot; <a class="time-log-link" href="file:///Users/you/projects/token-workshop/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/token-workshop.svg" width="640" height="400" loading="lazy" alt="Preview: Token Workshop"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/token-workshop/dist/index.html">Local</a>
         <span class="path-tag">~/projects/token-workshop</span>
@@ -3090,6 +3429,7 @@
           </tbody>
         </table>
       </details>
+      <figure class="card-preview"><img src="assets/previews/forge.svg" width="640" height="400" loading="lazy" alt="Preview: Forge"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/forge/forge.html">Forge</a>
         <span class="path-tag">~/projects/forge</span>
@@ -3151,6 +3491,7 @@
         <span class="time-log-breakdown">(manual: 1.5 + claude active: 5.3)</span>
         &middot; <a class="time-log-link" href="file:///Users/you/projects/forge-mobile-type/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/forge-mobile-type.svg" width="640" height="400" loading="lazy" alt="Preview: Forge Mobile Type"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
         <a class="path-tag path-link" href="file:///Users/you/projects/forge-mobile-type/index.html">Local</a>
         <span class="path-tag">~/projects/forge-mobile-type</span>
@@ -3161,7 +3502,7 @@
   </article>
 
   <!-- 9. Project Dashboard -->
-  <article class="project" id="project-dashboard">
+  <article class="project" id="personal-project-dashboard">
     <div class="project-header">
       <div class="project-indicator" style="background: var(--text-muted);"></div>
       <div class="project-title-block">
@@ -3206,9 +3547,9 @@
         <table class="docs-table">
           <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
           <tbody>
-            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/project-dashboard/LICENSE">open</a> <button class="copy-btn" onclick="copyDocPath(this,'project-dashboard','LICENSE')">copy</button></td><td>LICENSE</td><td>MIT License</td><td class="doc-size">1,1 KB</td><td class="doc-date">2026-03-25 10:34</td></tr>
-            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/project-dashboard/favicon.svg">open</a> <button class="copy-btn" onclick="copyDocPath(this,'project-dashboard','favicon.svg')">copy</button></td><td>favicon.svg</td><td>Dashboard-Icon (PD)</td><td class="doc-size">0,2 KB</td><td class="doc-date">2026-03-23 08:22</td></tr>
-            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/project-dashboard/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'project-dashboard','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">3,3 KB</td><td class="doc-date">2026-03-25 09:26</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/personal-project-dashboard/LICENSE">open</a> <button class="copy-btn" onclick="copyDocPath(this,'personal-project-dashboard','LICENSE')">copy</button></td><td>LICENSE</td><td>MIT License</td><td class="doc-size">1,1 KB</td><td class="doc-date">2026-03-25 10:34</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge code">Code</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/personal-project-dashboard/favicon.svg">open</a> <button class="copy-btn" onclick="copyDocPath(this,'personal-project-dashboard','favicon.svg')">copy</button></td><td>favicon.svg</td><td>Dashboard-Icon (PD)</td><td class="doc-size">0,2 KB</td><td class="doc-date">2026-03-23 08:22</td></tr>
+            <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/personal-project-dashboard/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'personal-project-dashboard','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">3,3 KB</td><td class="doc-date">2026-03-25 09:26</td></tr>
           </tbody>
         </table>
       </details>
@@ -3216,11 +3557,92 @@
         <span class="time-log-label">Time Log:</span>
         <strong>28.6h</strong> invested
         <span class="time-log-breakdown">(manual: 3.7 + claude active: 24.9)</span>
-        &middot; <a class="time-log-link" href="file:///Users/you/projects/project-dashboard/time-log.md">Details in time-log.md</a>
+        &middot; <a class="time-log-link" href="file:///Users/you/projects/personal-project-dashboard/time-log.md">Details in time-log.md</a>
       </div>
+      <figure class="card-preview"><img src="assets/previews/personal-project-dashboard.svg" width="640" height="400" loading="lazy" alt="Preview: Project Dashboard"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
       <div class="project-paths">
-        <span class="path-tag">~/projects/project-dashboard</span>
-        <span class="path-tag path-claude">~/.claude/projects/...-project-dashboard</span>
+        <span class="path-tag">~/projects/personal-project-dashboard</span>
+        <span class="path-tag path-claude">~/.claude/projects/...-personal-project-dashboard</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 10. Nova Campaign Visuals (cloud project) -->
+  <article class="project cloud-project collapsed" id="cd-nova-campaign-visuals">
+    <div class="project-header">
+      <div class="project-indicator" style="background: #d97757;"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Nova Campaign Visuals</div>
+        <div class="project-subtitle">Claude Design project &middot; Visual &middot; 14 files</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Claude Design</span>
+        <span class="badge">Visual</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Key visuals and social tiles for the Redleaf autumn campaign. Lives in Claude Design only &mdash; the dashboard lists it so nothing falls off the radar just because it has no local folder.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Canvases</h4>
+          <ul>
+            <li>Key visual 16:9</li>
+            <li>Social tiles 1:1</li>
+            <li>Poster A2</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Connections</h4>
+          <ul>
+            <li>Feeds the <a href="#nova-social-proof">Nova Social Proof</a> prototype</li>
+            <li>Uses the Redleaf brand tokens</li>
+          </ul>
+        </div>
+      </div>
+      <figure class="card-preview"><img src="assets/previews/cd-nova-campaign-visuals.svg" width="640" height="400" loading="lazy" alt="Preview: Nova Campaign Visuals"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
+      <div class="project-paths">
+        <span class="path-tag">https://example.com/design/cd-nova-campaign-visuals</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 11. Bloom Onboarding Flow (cloud project) -->
+  <article class="project cloud-project collapsed" id="cd-bloom-onboarding">
+    <div class="project-header">
+      <div class="project-indicator" style="background: #d97757;"></div>
+      <div class="project-title-block">
+        <div class="project-name project-toggle" onclick="this.closest('.project').classList.toggle('collapsed')">Bloom Onboarding Flow</div>
+        <div class="project-subtitle">Claude Design project &middot; Prototype &middot; 9 files</div>
+      </div>
+      <div class="project-badges">
+        <span class="badge">Claude Design</span>
+        <span class="badge">Prototype</span>
+      </div>
+    </div>
+    <div class="project-body">
+      <p class="project-description">
+        Click-through prototype of the patient onboarding (5 screens) for early stakeholder feedback, before the flow moves into the component library.
+      </p>
+      <div class="project-grid">
+        <div class="project-section">
+          <h4>Canvases</h4>
+          <ul>
+            <li>Onboarding flow (5 screens)</li>
+          </ul>
+        </div>
+        <div class="project-section">
+          <h4>Connections</h4>
+          <ul>
+            <li>Candidate for <a href="#bloom-components">Bloom Components</a></li>
+            <li>Open question: consent step wording</li>
+          </ul>
+        </div>
+      </div>
+      <figure class="card-preview"><img src="assets/previews/cd-bloom-onboarding.svg" width="640" height="400" loading="lazy" alt="Preview: Bloom Onboarding Flow"><figcaption>Preview (demo placeholder) &middot; replace with a screenshot in <code>assets/previews/</code></figcaption></figure>
+      <div class="project-paths">
+        <span class="path-tag">https://example.com/design/cd-bloom-onboarding</span>
       </div>
     </div>
   </article>
@@ -3231,7 +3653,7 @@
 <div class="ideas-sub">
   <h3 class="ideas-heading">Project Ideas</h3>
 
-  <div class="idea-card" id="the-handoff">
+  <div class="idea-card" id="personal-the-handoff">
     <div class="idea-header">
       <div class="idea-title" onclick="this.closest('.idea-card').classList.toggle('collapsed')">The Handoff</div>
       <span class="idea-status">Idea</span>
@@ -3274,15 +3696,15 @@
       <table class="docs-table">
         <thead><tr><th data-sort="text">Type</th><th>Actions</th><th data-sort="text">File</th><th>Description</th><th data-sort="size">Size</th><th data-sort="date">Updated</th></tr></thead>
         <tbody>
-          <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/the-handoff/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'the-handoff','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">1,0 KB</td><td class="doc-date">2026-03-23 07:17</td></tr>
-          <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/the-handoff/a11y-checks.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'the-handoff','a11y-checks.md')">copy</button></td><td>a11y-checks.md</td><td>Accessibility checklist</td><td class="doc-size">3,5 KB</td><td class="doc-date">2026-03-23 07:28</td></tr>
-          <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/the-handoff/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'the-handoff','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">2,0 KB</td><td class="doc-date">2026-03-23 07:28</td></tr>
+          <tr><td class="doc-type"><span class="doc-badge projekt">Project</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/personal-the-handoff/README.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'personal-the-handoff','README.md')">copy</button></td><td>README.md</td><td>Project documentation</td><td class="doc-size">1,0 KB</td><td class="doc-date">2026-03-23 07:17</td></tr>
+          <tr><td class="doc-type"><span class="doc-badge research">Research</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/personal-the-handoff/a11y-checks.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'personal-the-handoff','a11y-checks.md')">copy</button></td><td>a11y-checks.md</td><td>Accessibility checklist</td><td class="doc-size">3,5 KB</td><td class="doc-date">2026-03-23 07:28</td></tr>
+          <tr><td class="doc-type"><span class="doc-badge claude">Claude</span></td><td class="doc-actions"><a class="doc-link" href="file:///Users/you/projects/personal-the-handoff/CLAUDE.md">open</a> <button class="copy-btn" onclick="copyDocPath(this,'personal-the-handoff','CLAUDE.md')">copy</button></td><td>CLAUDE.md</td><td>Claude Code project instructions</td><td class="doc-size">2,0 KB</td><td class="doc-date">2026-03-23 07:28</td></tr>
         </tbody>
       </table>
       </details>
     <div class="project-paths" style="border-top:none; padding-top:0.5rem;">
-      <span class="path-tag">~/projects/the-handoff</span>
-      <span class="path-tag path-claude">~/.claude/projects/...-the-handoff</span>
+      <span class="path-tag">~/projects/personal-the-handoff</span>
+      <span class="path-tag path-claude">~/.claude/projects/...-personal-the-handoff</span>
     </div>
   </div>
 
@@ -3342,15 +3764,19 @@
 
 </main>
 
+<div class="col-resizer" id="col-resizer" title="Drag to resize the sidebar (double-click: reset, drag far right: hide)" aria-hidden="true"></div>
+
 <aside class="sidebar" id="sidebar">
 
 <!-- Tasks -->
 <details class="global-tasks sortable-section" id="global-tasks" data-section="tasks" open>
   <summary><span class="section-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="0"/><path d="M5.6 8.1l1.7 1.7 3.3-3.6"/></svg></span>Tasks <span class="task-count" id="task-counter"></span></summary>
+  <div class="tasks-headbar"><span class="task-filter" onclick="event.stopPropagation()"><span class="task-filter-dot" id="task-filter-dot"></span><select id="task-filter-select" aria-label="Filter tasks by organization"><option value="">All organizations</option></select></span></div>
   <div class="global-tasks-body">
     <div class="task-list" id="manual-tasks">
-      <div class="task-item">
-        <input type="checkbox" class="task-checkbox">
+      <!-- AUTO-TASKS:BEGIN — generated from ticket files by sync-tasks.py; do not edit by hand -->
+      <div class="task-item" data-generated="1" data-file="tasks/demo-001-fluid-tokens.md" data-priority="high" data-created="2026-07-10" data-body="IyBNaWdyYXRlIHR5cG9ncmFwaHkgdG9rZW5zIHRvIGZsdWlkIHNjYWxlCgpUaGUgYnJlYWtwb2ludCBqdW1wICgxOXB4IHRvIDIxcHggYXQgOTkycHgpIGdvZXMgYXdheTsgZXZlcnkgc3RlcCBnZXRzIGEgYGNsYW1wKClgIHZhbHVlLgoKIyMgU3RlcHMKCi0gWyBdIEFncmVlIG9uIHRoZSB0d28gdHlwZSBzY2FsZXMgKG1vYmlsZSAxLjEsIGRlc2t0b3AgMS4yKQotIFsgXSBHZW5lcmF0ZSB0aGUgOSBzdGVwcyB3aXRoIFV0b3BpYSAoMzIwcHggdG8gMTIwMHB4IHZpZXdwb3J0KQotIFsgXSBSZXBsYWNlIHRoZSBmb250LXNpemUgdG9rZW5zLCBrZWVwIHRoZSBvbGQgbmFtZXMgYXMgYWxpYXNlcyBmb3Igb25lIHJlbGVhc2UKLSBbIF0gQ2hlY2sgdGV4dCB6b29tIGF0IDIwMCUgKFdDQUcgMS40LjQpCgojIyBOb3RlcwoKTGluZSBoZWlnaHRzIHN0YXkgdW5pdGxlc3MuIFRoZSBkZW1vIHBhZ2Ugd2l0aCB0aGUgdmlld3BvcnQgdmlld2VyIGlzIHRoZSByZXZpZXcgc3VyZmFjZSBmb3Igc3Rha2Vob2xkZXJzLg==">
+        <input type="checkbox" class="task-checkbox" aria-label="Done: Migrate typography tokens to fluid scale">
         <div class="task-content">
           <div class="task-title">
             <span>Migrate typography tokens to fluid scale</span>
@@ -3362,8 +3788,8 @@
           </div>
         </div>
       </div>
-      <div class="task-item">
-        <input type="checkbox" class="task-checkbox">
+      <div class="task-item" data-generated="1" data-file="tasks/demo-002-active-states.md" data-priority="medium" data-created="2026-07-18" data-body="IyBDb21wb25lbnQgYXVkaXQgZm9yIGNvbnNpc3RlbnQgYWN0aXZlIHN0YXRlcwoKQWN0aXZlIHN0YXRlcyBhcmUgc3R5bGVkIHBlciBjb21wb25lbnQgdG9kYXksIHdpdGggaGFyZC1jb2RlZCBjb2xvcnMgaW4gdGhyZWUgcGxhY2VzLgoKIyMgU2NvcGUKCi0gVGFicywgc2VnbWVudGVkIGNvbnRyb2wsIHBhZ2luYXRpb24sIG5hdiBpdGVtcywgY2hpcHMsIHRvZ2dsZSBidXR0b25zCi0gT25lIHNlbWFudGljIHRva2VuIHBhaXI6IGAtLXN0YXRlLWFjdGl2ZS1iZ2AgLyBgLS1zdGF0ZS1hY3RpdmUtdGV4dGAKLSBDb250cmFzdDogNC41OjEgZm9yIHRleHQsIDM6MSBmb3IgdGhlIHN0YXRlIGluZGljYXRvciBhZ2FpbnN0IGFkamFjZW50IGNvbG9ycwoKIyMgT3BlbiBxdWVzdGlvbgoKRG9lcyB0aGUgYWN0aXZlIHN0YXRlIG5lZWQgYSBub24tY29sb3IgY3VlIGV2ZXJ5d2hlcmUgKHVuZGVybGluZSwgd2VpZ2h0KSwgb3Igb25seSB3aGVyZSBjb2xvciBpcyB0aGUgc2luZ2xlIGRpZmZlcmVuY2U/">
+        <input type="checkbox" class="task-checkbox" aria-label="Done: Component audit for consistent active states">
         <div class="task-content">
           <div class="task-title">
             <span>Component audit for consistent active states</span>
@@ -3375,6 +3801,7 @@
           </div>
         </div>
       </div>
+      <!-- AUTO-TASKS:END -->
     </div>
     <details class="ai-recommendations" id="ai-recommendations">
       <summary class="ai-summary">AI Recommendations <span class="task-count" id="ai-counter"></span></summary>
@@ -3835,27 +4262,244 @@
   })();
 
   // ── 5. Table search ──
+  // Smart search: weighted index over table row + project card + synergies + tasks.
+  // Syntax: several words = AND, -word = exclude, "phrase" = exact,
+  //         tool:<band>, org:<name>, tag:<badge>, in:<field> [word].
   (function() {
     const input = document.getElementById('table-search');
     const table = document.getElementById('overview-table');
     if (!input || !table) return;
-    input.addEventListener('input', () => {
-      const q = input.value.toLowerCase();
-      const rows = Array.from(table.querySelectorAll('tbody tr'));
-      let header = null, headerHasMatch = false;
-      const flush = () => { if (header) header.style.display = headerHasMatch ? '' : 'none'; };
-      rows.forEach(row => {
-        if (row.classList.contains('org-header')) {
-          flush();
-          header = row; headerHasMatch = false;
+    const count = document.getElementById('search-count');
+    function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ß/g,'ss').replace(/\s+/g,' '); }
+    function esc(s){ return String(s||'').replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+    // Square inline icons (design rule: no round shapes)
+    var ICONS = {
+      tool: '<svg viewBox="0 0 16 16"><path d="M2 4h4l1.5 1.5H14V13H2z"/></svg>',
+      tag:  '<svg viewBox="0 0 16 16"><path d="M2 2h6l6 6-6 6-6-6z"/><path d="M5 5h.01"/></svg>',
+      doc:  '<svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9z"/><path d="M6 8h4"/><path d="M6 11h4"/></svg>',
+      task: '<svg viewBox="0 0 16 16"><path d="M2.5 2.5h11v11h-11z"/><path d="M5 8l2 2 4-4"/></svg>',
+      text: '<svg viewBox="0 0 16 16"><path d="M2.5 4h11"/><path d="M2.5 8h11"/><path d="M2.5 12h7"/></svg>',
+      syn:  '<svg viewBox="0 0 16 16"><path d="M2 8h4"/><path d="M10 8h4"/><path d="M6 4h4v8H6z"/></svg>'
+    };
+    function fieldIcon(k){
+      if (/^Badge/.test(k)) return ICONS.tag;
+      if (/^Document/.test(k)) return ICONS.doc;
+      if (/^Task/.test(k)) return ICONS.task;
+      if (/^Synergy/.test(k)) return ICONS.syn;
+      return ICONS.text;
+    }
+    var index = null;
+    function build(){
+      index = [];
+      var syn = Array.prototype.slice.call(document.querySelectorAll('.synergy-card')).map(function(sc){
+        var h = sc.querySelector('h3');
+        return { el: sc, title: h ? h.textContent.replace(/\s+/g,' ').trim() : 'Synergy', n: norm(sc.textContent),
+                 links: Array.prototype.slice.call(sc.querySelectorAll('a[href^="#"]')).map(function(a){ return a.getAttribute('href').slice(1); }) };
+      });
+      var org = '', orgColor = '', tool = '', toolColor = '', tools = [];
+      Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(row){
+        if (row.classList.contains('org-header')){
+          var l = row.querySelector('.org-header-label'); var label = l ? l.textContent.trim() : '';
+          var color = row.style.getPropertyValue('--org-color') || '';
+          if (row.classList.contains('tool-header')){ tool = label; toolColor = color || 'var(--accent)'; tools.push({ label: label, color: toolColor }); }
+          // the first tool band only wraps the organizations, every other header names an organization
+          if (!row.classList.contains('tool-code')){ org = label; orgColor = color; }
           return;
         }
-        const match = row.textContent.toLowerCase().includes(q);
-        row.style.display = match ? '' : 'none';
-        if (match) headerHasMatch = true;
+        var a = row.querySelector('a.table-name'); if (!a) return;
+        var id = (a.getAttribute('href') || '').replace('#','');
+        var name = a.textContent.replace(/\s+/g,' ').trim();
+        var card = document.getElementById(id); var f = [];
+        function add(k,w,t){ t = (t||'').replace(/\s+/g,' ').trim(); if (t) f.push({k:k,w:w,t:t,n:norm(t)}); }
+        add('Name', 6, name); add('Table', 2, row.textContent); add('Organization', 2, org);
+        row.querySelectorAll('.table-badge').forEach(function(b){ add('Badge', 3, b.textContent); });
+        if (card){
+          add('Subtitle', 4, (card.querySelector('.project-subtitle')||{}).textContent);
+          card.querySelectorAll('.project-badges .badge').forEach(function(b){ add('Badge', 3, b.textContent); });
+          card.querySelectorAll('.project-description, .idea-desc').forEach(function(p){ add('Description', 2, p.textContent); });
+          card.querySelectorAll('.project-section').forEach(function(s){ var h = s.querySelector('h4'); add(h ? h.textContent.trim() : 'Section', 1.5, s.textContent); });
+          card.querySelectorAll('.docs-table tbody tr').forEach(function(tr){ add('Document', 1, tr.textContent); });
+          card.querySelectorAll('.task-title').forEach(function(t){ add('Task', 1.5, t.textContent); });
+          card.querySelectorAll('.path-tag').forEach(function(t){ add('Path', 1, t.textContent); });
+        }
+        var nn = norm(name);
+        syn.forEach(function(s){ if (s.links.indexOf(id) !== -1 || (nn.length > 3 && s.n.indexOf(nn) !== -1)) add('Synergy: ' + s.title, 2, s.el.textContent); });
+        var ind = card ? card.querySelector('.project-indicator') : null;
+        index.push({ row: row, id: id, name: name, tool: tool, toolColor: toolColor, org: org, color: orgColor || (ind && ind.style.background) || '', f: f });
       });
-      flush();
+      index.syn = syn;
+      index.tools = tools;
+      var oc = {}; index.forEach(function(it){ if (it.org && it.color && !oc[norm(it.org)]) oc[norm(it.org)] = it.color; });
+      index.orgColor = function(o){ return oc[norm(o)] || ''; };
+    }
+    var FILTER_KEYS = { tool: 1, org: 1, tag: 1, in: 1 };
+    function parse(q){
+      return (q.match(/-?"[^"]+"|-?\S+:"[^"]+"|\S+/g) || []).map(function(t){
+        var raw = t; var neg = t.charAt(0) === '-'; if (neg) t = t.slice(1);
+        var m = /^([a-z]+):(.+)$/i.exec(t);
+        if (m && FILTER_KEYS[m[1].toLowerCase()]) return { neg: neg, key: m[1].toLowerCase(), n: norm(m[2].replace(/^"|"$/g,'')), disp: m[2].replace(/^"|"$/g,''), raw: raw };
+        return { neg: neg, n: norm(t.replace(/^"|"$/g,'')), raw: raw };
+      }).filter(function(t){ return t.n; });
+    }
+    function fieldsFor(item, t){
+      if (t.key === 'tag') return item.f.filter(function(fl){ return /^Badge/.test(fl.k); });
+      if (t.key === 'in') return item.f.filter(function(fl){ return norm(fl.k).indexOf(t.n.split(' ')[0]) === 0; });
+      return item.f;
+    }
+    function scoreItem(item, toks){
+      var score = 0, hits = [];
+      for (var i = 0; i < toks.length; i++){
+        var t = toks[i], best = null;
+        if (t.key === 'tool'){ var ok = norm(item.tool).indexOf(t.n) !== -1; if (ok === t.neg) return null; continue; }
+        if (t.key === 'org'){ var ok2 = norm(item.org).indexOf(t.n) !== -1; if (ok2 === t.neg) return null; if (!t.neg) hits.push({ tok: t.n, f: { k: 'Organization', w: 2, t: item.org, n: norm(item.org) } }); continue; }
+        var fields = fieldsFor(item, t);
+        if (t.key === 'in'){
+          if (!fields.length){ if (t.neg) continue; return null; }
+          if (t.n.indexOf(' ') === -1){ /* field filter only, no search word */ if (t.neg) return null; hits.push({ tok: '', f: fields[0] }); score += fields[0].w; continue; }
+          var word = t.n.split(' ').slice(1).join(' ');
+          fields = fields.filter(function(fl){ return fl.n.indexOf(word) !== -1; });
+          if (!fields.length){ if (t.neg) continue; return null; }
+          if (t.neg) return null;
+          best = fields[0]; score += best.w; hits.push({ tok: word, f: best }); continue;
+        }
+        for (var j = 0; j < fields.length; j++){ var fl = fields[j]; if (fl.n.indexOf(t.n) !== -1){ if (!best || fl.w > best.w) best = fl; } }
+        if (t.neg){ if (best) return null; continue; }
+        if (!best) return null;
+        score += best.w * (best.k === 'Name' && best.n === t.n ? 2 : 1);
+        hits.push({ tok: t.n, f: best });
+      }
+      return { score: score, hits: hits };
+    }
+    function snippet(fl, tok){
+      if (!tok) return esc(fl.t.slice(0, 120)) + (fl.t.length > 120 ? ' …' : '');
+      var i = fl.n.indexOf(tok); if (i < 0) return '';
+      var s = Math.max(0, i - 48), e = Math.min(fl.t.length, i + tok.length + 72);
+      var re = new RegExp(tok.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+      return (s > 0 ? '… ' : '') + esc(fl.t.slice(s, e)).replace(re, function(m){ return '<mark>' + m + '</mark>'; }) + (e < fl.t.length ? ' …' : '');
+    }
+    var panel = document.createElement('div'); panel.className = 'search-results'; panel.id = 'search-results'; panel.hidden = true;
+    var hints = document.createElement('div'); hints.className = 'search-hints'; hints.id = 'search-hints'; hints.hidden = true;
+    var wrap = input.closest('.table-search'); if (wrap){ wrap.insertAdjacentElement('afterend', panel); wrap.insertAdjacentElement('afterend', hints); }
+    // Token field: filters (tool/org/tag/in) live as chips INSIDE the search box, free text stays in the input
+    var box = document.createElement('div'); box.className = 'search-box'; input.parentNode.insertBefore(box, input);
+    var active = document.createElement('div'); active.className = 'search-active'; active.id = 'search-active'; box.appendChild(active); box.appendChild(input);
+    var clearBtn = document.createElement('button'); clearBtn.type = 'button'; clearBtn.className = 'search-clear'; clearBtn.title = 'Reset search (Esc)'; clearBtn.setAttribute('aria-label','Reset search'); clearBtn.innerHTML = '&#10005;'; clearBtn.hidden = true; box.appendChild(clearBtn);
+    var filters = []; // [{raw, key, n, disp, neg}]
+    var keepHints = false; // clicks on chips (which drop out of the DOM on re-render) must not count as "click outside"
+    function reset(){ input.value = ''; filters.length = 0; runSearch(); }
+    function chipColor(t){
+      if (t.key === 'org') return index.orgColor(t.disp);
+      if (t.key === 'tool'){ var hit = index.tools.filter(function(x){ return norm(x.label).indexOf(t.n) !== -1; })[0]; return hit ? hit.color : ''; }
+      return '';
+    }
+    box.addEventListener('click', function(e){ if (!e.target.closest('.sa-x')) input.focus(); });
+    function renderActive(){
+      active.innerHTML = filters.map(function(t, i){
+        var icon = { tool: ICONS.tool, tag: ICONS.tag, 'in': ICONS.text }[t.key] || ''; var col = chipColor(t);
+        return '<span class="sa-chip' + (t.neg ? ' sa-neg' : '') + '"' + (col ? ' style="--chip:' + esc(col) + '"' : '') + ' data-i="' + i + '">' + icon + esc((t.neg ? '−' : '') + t.key + ':' + t.disp)
+          + '<button type="button" class="sa-x" title="Remove filter (Backspace in the empty field removes the last one)" aria-label="Remove filter ' + esc(t.key + ':' + t.disp) + '">&#10005;</button></span>';
+      }).join('');
+      active.hidden = !filters.length;
+    }
+    clearBtn.addEventListener('click', function(e){ e.preventDefault(); keepHints = true; reset(); input.focus(); });
+    active.addEventListener('click', function(e){ var x = e.target.closest('.sa-x'); if (!x) return; keepHints = true; filters.splice(parseInt(x.parentNode.getAttribute('data-i'), 10), 1); runSearch(); input.focus(); });
+    // Move completed filter tokens (closed by a space or by quotes) from the text into chips
+    function absorbFilters(force){
+      var v = input.value, rest = v, changed = false;
+      parse(v).forEach(function(t){
+        if (!t.key) return; var idx = rest.indexOf(t.raw); if (idx === -1) return;
+        var closed = force || rest.charAt(idx + t.raw.length) === ' ' || /"$/.test(t.raw); if (!closed) return;
+        filters.push(t); rest = (rest.slice(0, idx) + ' ' + rest.slice(idx + t.raw.length)).replace(/\s{2,}/g,' ').replace(/^\s+/,''); changed = true;
+      });
+      if (changed) input.value = rest;
+    }
+    function sameFilter(f, key, n){ return f.key === key && !f.neg && f.n === n; }
+    function isActive(key, n){ return filters.some(function(f){ return sameFilter(f, key, n); }); }
+    function chip(label, insert, icon, color, on){
+      return '<button type="button" class="sh-chip' + (on ? ' sh-active' : '') + '" aria-pressed="' + (on ? 'true' : 'false') + '"' + (on ? ' title="Remove this filter again"' : '') + (color ? ' style="--chip:' + esc(color) + '"' : '')
+        + ' data-insert="' + esc(insert).replace(/"/g,'&quot;') + '">' + (icon || '') + esc(label) + (on ? ' &#10003;' : '') + '</button>';
+    }
+    function quote(v){ return /\s/.test(v) ? '"' + v + '"' : v; }
+    function renderHints(){
+      var orgs = []; index.forEach(function(it){ if (it.org && it.org !== it.tool && orgs.indexOf(it.org) === -1) orgs.push(it.org); }); // tool bands have their own row
+      var html = '';
+      if (index.tools.length > 1) html += '<div class="sh-row"><span class="sh-label">Tool</span>' + index.tools.map(function(t){ return chip(t.label, 'tool:' + quote(t.label) + ' ', ICONS.tool, t.color, isActive('tool', norm(t.label))); }).join('') + '</div>';
+      html += '<div class="sh-row"><span class="sh-label">Org</span>' + orgs.map(function(o){ return chip(o, 'org:' + quote(o) + ' ', '<span class="sh-dot"></span>', index.orgColor(o), isActive('org', norm(o))); }).join('') + '</div>';
+      html += '<div class="sh-row"><span class="sh-label">Field</span>' + chip('tag:', 'tag:', ICONS.tag) + chip('in:synergy', 'in:synergy ', ICONS.syn) + chip('in:task', 'in:task ', ICONS.task) + chip('in:document', 'in:document ', ICONS.doc) + chip('in:description', 'in:description ', ICONS.text) + '</div>';
+      html += '<div class="sh-row sh-syntax"><span class="sh-label">Syntax</span><code>word word</code> = AND &middot; <code>-word</code> excludes &middot; <code>"exact phrase"</code> &middot; <code>in:field word</code> searches one field only</div>';
+      hints.innerHTML = html;
+    }
+    hints.addEventListener('click', function(e){
+      var c = e.target.closest('.sh-chip'); if (!c) return;
+      e.preventDefault(); keepHints = true;
+      var ins = c.getAttribute('data-insert'), tk = parse(ins.trim())[0];
+      if (c.classList.contains('sh-active') && tk && tk.key){ filters = filters.filter(function(f){ return !sameFilter(f, tk.key, tk.n); }); }
+      else if (tk && tk.key && /\s$/.test(ins)){ filters.push(tk); }              // complete filter -> chip
+      else { var v = input.value; input.value = (v && !/\s$/.test(v) ? v + ' ' : v) + ins; } // prefix (tag:) -> keep typing
+      input.focus(); runSearch();
     });
+    input.addEventListener('focus', function(){ if (!index) build(); renderHints(); hints.hidden = false; });
+    document.addEventListener('click', function(e){ if (keepHints){ keepHints = false; return; } if (!e.target.closest('.table-search, #search-hints')) hints.hidden = true; });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') reset();
+      else if (e.key === 'Enter'){ absorbFilters(true); runSearch(); }
+      else if (e.key === 'Backspace' && !input.value && filters.length){ e.preventDefault(); filters.pop(); runSearch(); }
+    });
+    function render(results, toks){
+      if (!toks.length){ panel.hidden = true; panel.innerHTML = ''; return; }
+      var pos = toks.filter(function(t){ return !t.neg && !t.key; });
+      var neg = toks.filter(function(t){ return t.neg && !t.key; });
+      function textHit(n){ return pos.length && pos.every(function(t){ return n.indexOf(t.n) !== -1; }) && !neg.some(function(t){ return n.indexOf(t.n) !== -1; }); }
+      var synHits = index.syn.filter(function(s){ return textHit(s.n); });
+      var taskHits = Array.prototype.slice.call(document.querySelectorAll('#manual-tasks .task-item, #ai-recommendations .ai-task')).filter(function(el){ return textHit(norm(el.textContent)); });
+      var html = '<div class="sr-head"><span class="sr-stat">' + (results.length ? '<strong>' + results.length + '</strong> project' + (results.length === 1 ? '' : 's') : 'No project') + '</span>'
+        + '<span class="sr-stat">' + ICONS.syn + synHits.length + (synHits.length === 1 ? ' synergy' : ' synergies') + '</span>'
+        + '<span class="sr-stat">' + ICONS.task + taskHits.length + (taskHits.length === 1 ? ' task' : ' tasks') + '</span>'
+        + '<button type="button" class="sr-clear" id="sr-clear" title="Clear search (Esc)">&#10005;</button></div>';
+      results.slice(0, 14).forEach(function(r){
+        var top = r.hits.filter(function(h){ return h.f.k !== 'Name' && h.f.k !== 'Table' && h.f.k !== 'Organization'; }).sort(function(a,b){ return b.f.w - a.f.w; })[0];
+        var fields = []; r.hits.forEach(function(h){ if (h.f.k !== 'Table' && fields.indexOf(h.f.k) === -1) fields.push(h.f.k); });
+        html += '<div class="sr-item"><span class="sr-dot" style="background:' + esc(r.color || 'var(--text-dim)') + '"></span>'
+          + '<a class="sr-name" href="#' + esc(r.id) + '">' + esc(r.name) + '</a>'
+          + (r.org ? '<span class="sr-org">' + esc(r.org) + '</span>' : '')
+          + fields.slice(0, 4).map(function(k){ return '<span class="sr-field">' + fieldIcon(k) + esc(k.replace(/^Synergy: .*/, 'Synergy')) + '</span>'; }).join('')
+          + (top ? '<span class="sr-snip">' + snippet(top.f, top.tok) + '</span>' : '') + '</div>';
+      });
+      if (results.length > 14) html += '<div class="sr-more">… ' + (results.length - 14) + ' more in the table</div>';
+      synHits.slice(0, 5).forEach(function(s){ html += '<div class="sr-item"><span class="sr-type">' + ICONS.syn + '</span><span class="sr-field">Synergy</span><span class="sr-name">' + esc(s.title) + '</span><span class="sr-snip">' + snippet({ t: s.el.textContent.replace(/\s+/g,' '), n: s.n }, pos[0].n) + '</span></div>'; });
+      panel.innerHTML = html; panel.hidden = false;
+      document.getElementById('sr-clear').addEventListener('click', function(){ reset(); input.focus(); });
+    }
+    function runSearch(){
+      if (!index) build();
+      absorbFilters(false); renderActive(); if (!hints.hidden) renderHints(); clearBtn.hidden = !(input.value || filters.length);
+      var toks = filters.concat(parse(input.value.trim()));
+      table.classList.toggle('is-searching', toks.length > 0);
+      var byRow = {}, results = [];
+      if (toks.length) index.forEach(function(it){ var sc = scoreItem(it, toks); if (sc){ byRow[it.id] = sc; results.push({ id: it.id, name: it.name, org: it.org, color: it.color, score: sc.score, hits: sc.hits }); } });
+      // Show matching rows; hide organization headers and tool bands without a match
+      var header = null, headerHasMatch = false, tool = null, toolHasMatch = false, shown = 0;
+      var flush = function(){ if (header) header.style.display = headerHasMatch ? '' : 'none'; };
+      var flushTool = function(){ if (tool) tool.style.display = toolHasMatch ? '' : 'none'; };
+      Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(row){
+        if (row.classList.contains('tool-header')){ flush(); header = null; flushTool(); tool = row; toolHasMatch = false; return; }
+        if (row.classList.contains('org-header')){ flush(); header = row; headerHasMatch = false; return; }
+        var a = row.querySelector('a.table-name'); var id = a ? (a.getAttribute('href') || '').replace('#','') : '';
+        var match = !toks.length || !!byRow[id];
+        row.style.display = match ? '' : 'none';
+        if (match){ headerHasMatch = true; toolHasMatch = true; if (a && !row.classList.contains('pinned-away')) shown++; }
+      });
+      flush(); flushTool();
+      if (count){
+        count.textContent = !toks.length ? '' : (shown ? shown + (shown === 1 ? ' match' : ' matches') : 'No matches');
+        count.classList.toggle('none', toks.length > 0 && shown === 0);
+      }
+      results.sort(function(a,b){ return b.score - a.score || a.name.localeCompare(b.name); });
+      render(results, toks);
+    }
+    input.addEventListener('input', runSearch);
+    // Task/star/done state is part of the index -> rebuild lazily after such a click
+    document.addEventListener('click', function(e){ if (e.target.closest('.task-checkbox, .star-toggle, .done-toggle')) index = null; }, true);
   })();
 
   // ── 8. Relative dates + 9. Activity bars ──
@@ -3942,18 +4586,21 @@
       return t ? t.textContent.trim() : '';
     }
 
-    // --- Counters ---
+    // --- Counters (only count visible tasks, i.e. respect the active organization filter) ---
+    function isFiltered(el) { return el.style.display === 'none'; }
     function updateCounts() {
       var manualAll = manual ? manual.querySelectorAll('.task-item') : [];
-      var aiItems = document.querySelectorAll('#ai-recommendations .ai-task:not(.promoted)');
+      var aiItems = Array.from(document.querySelectorAll('#ai-recommendations .ai-task:not(.promoted)')).filter(function(el) { return !isFiltered(el); });
       var openCount = 0;
       manualAll.forEach(function(el) {
+        if (isFiltered(el)) return;
         var cb = el.querySelector('.task-checkbox');
         // Open = neither checked NOR deactivated (project completed)
         if ((!cb || !cb.checked) && !el.classList.contains('task-deactivated')) openCount++;
       });
       var hasActive = Array.from(manualAll).some(function(el) {
-        return el.querySelector('.task-status.aktiv')
+        return !isFiltered(el)
+          && el.querySelector('.task-status.aktiv')
           && !el.querySelector('.task-checkbox:checked')
           && !el.classList.contains('task-deactivated');
       });
@@ -3964,6 +4611,174 @@
       if (toggleDot) toggleDot.classList.toggle('has-active', hasActive);
     }
     window.refreshTaskCounts = updateCounts;
+
+    // --- Obsidian (optional): .md links inside your vault open in Obsidian without leaving the page.
+    //     Set both values to enable, e.g. { vault: 'code', root: '/Users/you/projects/' };
+    //     with an empty vault all links stay plain file:// links. ---
+    var OBSIDIAN = { vault: '', root: '' };
+    (function() {
+      if (!OBSIDIAN.vault || !OBSIDIAN.root) return;
+      function obsidianUriFor(a) {
+        if (a.protocol === 'obsidian:') return a.href;
+        if (a.protocol !== 'file:') return null;
+        var path = decodeURIComponent(a.pathname);
+        if (path.indexOf(OBSIDIAN.root) !== 0 || !/[.](md|mdx)$/i.test(path)) return null;
+        return 'obsidian://open?vault=' + encodeURIComponent(OBSIDIAN.vault) + '&file=' + encodeURIComponent(path.slice(OBSIDIAN.root.length));
+      }
+      // Hidden iframe: hands the URI to the OS without navigating away
+      function openInObsidian(uri) {
+        var f = document.createElement('iframe');
+        f.style.display = 'none';
+        f.src = uri;
+        document.body.appendChild(f);
+        setTimeout(function() { f.remove(); }, 2000);
+      }
+      document.addEventListener('click', function(e) {
+        var a = e.target.closest ? e.target.closest('a') : null;
+        var uri = a && obsidianUriFor(a);
+        if (!uri) return;
+        e.preventDefault();
+        openInObsidian(uri);
+      });
+      // Mark all links that end up in Obsidian
+      document.querySelectorAll('a[href^="file:"], a[href^="obsidian:"]').forEach(function(a) {
+        if (obsidianUriFor(a)) a.classList.add('obsidian-target');
+      });
+      // Full-text search in the vault: Cmd/Ctrl+Enter in the search field
+      var input = document.getElementById('table-search');
+      if (input) input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          openInObsidian('obsidian://search?vault=' + encodeURIComponent(OBSIDIAN.vault) + '&query=' + encodeURIComponent(input.value.trim()));
+        }
+      });
+    })();
+
+    // --- "open only" toggle: hide completed projects ---
+    (function(){
+      var btn = document.getElementById('projects-open-only'); var tbl = document.getElementById('overview-table');
+      if (!btn || !tbl) return;
+      var KEY = 'dashboard-open-only';
+      function apply(on){
+        tbl.classList.toggle('open-only', on); btn.classList.toggle('is-on', on); btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        try { localStorage.setItem(KEY, on ? '1' : '0'); } catch(e){}
+      }
+      btn.addEventListener('click', function(){ apply(!tbl.classList.contains('open-only')); });
+      var saved = null; try { saved = localStorage.getItem(KEY); } catch(e){}
+      if (saved === '1') apply(true);
+    })();
+
+    // --- Organization filter for tasks ---
+    // A task belongs to the organization of the project it links to (href="#project-id");
+    // an explicit data-org attribute on the task wins.
+    (function() {
+      var sel = document.getElementById('task-filter-select');
+      var dot = document.getElementById('task-filter-dot');
+      if (!sel) return;
+      var FILTER_KEY = 'dashboard-tasks-org';
+      var orgOf = {}, colorOf = {}, org = '';
+      document.querySelectorAll('#overview-table tbody tr').forEach(function(tr) {
+        if (tr.classList.contains('org-header')) {
+          if (tr.classList.contains('tool-code')) return;
+          var l = tr.querySelector('.org-header-label'); org = l ? l.textContent.trim() : '';
+          colorOf[org] = tr.style.getPropertyValue('--org-color') || '';
+          return;
+        }
+        var a = tr.querySelector('a.table-name');
+        if (a) orgOf[(a.getAttribute('href') || '').replace('#', '')] = org;
+      });
+      var tasks = Array.from(document.querySelectorAll('#global-tasks .task-item'));
+      function taskOrg(el) {
+        if (el.hasAttribute('data-org')) return el.getAttribute('data-org');
+        var a = el.querySelector('.task-meta a[href^="#"]');
+        return (a && orgOf[a.getAttribute('href').slice(1)]) || '';
+      }
+      Object.keys(colorOf).forEach(function(o) {
+        if (!tasks.some(function(el) { return taskOrg(el) === o; })) return;
+        var opt = document.createElement('option');
+        opt.value = o; opt.textContent = o;
+        sel.appendChild(opt);
+      });
+      function apply() {
+        var v = sel.value;
+        tasks.forEach(function(el) { el.style.display = (!v || taskOrg(el) === v) ? '' : 'none'; });
+        if (dot) dot.style.background = v ? (colorOf[v] || 'var(--accent)') : 'var(--text-dim)';
+        try { localStorage.setItem(FILTER_KEY, v); } catch (e) {}
+        updateCounts();
+      }
+      sel.addEventListener('change', apply);
+      try {
+        var saved = localStorage.getItem(FILTER_KEY);
+        if (saved && Array.from(sel.options).some(function(o) { return o.value === saved; })) sel.value = saved;
+      } catch (e) {}
+      apply();
+    })();
+
+    // --- Drag the handle to resize the sidebar ---
+    (function() {
+      var KEY = 'dashboard-sidebar-w';
+      var layout = document.querySelector('.layout');
+      var rz = document.getElementById('col-resizer');
+      var sidebar = document.getElementById('sidebar');
+      if (!layout || !rz || !sidebar) return;
+      function clampW(w) { return Math.min(860, Math.max(380, w)); }
+      // Hide: dragged below HIDE_AT px (clearly under the minimum width) = sidebar gone, saved as "0"
+      var HIDE_AT = 200;
+      var TITLE_W = rz.title, TITLE_HIDDEN = 'Show sidebar: drag left or click';
+      function setHidden(h) {
+        layout.classList.toggle('sidebar-hidden', h);
+        rz.title = h ? TITLE_HIDDEN : TITLE_W;
+      }
+      try {
+        var raw = localStorage.getItem(KEY);
+        var saved = parseInt(raw, 10);
+        if (raw === '0') setHidden(true);
+        else if (saved) layout.style.setProperty('--sidebar-w', clampW(saved) + 'px');
+      } catch (e) {}
+      // Show again at the last width (or the default) — also used by the tasks button in the header
+      function showSidebar() {
+        setHidden(false);
+        var cur = parseInt(layout.style.getPropertyValue('--sidebar-w'), 10);
+        try { if (cur) localStorage.setItem(KEY, cur); else localStorage.removeItem(KEY); } catch (e2) {}
+      }
+      window.showSidebar = showSidebar;
+      rz.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        var startX = e.clientX;
+        var wasHidden = layout.classList.contains('sidebar-hidden');
+        var startW = wasHidden ? 0 : sidebar.getBoundingClientRect().width;
+        var lastW = startW, moved = false;
+        rz.classList.add('dragging');
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'col-resize';
+        function move(ev) {
+          if (Math.abs(ev.clientX - startX) > 3) moved = true;
+          var w = startW - (ev.clientX - startX);
+          if (w < HIDE_AT) { lastW = 0; setHidden(true); return; }
+          lastW = clampW(w);
+          setHidden(false);
+          layout.style.setProperty('--sidebar-w', lastW + 'px');
+        }
+        function up() {
+          document.removeEventListener('mousemove', move);
+          document.removeEventListener('mouseup', up);
+          rz.classList.remove('dragging');
+          document.body.style.userSelect = '';
+          document.body.style.cursor = '';
+          // A click without dragging on the grip of the hidden sidebar = show it again
+          if (wasHidden && !moved) { showSidebar(); return; }
+          if (!moved) return;
+          try { localStorage.setItem(KEY, Math.round(lastW)); } catch (e2) {}
+        }
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+      });
+      rz.addEventListener('dblclick', function() {
+        setHidden(false);
+        layout.style.removeProperty('--sidebar-w');
+        try { localStorage.removeItem(KEY); } catch (e2) {}
+      });
+    })();
 
     // Global AI recommendations container
     var aiListContainer = document.querySelector('#ai-recommendations > .task-list');
@@ -4199,6 +5014,151 @@
     })();
   })();
 
+  /* ── Task cards: star, drag order, hide, detail dialog ──
+     View state only (localStorage) — the ticket file / the HTML stays the source of truth.
+     Cards generated by sync-tasks.py carry data-file (link to the ticket) and data-body (its notes, base64). */
+  (function(){
+    var list = document.getElementById('manual-tasks');
+    if (!list) return;
+    var K = { star: 'dashboard-task-starred', order: 'dashboard-task-order', hidden: 'dashboard-task-hidden' };
+    function load(k){ try { var v = JSON.parse(localStorage.getItem(k) || '[]'); return Array.isArray(v) ? v : []; } catch(e){ return []; } }
+    function store(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+    function items(){ return Array.prototype.slice.call(list.querySelectorAll('.task-item')); }
+    function titleOf(item){ var t = item.querySelector('.task-title > span:first-child'); return t ? t.textContent.trim() : ''; } // same key as the checkbox sync
+    function refresh(){ if (window.refreshTaskCounts) window.refreshTaskCounts(); if (window.refreshFooterStats) window.refreshFooterStats(); }
+
+    var ICON = {
+      star: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg>',
+      info: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z"/><path d="M6 8h4"/><path d="M6 11h4"/></svg>',
+      hide: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><path d="M2.5 13.5l11-11"/></svg>'
+    };
+    function btn(cls, label, svg){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'task-btn ' + cls; b.title = label; b.setAttribute('aria-label', label); b.innerHTML = svg;
+      return b;
+    }
+
+    // Hidden tasks leave the DOM (counters, filter and footer then need no special case); "restore" brings them back
+    var hidden = load(K.hidden);
+    items().forEach(function(item){ if (hidden.indexOf(titleOf(item)) !== -1) item.remove(); });
+    var restore = document.createElement('button');
+    restore.type = 'button'; restore.className = 'task-restore';
+    restore.addEventListener('click', function(){ store(K.hidden, []); location.reload(); });
+    list.insertAdjacentElement('afterend', restore);
+    function labelRestore(){ restore.hidden = !hidden.length; restore.textContent = hidden.length + (hidden.length === 1 ? ' task' : ' tasks') + ' hidden — restore'; }
+    labelRestore();
+
+    // Saved order = ranking; unknown tasks keep their place at the end
+    (function applyOrder(){
+      var order = load(K.order); if (!order.length) return;
+      var pos = {}; order.forEach(function(k, i){ pos[k] = i; });
+      items().map(function(it, i){ return [it, (titleOf(it) in pos) ? pos[titleOf(it)] : Infinity, i]; })
+        .sort(function(a, b){ return (a[1] - b[1]) || (a[2] - b[2]); })
+        .forEach(function(x){ list.appendChild(x[0]); });
+    })();
+
+    var starred = load(K.star);
+    items().forEach(function(item){
+      var key = titleOf(item); if (!key) return;
+      var actions = document.createElement('div'); actions.className = 'task-actions';
+      var details = btn('task-details', 'Details: ' + key, ICON.info);
+      details.addEventListener('click', function(){ openDialog(item); });
+      var star = btn('task-star', '', ICON.star);
+      function syncStar(){ var on = starred.indexOf(key) !== -1; item.classList.toggle('starred', on); star.classList.toggle('on', on); star.setAttribute('aria-pressed', on ? 'true' : 'false'); star.title = on ? 'Remove star' : 'Star this task'; star.setAttribute('aria-label', star.title + ': ' + key); }
+      star.addEventListener('click', function(){ var i = starred.indexOf(key); if (i === -1) starred.push(key); else starred.splice(i, 1); store(K.star, starred); syncStar(); });
+      syncStar();
+      var hide = btn('task-hide', 'Hide from the dashboard (view only — the task itself stays): ' + key, ICON.hide);
+      hide.addEventListener('click', function(){ hidden.push(key); store(K.hidden, hidden); item.remove(); labelRestore(); refresh(); restore.focus(); });
+      actions.appendChild(details); actions.appendChild(star); actions.appendChild(hide);
+      item.appendChild(actions);
+      var title = item.querySelector('.task-title > span:first-child');
+      if (title){ title.classList.add('task-open'); title.addEventListener('click', function(){ if (!justDragged) openDialog(item); }); }
+      item.addEventListener('pointerdown', onDown);
+    });
+    refresh();
+
+    // ── Drag to reorder (pointer-based, drop line — same pattern as the table rows) ──
+    var drag = null, startY = 0, moved = false, line = null, target = null, after = false, justDragged = false;
+    function onDown(e){
+      if ((e.button != null && e.button !== 0) || e.target.closest('a, button, input, select, label')) return;
+      drag = e.currentTarget; startY = e.clientY; moved = false; target = null;
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    }
+    function onMove(e){
+      if (!drag || (!moved && Math.abs(e.clientY - startY) < 5)) return;
+      if (!moved){
+        moved = true; drag.classList.add('task-dragging'); document.body.classList.add('dnd-active');
+        line = document.createElement('div'); line.className = 'dnd-drop-line'; document.body.appendChild(line);
+      }
+      e.preventDefault();
+      var sibs = items().filter(function(it){ return it !== drag && it.style.display !== 'none'; });
+      target = null; after = false;
+      for (var i = 0; i < sibs.length; i++){ var rc = sibs[i].getBoundingClientRect(); if (e.clientY < rc.top + rc.height / 2){ target = sibs[i]; break; } }
+      if (!target && sibs.length){ target = sibs[sibs.length - 1]; after = true; }
+      var dr = drag.getBoundingClientRect(), tr = target ? target.getBoundingClientRect() : dr;
+      line.style.top = ((target ? (after ? tr.bottom + 3 : tr.top - 4) : dr.top) + window.scrollY) + 'px';
+      line.style.left = (dr.left + window.scrollX) + 'px'; line.style.width = dr.width + 'px'; line.style.height = '2px';
+    }
+    function onUp(){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      if (!drag) return;
+      var d = drag; drag = null;
+      d.classList.remove('task-dragging'); document.body.classList.remove('dnd-active');
+      if (line && line.parentNode) line.parentNode.removeChild(line);
+      line = null;
+      if (moved){ justDragged = true; setTimeout(function(){ justDragged = false; }, 0); }
+      if (moved && target && target !== d){
+        list.insertBefore(d, after ? target.nextSibling : target);
+        store(K.order, items().map(titleOf));
+      }
+    }
+
+    // ── Detail dialog (native <dialog>: focus trap, Esc and focus return come for free) ──
+    var dlg = null;
+    function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+    function decode(b64){ try { return new TextDecoder().decode(Uint8Array.from(atob(b64), function(c){ return c.charCodeAt(0); })); } catch(e){ return ''; } }
+    function openDialog(item){
+      if (!dlg){
+        dlg = el('dialog', 'task-dialog'); dlg.setAttribute('aria-labelledby', 'task-dialog-title');
+        dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); }); // click on the backdrop
+        document.body.appendChild(dlg);
+      }
+      if (typeof dlg.showModal !== 'function') return; // very old browser: the card itself already shows the essentials
+      dlg.textContent = '';
+      var head = el('div', 'td-head');
+      var h = el('h3', null, titleOf(item)); h.id = 'task-dialog-title';
+      var close = el('button', 'td-close', '✕'); close.type = 'button'; close.setAttribute('aria-label', 'Close'); close.addEventListener('click', function(){ dlg.close(); });
+      head.appendChild(h); head.appendChild(close); dlg.appendChild(head);
+      var chips = el('div', 'td-chips');
+      var id = item.querySelector('.task-id'), status = item.querySelector('.task-status');
+      if (id && id.textContent.trim()) chips.appendChild(el('span', 'task-id', id.textContent.trim()));
+      if (status) chips.appendChild(status.cloneNode(true));
+      [['priority', 'Priority'], ['deadline', 'Due'], ['created', 'Created']].forEach(function(f){
+        var v = item.getAttribute('data-' + f[0]); if (v) chips.appendChild(el('span', 'td-chip', f[1] + ': ' + v));
+      });
+      dlg.appendChild(chips);
+      var meta = item.querySelector('.task-meta');
+      if (meta){ var m = el('div', 'td-meta'); m.innerHTML = meta.innerHTML; dlg.appendChild(m); } // the page's own markup, not user input
+      var body = decode(item.getAttribute('data-body') || '');
+      if (body) dlg.appendChild(el('pre', 'td-body', body)); // plain text on purpose: no Markdown parser, no injection surface
+      var file = item.getAttribute('data-file');
+      if (file){
+        var foot = el('div', 'td-foot'), a = el('a', 'td-file', 'Open ticket file');
+        a.href = file; a.title = 'Opens the Markdown file — in Obsidian when the OBSIDIAN option is set';
+        foot.appendChild(a); foot.appendChild(el('span', 'td-hint', 'Edit the task in its file, then run sync-tasks.py'));
+        dlg.appendChild(foot);
+      }
+      // Links inside the dialog navigate the page (project anchor) or open the file -> close first
+      dlg.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ dlg.close(); }); });
+      dlg.showModal();
+      close.focus();
+    }
+  })();
+
   /* ── Quicklinks nav: curated pills (icon + copy) with pin/remove ── */
   (function(){
     var STORAGE = 'dashboard-quicklinks';
@@ -4220,32 +5180,46 @@
       document.body.removeChild(ta);
     }
 
-    // Registry of all projects from the overview table
+    // Registry of all projects from the overview table.
+    // The key is the unique href anchor id (same convention as star/done/focus) — NOT the
+    // openClaude arg: sub-projects without their own folder share that with their parent
+    // and would collide. The folder (dir) is only used for the pill's cd command.
     var registry = [];
-    var byDir = {};
+    var byId = {};
     Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(tr){
       if (tr.classList.contains('org-header')) return;
       var link = tr.querySelector('a.table-name');
       if (!link) return;
       var img = link.querySelector('img.project-icon');
       var href = link.getAttribute('href') || '';
-      var dir = href.replace('#', '');
+      var id = href.replace('#', '');
+      var dir = id;
       var claudeBtn = tr.querySelector('.btn-claude');
+      var url = ''; // cloud projects carry a link instead of the claude button
       if (claudeBtn){
         var m = /openClaude\('([^']+)'\)/.exec(claudeBtn.getAttribute('onclick') || '');
         if (m) dir = m[1];
+        url = claudeBtn.getAttribute('href') || '';
       }
-      var item = { dir: dir, name: link.textContent.trim(), href: href,
+      var item = { id: id, dir: dir, url: url, name: link.textContent.trim(), href: href,
                    iconSrc: img ? img.getAttribute('src') : '', tr: tr, pinBtn: null };
       registry.push(item);
-      byDir[dir] = item;
+      byId[id] = item;
     });
 
     // Selected quicklinks (curated, persisted) — default: empty
     var selected;
     try { selected = JSON.parse(localStorage.getItem(STORAGE) || 'null'); } catch(e){ selected = null; }
     if (!Array.isArray(selected)) selected = [];
-    selected = selected.filter(function(d){ return byDir[d]; });
+    // Migration: earlier versions stored the openClaude arg — map to anchor ids
+    // (with shared folders the first row = parent wins), drop unknown/duplicate entries
+    selected = selected.map(function(v){
+      if (byId[v]) return v;
+      var hit = registry.filter(function(it){ return it.dir === v; })[0];
+      return hit ? hit.id : v;
+    });
+    selected = selected.filter(function(v, i){ return byId[v] && selected.indexOf(v) === i; });
+    try { localStorage.setItem(STORAGE, JSON.stringify(selected)); } catch(e){} // persist the migrated state right away
 
     function save(){ try { localStorage.setItem(STORAGE, JSON.stringify(selected)); } catch(e){} }
     function isPinned(dir){ return selected.indexOf(dir) !== -1; }
@@ -4317,18 +5291,19 @@
     function makePill(item){
       var pill = document.createElement('span');
       pill.className = 'ql-pill';
-      pill.setAttribute('data-dir', item.dir);
+      pill.setAttribute('data-dir', item.id);
       pill.addEventListener('pointerdown', onPillDown);
 
       var main = document.createElement('button');
       main.type = 'button';
       main.className = 'ql-pill-copy';
-      main.title = '"' + item.name + '" — drag to reorder, click to copy';
+      main.title = '"' + item.name + '" — drag to reorder, click to ' + (item.url ? 'open' : 'copy');
       var icon = item.iconSrc ? '<img class="ql-pill-icon" src="' + item.iconSrc + '" alt="">' : '';
       main.innerHTML = icon + '<span class="ql-pill-name"></span>' + COPY_SVG;
       main.querySelector('.ql-pill-name').textContent = item.name;
       main.addEventListener('click', function(){
         if (justDragged) return; // don't copy right after a drag
+        if (item.url){ window.open(item.url, '_blank', 'noopener'); return; }
         copyText('cd ~/projects/' + item.dir + ' && claude');
         main.classList.add('copied');
         setTimeout(function(){ main.classList.remove('copied'); }, 1200);
@@ -4340,7 +5315,7 @@
       rm.title = 'Remove from quicklinks';
       rm.setAttribute('aria-label', 'Remove');
       rm.innerHTML = '&times;';
-      rm.addEventListener('click', function(){ unpin(item.dir); });
+      rm.addEventListener('click', function(){ unpin(item.id); });
 
       pill.appendChild(main);
       pill.appendChild(rm);
@@ -4350,12 +5325,13 @@
     function updatePins(){
       registry.forEach(function(item){
         if (!item.pinBtn) return;
-        var p = isPinned(item.dir);
+        var p = isPinned(item.id);
         item.pinBtn.classList.toggle('pinned', p);
-        item.pinBtn.innerHTML = p
-          ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5"/></svg>'
-          : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>';
-        item.pinBtn.title = p ? 'In quicklinks — click removes' : 'Add to quicklinks';
+        // Bookmark = quicklink (filled when active); the arrow belongs to the focus toggle
+        item.pinBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.5h7v11L8 10.6l-3.5 2.9z"/></svg>';
+        item.pinBtn.title = p ? 'Quicklink: in the header — click removes' : 'Quicklink: add to the header';
+        item.pinBtn.setAttribute('aria-pressed', p ? 'true' : 'false');
+        item.pinBtn.setAttribute('aria-label', item.pinBtn.title);
       });
     }
 
@@ -4364,10 +5340,10 @@
       if (!selected.length){
         var e = document.createElement('span');
         e.className = 'ql-empty';
-        e.textContent = 'Pin projects here with + below';
+        e.textContent = 'Add projects here with the bookmark button below';
         nav.appendChild(e);
       } else {
-        selected.forEach(function(d){ if (byDir[d]) nav.appendChild(makePill(byDir[d])); });
+        selected.forEach(function(d){ if (byId[d]) nav.appendChild(makePill(byId[d])); });
       }
       updatePins();
     }
@@ -4380,7 +5356,7 @@
       btn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
-        if (isPinned(item.dir)) unpin(item.dir); else pin(item.dir);
+        if (isPinned(item.id)) unpin(item.id); else pin(item.id);
       });
       var claudeBtn = item.tr.querySelector('.btn-claude');
       if (claudeBtn && claudeBtn.parentNode){
@@ -4400,7 +5376,7 @@
         var tr = st.closest('tr');
         var item = registry.filter(function(it){ return it.tr === tr; })[0];
         if (!item) return;
-        if (tr.classList.contains('work')) pin(item.dir); else unpin(item.dir);
+        if (tr.classList.contains('work')) pin(item.id); else unpin(item.id);
       }, 0);
     }, true);
 
@@ -4426,7 +5402,7 @@
         });
       } catch(e){}
     }
-    var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M5.5 8.2l1.7 1.7 3.3-3.6"/></svg>';
+    var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 2.5h11v11h-11z"/><path d="M5.2 8.3l1.9 1.9 3.7-4.2"/></svg>';
 
     Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(tr){
       if (tr.classList.contains('org-header')) return;
@@ -4506,6 +5482,257 @@
     });
   })();
 
+  /* ── Focus: pin up to 3 projects into the "Focus" section above the table ──
+     Toggles are injected on load (project id from the href of the .table-name link),
+     so future projects get the pin automatically. Persistence: localStorage 'dashboard-focus'.
+     Pinned original rows are hidden below (class .pinned-away, they stay in the DOM as the
+     data source); reordering inside the focus section reuses the row-grip pattern of the
+     overview table. */
+  (function(){
+    var KEY = 'dashboard-focus';
+    var MAX = 3;
+    var table = document.getElementById('overview-table');
+    var section = document.getElementById('pin-section');
+    var tbody = document.getElementById('pin-tbody');
+    if (!table || !section || !tbody) return;
+    var mainTbody = table.querySelector('tbody');
+
+    var pins;
+    try { pins = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ pins = null; }
+    if (!Array.isArray(pins)) pins = [];
+    pins = pins.filter(function(id){ return typeof id === 'string'; });
+    function save(){ try { localStorage.setItem(KEY, JSON.stringify(pins)); } catch(e){} }
+
+    var PIN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 2.8h9"/><path d="M8 13.2V5.8"/><path d="M4.6 9L8 5.6 11.4 9"/></svg>';
+    var GRIP = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">'
+      + '<circle cx="5.5" cy="3" r="1.4"/><circle cx="10.5" cy="3" r="1.4"/>'
+      + '<circle cx="5.5" cy="8" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/>'
+      + '<circle cx="5.5" cy="13" r="1.4"/><circle cx="10.5" cy="13" r="1.4"/></svg>';
+
+    var rows = {};    // project id -> original row
+    var toggles = {}; // project id -> toggle in the original row
+
+    function syncToggle(btn, on){
+      btn.classList.toggle('pinned', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.title = on ? 'Focus: unpin from the top' : 'Focus: pin above the table (max. 3)';
+      btn.setAttribute('aria-label', btn.title);
+    }
+
+    function makeToggle(id){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pin-toggle';
+      btn.innerHTML = PIN;
+      btn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        var i = pins.indexOf(id);
+        if (i !== -1){ pins.splice(i, 1); save(); render(); }
+        else if (pins.length >= MAX){ hint(btn); }
+        else { pins.push(id); save(); render(); }
+      });
+      return btn;
+    }
+
+    // Subtle hint at the button when a 4th pin is attempted
+    function hint(btn){
+      var h = document.createElement('div');
+      h.className = 'pin-hint';
+      h.setAttribute('role', 'status');
+      h.textContent = 'Focus is full \u2014 unpin a project first';
+      document.body.appendChild(h);
+      var r = btn.getBoundingClientRect();
+      h.style.top = (r.top + window.scrollY - h.offsetHeight - 6) + 'px';
+      h.style.left = Math.max(8, r.left + window.scrollX + r.width / 2 - h.offsetWidth / 2) + 'px';
+      setTimeout(function(){ h.classList.add('out'); }, 1500);
+      setTimeout(function(){ if (h.parentNode) h.parentNode.removeChild(h); }, 1900);
+    }
+
+    // Hide an org header (and tool band) as well when ALL project rows of its group are pinned
+    function updateOrgHeaders(){
+      var all = Array.prototype.slice.call(mainTbody.children);
+      var header = null, visible = 0, tool = null, toolVisible = 0;
+      function flush(){ if (header) header.classList.toggle('pinned-away', visible === 0); }
+      function flushTool(){ if (tool) tool.classList.toggle('pinned-away', toolVisible === 0); }
+      all.forEach(function(tr){
+        if (tr.classList.contains('tool-header')){ flush(); header = null; flushTool(); tool = tr; toolVisible = 0; return; }
+        if (tr.classList.contains('org-header')){ flush(); header = tr; visible = 0; return; }
+        if (tr.querySelector('a.table-name') && !tr.classList.contains('pinned-away')){ visible++; toolVisible++; }
+      });
+      flush(); flushTool();
+    }
+
+    function render(){
+      // Sync the original toggles + hide pinned original rows below
+      Object.keys(toggles).forEach(function(id){
+        var on = pins.indexOf(id) !== -1;
+        syncToggle(toggles[id], on);
+        rows[id].classList.toggle('pinned-away', on);
+      });
+      updateOrgHeaders();
+      // Rebuild the focus section: cloned rows in pin order
+      tbody.innerHTML = '';
+      var shown = 0;
+      pins.forEach(function(id){
+        var src = rows[id];
+        if (!src) return; // id no longer exists -> ignore silently
+        var clone = src.cloneNode(true);
+        clone.className = 'pin-row';
+        clone.setAttribute('data-pin-id', id);
+        // Only remove the focus toggle + grip from the clone (they get fresh instances).
+        // ql-pin / star-toggle / done-toggle STAY in the clone: cloneNode copies no listeners,
+        // so the delegation below forwards their clicks to the original buttons.
+        Array.prototype.slice.call(clone.querySelectorAll('.pin-toggle, .row-grip')).forEach(function(el){
+          if (el.parentNode) el.parentNode.removeChild(el);
+        });
+        // Unpin button at the same position as below: before star/done, otherwise before claude
+        var btn = makeToggle(id);
+        syncToggle(btn, true);
+        var anchorEl = clone.querySelector('.star-toggle') || clone.querySelector('.done-toggle') || clone.querySelector('.btn-claude');
+        if (anchorEl && anchorEl.parentNode) anchorEl.parentNode.insertBefore(btn, anchorEl);
+        else if (clone.lastElementChild) clone.lastElementChild.appendChild(btn);
+        // Reorder grip: same pattern as the row sorting below (last cell, right)
+        var cells = clone.querySelectorAll('td');
+        var cell = cells[cells.length - 1];
+        if (cell){
+          cell.style.position = 'relative';
+          var grip = document.createElement('span');
+          grip.className = 'row-grip';
+          grip.title = 'Reorder focus';
+          grip.innerHTML = GRIP;
+          grip.addEventListener('pointerdown', onDown);
+          cell.appendChild(grip);
+        }
+        tbody.appendChild(clone);
+        shown++;
+      });
+      section.hidden = shown === 0;
+      syncCloneControls();
+    }
+
+    // Mirror the state of the existing toggles (quicklink/star/done) + row classes from the original into the clones
+    var PROXY_SEL = '.ql-pin, .star-toggle, .done-toggle';
+    function syncCloneControls(){
+      Array.prototype.slice.call(tbody.children).forEach(function(clone){
+        var src = rows[clone.getAttribute('data-pin-id')];
+        if (!src) return;
+        ['.ql-pin', '.star-toggle', '.done-toggle'].forEach(function(sel){
+          var o = src.querySelector(sel), c = clone.querySelector(sel);
+          if (!o || !c) return;
+          c.className = o.className;
+          c.innerHTML = o.innerHTML;
+          c.title = o.title;
+          var ap = o.getAttribute('aria-pressed');
+          if (ap != null) c.setAttribute('aria-pressed', ap);
+          c.setAttribute('aria-label', o.getAttribute('aria-label') || o.title);
+        });
+        clone.classList.toggle('work', src.classList.contains('work'));
+        clone.classList.toggle('completed', src.classList.contains('completed'));
+      });
+    }
+
+    // Delegation: forward clicks on existing toggles in focus rows to the original button
+    // (project id as key) — quicklink logic, star/quicklink coupling and task counters keep
+    // running through the original handlers, even while the original row is hidden
+    tbody.addEventListener('click', function(e){
+      var proxy = e.target.closest(PROXY_SEL);
+      if (!proxy || !tbody.contains(proxy)) return;
+      var row = proxy.closest('tr');
+      var src = row && rows[row.getAttribute('data-pin-id')];
+      if (!src) return;
+      e.preventDefault();
+      var sel = proxy.classList.contains('ql-pin') ? '.ql-pin'
+        : proxy.classList.contains('star-toggle') ? '.star-toggle' : '.done-toggle';
+      var orig = src.querySelector(sel);
+      if (orig) orig.click();
+      setTimeout(syncCloneControls, 0);
+    });
+
+    // ── Reorder via drag (pointer-based, drop line — pattern of the row sorting) ──
+    var dragRow = null, startY = 0, moved = false, line = null, target = null, after = false;
+    function onDown(e){
+      if (e.button != null && e.button !== 0) return;
+      e.preventDefault();
+      dragRow = e.currentTarget.closest('tr');
+      startY = e.clientY; moved = false; target = null; after = false;
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    }
+    function onMove(e){
+      if (!dragRow) return;
+      if (!moved && Math.abs(e.clientY - startY) < 5) return;
+      if (!moved){
+        moved = true;
+        dragRow.classList.add('row-dragging');
+        document.body.classList.add('dnd-active');
+        line = document.createElement('div');
+        line.className = 'dnd-drop-line';
+        document.body.appendChild(line);
+      }
+      e.preventDefault();
+      var sibs = Array.prototype.slice.call(tbody.children).filter(function(r){ return r !== dragRow; });
+      target = null; after = false;
+      for (var i = 0; i < sibs.length; i++){
+        var rc = sibs[i].getBoundingClientRect();
+        if (e.clientY < rc.top + rc.height / 2){ target = sibs[i]; break; }
+      }
+      if (!target && sibs.length){ target = sibs[sibs.length - 1]; after = true; }
+      var dr = dragRow.getBoundingClientRect();
+      var y = target ? (after ? target.getBoundingClientRect().bottom : target.getBoundingClientRect().top) : dr.top;
+      line.style.top = (y - 1 + window.scrollY) + 'px';
+      line.style.left = (dr.left + window.scrollX) + 'px';
+      line.style.width = dr.width + 'px';
+      line.style.height = '2px';
+    }
+    function onUp(){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      if (!dragRow) return;
+      var r = dragRow; dragRow = null;
+      r.classList.remove('row-dragging');
+      document.body.classList.remove('dnd-active');
+      if (line && line.parentNode) line.parentNode.removeChild(line);
+      line = null;
+      if (moved && target && target !== r){
+        // Pin order = reorder the pins array (no second storage location), then re-render
+        var id = r.getAttribute('data-pin-id');
+        var refId = target.getAttribute('data-pin-id');
+        var from = pins.indexOf(id);
+        if (from !== -1 && refId && pins.indexOf(refId) !== -1){
+          pins.splice(from, 1);
+          var to = pins.indexOf(refId);
+          pins.splice(after ? to + 1 : to, 0, id);
+          save(); render();
+        }
+      }
+      target = null; after = false;
+    }
+
+    // Inject toggles into all project rows
+    Array.prototype.slice.call(table.querySelectorAll('tbody tr')).forEach(function(tr){
+      if (tr.classList.contains('org-header')) return;
+      var link = tr.querySelector('a.table-name');
+      if (!link) return;
+      var id = (link.getAttribute('href') || '').replace('#', '');
+      if (!id || rows[id]) return;
+      rows[id] = tr;
+      var btn = makeToggle(id);
+      syncToggle(btn, pins.indexOf(id) !== -1);
+      var anchor = tr.querySelector('.star-toggle') || tr.querySelector('.done-toggle') || tr.querySelector('.btn-claude');
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(btn, anchor);
+      else tr.appendChild(btn);
+      toggles[id] = btn;
+    });
+
+    // Clean orphaned ids (project removed/renamed) out of storage
+    var cleaned = pins.filter(function(id){ return !!rows[id]; });
+    if (cleaned.length !== pins.length){ pins = cleaned; save(); }
+
+    render();
+  })();
+
   /* ── View toggle: Projects / Organizations / Active ── */
   (function(){
     var KEY = 'dashboard-view-mode';
@@ -4521,6 +5748,7 @@
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
       try { localStorage.setItem(KEY, mode); } catch(e){}
+      if (window.applyRowOrderForMode) window.applyRowOrderForMode();
     }
     var saved = null; try { saved = localStorage.getItem(KEY); } catch(e){}
     setMode(saved === 'flat' || saved === 'active' ? saved : 'orgs');
@@ -4531,11 +5759,14 @@
 
   /* ── Reorder table rows per organization via drag & drop ── */
   (function(){
-    var KEY = 'dashboard-row-order';
+    var KEY = 'dashboard-row-order';           // grouped order (Organizations view)
+    var FLAT_KEY = 'dashboard-row-order-flat'; // free order (Projects / Active view)
     var table = document.getElementById('overview-table');
     if (!table) return;
     var tbody = table.querySelector('tbody');
     if (!tbody) return;
+    function isOrgs(){ return table.classList.contains('mode-orgs'); }
+    function currentKey(){ return isOrgs() ? KEY : FLAT_KEY; }
 
     var GRIP = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">'
       + '<circle cx="5.5" cy="3" r="1.4"/><circle cx="10.5" cy="3" r="1.4"/>'
@@ -4543,6 +5774,7 @@
       + '<circle cx="5.5" cy="13" r="1.4"/><circle cx="10.5" cy="13" r="1.4"/></svg>';
 
     function rowKey(tr){
+      if (tr.classList.contains('tool-code')) return null; // stays on top, never part of the saved order
       if (tr.classList.contains('org-header')){
         var lbl = tr.querySelector('.org-header-label');
         return 'ORG:' + (lbl ? lbl.textContent.trim() : '');
@@ -4552,16 +5784,93 @@
     }
     function save(){
       var order = Array.prototype.slice.call(tbody.children).map(rowKey).filter(Boolean);
-      try { localStorage.setItem(KEY, JSON.stringify(order)); } catch(e){}
+      try { localStorage.setItem(currentKey(), JSON.stringify(order)); } catch(e){}
     }
-    function applyOrder(){
-      var saved; try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ saved = null; }
-      if (!Array.isArray(saved) || !saved.length) return;
-      var map = {};
-      Array.prototype.slice.call(tbody.children).forEach(function(tr){ var k = rowKey(tr); if (k) map[k] = tr; });
-      saved.forEach(function(k){ if (map[k]) tbody.appendChild(map[k]); });
+    // Initial (HTML) order = canonical grouping — fallback for the Organizations view
+    var initialRows = Array.prototype.slice.call(tbody.children);
+    var initialOrder = initialRows.map(rowKey).filter(Boolean);
+    // Self-healing: the saved order is only a RANKING of siblings, applied to the canonical structure.
+    // Sections (Organizations view: org headers, flat views: tool bands) keep their rows, sub-rows stay
+    // under their parent, rows without a saved position go to the end of their sibling group — so
+    // renamed anchors, new organizations or moved rows never need a storage key bump.
+    function applyOrder(key){
+      var saved; try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch(e){ saved = null; }
+      if (!Array.isArray(saved) || !saved.length) saved = (key === KEY) ? initialOrder : null;
+      if (!saved) return;
+      var pos = {}; saved.forEach(function(k, i){ if (!(k in pos)) pos[k] = i; });
+      function rank(tr){ var k = rowKey(tr); return (k && k in pos) ? pos[k] : Infinity; }
+      function ranked(blocks){
+        return blocks.map(function(b, i){ return [b, i]; })
+          .sort(function(a, b){ return (rank(a[0].tr) - rank(b[0].tr)) || (a[1] - b[1]); })
+          .map(function(x){ return x[0]; });
+      }
+      var boundary = isOrgs()
+        ? function(r){ return r.classList.contains('org-header'); }
+        : function(r){ return r.classList.contains('tool-header'); };
+      var sections = [], sec = null, last0 = null, last1 = null;
+      initialRows.forEach(function(tr){
+        var lv = level(tr);
+        if (lv === -1){
+          if (boundary(tr) || !sec){ sec = { head: [tr], blocks: [] }; sections.push(sec); }
+          else sec.head.push(tr);
+          return;
+        }
+        if (!sec){ sec = { head: [], blocks: [] }; sections.push(sec); }
+        var node = { tr: tr, children: [] };
+        if (lv === 0){ sec.blocks.push(node); last0 = node; last1 = null; }
+        else if (lv === 1 && last0){ last0.children.push(node); last1 = node; }
+        else if (lv === 2 && last1){ last1.children.push(node); }
+        else if (last0){ last0.children.push(node); last1 = node; }
+      });
+      function emit(node){ tbody.appendChild(node.tr); ranked(node.children).forEach(emit); }
+      // Sections themselves are movable (Organizations view): rank of the header key; the first tool band stays in front
+      function secRank(sec){ var h = sec.head[0]; return !h ? Infinity : (h.classList.contains('tool-code') ? -1 : rank(h)); }
+      sections.map(function(sec, i){ return [sec, i]; })
+        .sort(function(a, b){ return (secRank(a[0]) - secRank(b[0])) || (a[1] - b[1]); })
+        .forEach(function(x){
+          x[0].head.forEach(function(tr){ tbody.appendChild(tr); });
+          ranked(x[0].blocks).forEach(emit);
+        });
+      applyCollapse();
     }
-    applyOrder();
+    // --- Collapse/expand organization sections (state per ORG key) ---
+    var COLLAPSE_KEY = 'dashboard-org-collapsed';
+    var collapsed = {}; try { (JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '[]') || []).forEach(function(k){ collapsed[k] = true; }); } catch(e){}
+    function saveCollapse(){ try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(Object.keys(collapsed))); } catch(e){} }
+    // Mark the rows of a collapsed section. The header visible in the current view decides:
+    // Organizations view = every org header, flat views = tool bands only
+    function applyCollapse(){
+      var isHead = isOrgs() ? function(r){ return true; } : function(r){ return r.classList.contains('tool-header'); };
+      var cur = null, curCollapsed = false, count = 0;
+      var flush = function(){ if (cur){ var c = cur.querySelector('.org-count'); if (c) c.textContent = count + (count === 1 ? ' project' : ' projects'); } };
+      Array.prototype.slice.call(tbody.children).forEach(function(tr){
+        if (tr.classList.contains('org-header')){
+          if (isHead(tr)){ flush(); cur = tr; count = 0; curCollapsed = !!collapsed[rowKey(tr)]; tr.classList.toggle('org-collapsed', curCollapsed); tr.classList.remove('org-collapsed-row'); return; }
+          tr.classList.toggle('org-collapsed-row', curCollapsed); return; // hidden org header inside a tool band
+        }
+        if (tr.querySelector('a.table-name')) count++;
+        tr.classList.toggle('org-collapsed-row', curCollapsed);
+      });
+      flush();
+      if (window.refreshFooterStats) window.refreshFooterStats();
+    }
+    Array.prototype.slice.call(tbody.children).forEach(function(tr){
+      if (!tr.classList.contains('org-header') || tr.classList.contains('tool-code')) return;
+      var td = tr.querySelector('td'), lbl = tr.querySelector('.org-header-label'); if (!td || !lbl) return;
+      var caret = document.createElement('span'); caret.className = 'org-toggle'; caret.setAttribute('aria-hidden', 'true');
+      caret.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"><path d="M3 5.5l5 5 5-5"/></svg>';
+      lbl.parentNode.insertBefore(caret, lbl);
+      var cnt = document.createElement('span'); cnt.className = 'org-count'; lbl.parentNode.insertBefore(cnt, lbl.nextSibling);
+      tr.setAttribute('title', 'Click: collapse/expand section');
+      td.addEventListener('click', function(e){
+        if (e.target.closest('.row-grip')) return;
+        var k = rowKey(tr); if (collapsed[k]) delete collapsed[k]; else collapsed[k] = true;
+        saveCollapse(); applyCollapse();
+      });
+    });
+    // On a view change apply the matching order (Organizations = grouped, otherwise free)
+    window.applyRowOrderForMode = function(){ applyOrder(currentKey()); };
+    applyOrder(currentKey());
 
     // Level: -1 = org-header, 0 = main project, 1 = sub-row, 2 = sub-sub-row
     function level(r){
@@ -4586,8 +5895,19 @@
     function groupSiblings(tr){
       var rows = Array.prototype.slice.call(tbody.children);
       var lv = level(tr);
-      if (lv < 0) return [];
+      if (lv < 0){
+        // Organization sections (Organizations view): all org headers except the first tool band are siblings
+        if (!isOrgs()) return [];
+        return rows.filter(function(r){ return level(r) === -1 && !r.classList.contains('tool-code'); });
+      }
       var idx = rows.indexOf(tr), start = idx, end = idx;
+      if (lv === 0 && !isOrgs()){
+        // Flat views: main projects of the same tool band are siblings (without bands: all of them)
+        var isTool = function(r){ return r.classList.contains('tool-header'); };
+        for (var t1 = idx - 1; t1 >= 0 && !isTool(rows[t1]); t1--) start = t1;
+        for (var t2 = idx + 1; t2 < rows.length && !isTool(rows[t2]); t2++) end = t2;
+        return rows.slice(start, end + 1).filter(function(r){ return level(r) === 0; });
+      }
       if (lv === 0){
         for (var i = idx - 1; i >= 0 && level(rows[i]) !== -1; i--) start = i;
         for (var j = idx + 1; j < rows.length && level(rows[j]) !== -1; j++) end = j;
@@ -4667,15 +5987,17 @@
     }
 
     Array.prototype.slice.call(tbody.children).forEach(function(tr){
-      // All project rows are draggable (main projects drag their subs along as a block)
-      if (tr.classList.contains('org-header')) return;
+      // All project rows are draggable (main projects drag their subs along as a block);
+      // org headers drag their whole section along — only visible in the Organizations view (CSS)
+      var isOrg = tr.classList.contains('org-header');
+      if (tr.classList.contains('tool-code')) return;
       var cells = tr.querySelectorAll('td');
       var cell = cells[cells.length - 1]; // last (actions) cell -> grip on the right
       if (!cell) return;
       cell.style.position = 'relative';
       var grip = document.createElement('span');
       grip.className = 'row-grip';
-      grip.title = 'Move row within its organization';
+      grip.title = isOrg ? 'Move organization (whole section)' : 'Move row within its group';
       grip.innerHTML = GRIP;
       grip.addEventListener('pointerdown', onDown);
       cell.appendChild(grip);
@@ -4684,6 +6006,22 @@
 
   /* ── Drag & drop: section order (pointer-based, with auto-scroll) ── */
   (function(){
+    // Persist the open/closed state of the sections (overview, about, details, tasks, synergies)
+    (function(){
+      var OPEN_KEY = 'dashboard-sections-open';
+      var secs = Array.prototype.slice.call(document.querySelectorAll('details.sortable-section[data-section]'));
+      var saved = null; try { saved = JSON.parse(localStorage.getItem(OPEN_KEY) || 'null'); } catch(e){}
+      function apply(){ if (saved && typeof saved === 'object') secs.forEach(function(s){ var id = s.getAttribute('data-section'); if (id in saved) s.open = !!saved[id]; }); }
+      apply();
+      // Do not save while loading: with an #anchor in the URL the browser opens the jump target
+      // (and thereby a collapsed section) on its own — that would otherwise be saved as "open".
+      // Re-apply the saved state after load; later clicks on project links still open sections.
+      var ready = false;
+      function save(){ if (!ready) return; var o = {}; secs.forEach(function(s){ o[s.getAttribute('data-section')] = s.open; }); saved = o; try { localStorage.setItem(OPEN_KEY, JSON.stringify(o)); } catch(e){} }
+      secs.forEach(function(s){ s.addEventListener('toggle', save); });
+      function settle(){ setTimeout(function(){ apply(); setTimeout(function(){ ready = true; }, 0); }, 100); }
+      if (document.readyState === 'complete') settle(); else window.addEventListener('load', settle);
+    })();
     var STORAGE_KEY = 'dashboard-section-order';
     var sections = Array.prototype.slice.call(document.querySelectorAll('.sortable-section'));
     if (!sections.length) return;
@@ -4850,8 +6188,9 @@
     function calc(){
       var rows = Array.prototype.slice.call(document.querySelectorAll('#overview-table tbody tr'))
         .filter(function(t){ return t.querySelector('a.table-name'); });
+      var hidden = rows.filter(function(t){ return getComputedStyle(t).display === 'none' && !t.classList.contains('pinned-away'); }).length;
       var projects = rows.length;
-      var orgs = document.querySelectorAll('#overview-table tbody tr.org-header').length;
+      var orgs = document.querySelectorAll('#overview-table tbody tr.org-header:not(.tool-header)').length;
       var inProgress = rows.filter(function(t){ return t.classList.contains('work'); }).length;
       var completed = rows.filter(function(t){ return t.classList.contains('completed'); }).length;
       var open = 0;
@@ -4864,7 +6203,7 @@
       var hv = document.getElementById('hours-total-value');
       if (hv){ var m = /([0-9.,]+h)/.exec(hv.getAttribute('aria-label') || ''); if (m) hours = m[1]; }
       var parts = [
-        '<strong>' + projects + '</strong> projects',
+        '<strong>' + projects + '</strong> projects' + (hidden ? ' <span class="footer-sub">(' + hidden + ' hidden)</span>' : ''),
         '<strong>' + orgs + '</strong> organizations',
         '<strong>' + inProgress + '</strong> in progress',
         '<strong>' + completed + '</strong> completed',
@@ -4873,26 +6212,54 @@
       ];
       if (hours) parts.push('<strong>' + hours + '</strong> invested');
       el.innerHTML = parts.join(' &middot; ');
+      // Stacked ASCII bars (one line each, square blocks): share of projects per tool band and per organization
+      var bars = document.getElementById('footer-bars');
+      if (!bars){ bars = document.createElement('div'); bars.id = 'footer-bars'; bars.className = 'footer-bars'; el.parentNode.insertAdjacentElement('afterend', bars); }
+      function stacked(segs, W){
+        var total = segs.reduce(function(a, s){ return a + s[1]; }, 0), used = 0, b = '';
+        segs.forEach(function(s, i){ var n = i === segs.length - 1 ? W - used : Math.round(s[1] / (total || 1) * W); used += n; b += '<span style="color:' + s[2] + '" title="' + s[0] + ': ' + s[1] + '">' + Array(n + 1).join('&#9608;') + '</span>'; });
+        return '<div class="fb-line"><span class="fb-bar" aria-hidden="true">' + b + '</span><span class="fb-legend">' + segs.map(function(s){ return '<span class="fb-key"><span class="fb-sw" style="background:' + s[2] + '"></span>' + s[0] + ' <strong>' + s[1] + '</strong> <span class="fb-pct">' + Math.round(s[1] / (total || 1) * 100) + '%</span></span>'; }).join('') + '</span></div>';
+      }
+      var byTool = [], byOrg = [], tool = null, org = null;
+      Array.prototype.slice.call(document.querySelectorAll('#overview-table tbody tr')).forEach(function(t){
+        if (t.classList.contains('org-header')){
+          var l = t.querySelector('.org-header-label'); var label = l ? l.textContent.trim() : '';
+          var color = t.style.getPropertyValue('--org-color') || 'var(--accent)';
+          if (t.classList.contains('tool-header')){ tool = [label, 0, color]; byTool.push(tool); }
+          if (!t.classList.contains('tool-code')){ org = [label, 0, color]; byOrg.push(org); }
+          return;
+        }
+        if (!t.querySelector('a.table-name')) return;
+        if (tool) tool[1]++;
+        if (org) org[1]++;
+      });
+      bars.innerHTML = (byTool.length > 1 ? stacked(byTool, 48) : '') + (byOrg.length > 1 ? stacked(byOrg, 48) : '');
     }
     calc();
-    // Recompute live when stars/completions/checkboxes change
+    window.refreshFooterStats = function(){ setTimeout(calc, 0); };
+    // Recompute live when stars/completions/checkboxes/filters change
     // (capture phase: the button handlers stop propagation, capture runs first)
     document.addEventListener('click', function(e){
-      if (e.target.closest('.star-toggle, .done-toggle')) setTimeout(calc, 0);
+      if (e.target.closest('.star-toggle, .done-toggle, #projects-open-only, .pin-toggle, .view-btn, .search-clear, .sr-clear, .sa-x, .sh-chip')) setTimeout(calc, 0);
     }, true);
+    var fs = document.getElementById('table-search'); if (fs) fs.addEventListener('input', function(){ setTimeout(calc, 0); });
+    window.addEventListener('load', function(){ setTimeout(calc, 50); });
     document.addEventListener('change', function(e){
       if (e.target.classList && e.target.classList.contains('task-checkbox')) setTimeout(calc, 0);
     });
   })();
 
-  /* ── Quick wins: reset, shortcuts, collapse all, search count, active count ── */
+  /* ── Quick wins: reset, shortcuts, collapse all, active count ── */
   (function(){
     // 1) Layout reset
     var rb = document.getElementById('layout-reset');
     if (rb) rb.addEventListener('click', function(){
-      if (!confirm('Reset layout & ordering? (sections, rows, quicklinks, stars, completed, view, columns — theme and task status are kept)')) return;
-      ['dashboard-section-order','dashboard-row-order','dashboard-quicklinks',
-       'dashboard-starred','dashboard-completed','dashboard-view-mode','dashboard-hidden-cols']
+      if (!confirm('Reset layout & ordering? (sections, rows, quicklinks, focus, stars, completed, view, columns, sidebar, filters, task order/stars/hidden — theme and checked tasks are kept)')) return;
+      ['dashboard-section-order','dashboard-sections-open','dashboard-row-order','dashboard-row-order-flat',
+       'dashboard-org-collapsed','dashboard-quicklinks','dashboard-focus','dashboard-collapsed',
+       'dashboard-starred','dashboard-completed','dashboard-view-mode','dashboard-open-only',
+       'dashboard-hidden-cols','dashboard-sidebar-w','dashboard-tasks-org',
+       'dashboard-task-starred','dashboard-task-order','dashboard-task-hidden']
         .forEach(function(k){ try { localStorage.removeItem(k); } catch(e){} });
       location.reload();
     });
@@ -4921,35 +6288,33 @@
       cab.className = 'collapse-all-btn';
       function anyOpen(){ return !!document.querySelector('.projects .project:not(.collapsed)'); }
       function labelCab(){ cab.textContent = anyOpen() ? 'Collapse all' : 'Expand all'; }
+      // Persist the collapsed state per card — for "Collapse all" AND individual cards
+      var COLL_KEY = 'dashboard-collapsed';
+      function saveCollapsed(){
+        var ids = Array.prototype.slice.call(document.querySelectorAll('.projects .project.collapsed, .idea-card.collapsed')).map(function(p){ return p.id; }).filter(Boolean);
+        try { localStorage.setItem(COLL_KEY, JSON.stringify(ids)); } catch(e){}
+      }
+      (function restore(){
+        var ids; try { ids = JSON.parse(localStorage.getItem(COLL_KEY) || 'null'); } catch(e){ ids = null; }
+        if (!Array.isArray(ids)) return;
+        var set = {}; ids.forEach(function(i){ set[i] = true; });
+        document.querySelectorAll('.projects .project, .idea-card').forEach(function(p){ if (p.id) p.classList.toggle('collapsed', !!set[p.id]); });
+      })();
       cab.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation();
         var collapse = anyOpen();
         document.querySelectorAll('.projects .project').forEach(function(p){ p.classList.toggle('collapsed', collapse); });
-        labelCab();
+        labelCab(); saveCollapsed();
       });
-      // Keep the label current when individual cards are toggled
+      // Keep the label current + save the state when individual cards are toggled
       document.addEventListener('click', function(e){
-        if (e.target.closest('.project-header')) setTimeout(labelCab, 0);
+        if (e.target.closest('.project-header, .idea-title')) setTimeout(function(){ labelCab(); saveCollapsed(); }, 0);
       });
       labelCab();
       detSummary.appendChild(cab);
     }
 
-    // 4) Search hit count
-    var search2 = document.getElementById('table-search');
-    var count = document.getElementById('search-count');
-    if (search2 && count){
-      search2.addEventListener('input', function(){
-        var q = search2.value.trim();
-        if (!q){ count.textContent = ''; count.classList.remove('none'); return; }
-        var n = Array.prototype.slice.call(document.querySelectorAll('#overview-table tbody tr'))
-          .filter(function(t){ return t.querySelector('a.table-name') && t.style.display !== 'none'; }).length;
-        count.textContent = n ? n + (n === 1 ? ' match' : ' matches') : 'No matches';
-        count.classList.toggle('none', n === 0);
-      });
-    }
-
-    // 5) Active count in the view toggle
+    // 4) Active count in the view toggle
     var activeBtn = document.querySelector('.view-btn[data-mode="active"]');
     function updateActive(){
       if (!activeBtn) return;
