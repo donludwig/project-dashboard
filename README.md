@@ -1,4 +1,4 @@
-<img width="1600" height="640" alt="Project Dashboard: title and tagline All your projects at a glance, maintained with Claude Code, next to the full dashboard window in dark mode with side navigation, lists, project overview and the task sidebar"All your projects at a glance, maintained with Claude Code" next to a cropped view of the dashboard in dark mode with the focus section, lists and the task sidebar" src="assets/readme/header.png" />
+<img width="1600" height="640" alt="Project Dashboard: title and tagline All your projects at a glance, maintained with Claude Code, next to the full dashboard window in dark mode with side navigation, lists, project overview and the task sidebar" src="assets/readme/header.png" />
 
 # Project Dashboard
 
