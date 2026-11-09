@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Patient Portal: Book appointments, see results, message the practice" font-family="Atkinson Hyperlegible Next, Inter, -apple-system, Segoe UI, system-ui, sans-serif">
+<rect width="1200" height="675" fill="#0c1120"/>
+<rect x="60" y="56" width="1080" height="563" fill="#151d33" stroke="#3d4a70" stroke-width="1.5"/>
+<rect x="60" y="56" width="6" height="563" fill="#b5175a"/>
+<rect x="104" y="96" width="88" height="88" fill="#b5175a"/>
+<text x="148" y="154" text-anchor="middle" font-size="40" font-weight="700" fill="#ffffff">Pp</text>
+<text x="220" y="132" font-size="44" font-weight="700" fill="#e8ecf8">Patient Portal</text>
+<text x="222" y="174" font-size="20" font-weight="600" letter-spacing="2" fill="#959eb6">WEB APP · PROTOTYPE</text>
+<text x="104" y="248" font-size="28" fill="#b4bdd6">Book appointments, see results, message the practice</text>
+<rect x="104" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="128" y="366" width="136" height="16" fill="#3d4a70"/>
+<rect x="128" y="410" width="92" height="12" fill="#2c3756"/>
+<rect x="128" y="446" width="159" height="12" fill="#2c3756"/>
+<rect x="128" y="482" width="226" height="12" fill="#2c3756"/>
+<rect x="128" y="518" width="93" height="12" fill="#2c3756"/>
+<rect x="444" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="468" y="366" width="189" height="16" fill="#3d4a70"/>
+<rect x="468" y="410" width="133" height="12" fill="#2c3756"/>
+<rect x="468" y="446" width="200" height="12" fill="#2c3756"/>
+<rect x="468" y="482" width="67" height="12" fill="#2c3756"/>
+<rect x="468" y="518" width="134" height="12" fill="#2c3756"/>
+<rect x="784" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="808" y="366" width="152" height="16" fill="#3d4a70"/>
+<rect x="808" y="410" width="174" height="12" fill="#2c3756"/>
+<rect x="808" y="446" width="241" height="12" fill="#b5175a"/>
+<rect x="808" y="482" width="108" height="12" fill="#2c3756"/>
+<rect x="808" y="518" width="175" height="12" fill="#2c3756"/>
+</svg>

@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img" aria-label="Placeholder preview: Forge"><rect x="0" y="0" width="640" height="400" fill="#0f1a22"/><rect x="0" y="0" width="640" height="34" fill="#16242f"/><rect x="0" y="34" width="640" height="1" fill="#2b404e"/><rect x="14" y="11" width="12" height="12" fill="#f59e0b"/><text x="34" y="22" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#dbe7ee">Forge</text><rect x="490" y="13" width="40" height="8" fill="#2b404e"/><rect x="540" y="13" width="40" height="8" fill="#2b404e"/><rect x="590" y="13" width="36" height="8" fill="#f59e0b" opacity="0.85"/><rect x="40" y="140" width="96" height="190" fill="#16242f"/><rect x="40" y="140" width="96" height="14" fill="#1e303d"/><rect x="48" y="166" width="80" height="53" fill="#f59e0b" opacity="0.75"/><rect x="48" y="229" width="64" height="8" fill="#dbe7ee"/><rect x="48" y="245" width="48" height="6" fill="#7d92a4" opacity="0.6"/><rect x="48" y="259" width="56" height="6" fill="#7d92a4" opacity="0.6"/><rect x="160" y="100" width="170" height="230" fill="#16242f"/><rect x="160" y="100" width="170" height="14" fill="#1e303d"/><rect x="168" y="126" width="154" height="64" fill="#f59e0b" opacity="0.75"/><rect x="168" y="200" width="123" height="8" fill="#dbe7ee"/><rect x="168" y="216" width="92" height="6" fill="#7d92a4" opacity="0.6"/><rect x="168" y="230" width="107" height="6" fill="#7d92a4" opacity="0.6"/><rect x="354" y="60" width="246" height="270" fill="#16242f"/><rect x="354" y="60" width="246" height="14" fill="#1e303d"/><rect x="362" y="86" width="230" height="75" fill="#f59e0b" opacity="0.75"/><rect x="362" y="171" width="184" height="8" fill="#dbe7ee"/><rect x="362" y="187" width="138" height="6" fill="#7d92a4" opacity="0.6"/><rect x="362" y="201" width="161" height="6" fill="#7d92a4" opacity="0.6"/><rect x="40" y="350" width="560" height="1" fill="#2b404e"/><rect x="40" y="347" width="96" height="6" fill="#f59e0b"/><rect x="160" y="347" width="170" height="6" fill="#f59e0b" opacity="0.6"/><rect x="354" y="347" width="246" height="6" fill="#f59e0b" opacity="0.35"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Forge: Command-line helper that scaffolds new component folders" font-family="Atkinson Hyperlegible Next, Inter, -apple-system, Segoe UI, system-ui, sans-serif">
+<rect width="1200" height="675" fill="#0c1120"/>
+<rect x="60" y="56" width="1080" height="563" fill="#151d33" stroke="#3d4a70" stroke-width="1.5"/>
+<rect x="60" y="56" width="6" height="563" fill="#4f5b6b"/>
+<rect x="104" y="96" width="88" height="88" fill="#4f5b6b"/>
+<text x="148" y="154" text-anchor="middle" font-size="40" font-weight="700" fill="#ffffff">Fo</text>
+<text x="220" y="132" font-size="44" font-weight="700" fill="#e8ecf8">Forge</text>
+<text x="222" y="174" font-size="20" font-weight="600" letter-spacing="2" fill="#959eb6">TOOL · DORMANT</text>
+<text x="104" y="248" font-size="28" fill="#b4bdd6">Command-line helper that scaffolds new component</text>
+<text x="104" y="286" font-size="28" fill="#b4bdd6">folders</text>
+<rect x="104" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="128" y="366" width="157" height="16" fill="#3d4a70"/>
+<rect x="128" y="410" width="179" height="12" fill="#2c3756"/>
+<rect x="128" y="446" width="246" height="12" fill="#2c3756"/>
+<rect x="128" y="482" width="113" height="12" fill="#2c3756"/>
+<rect x="128" y="518" width="180" height="12" fill="#2c3756"/>
+<rect x="444" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="468" y="366" width="120" height="16" fill="#3d4a70"/>
+<rect x="468" y="410" width="220" height="12" fill="#2c3756"/>
+<rect x="468" y="446" width="87" height="12" fill="#2c3756"/>
+<rect x="468" y="482" width="154" height="12" fill="#2c3756"/>
+<rect x="468" y="518" width="221" height="12" fill="#2c3756"/>
+<rect x="784" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="808" y="366" width="173" height="16" fill="#3d4a70"/>
+<rect x="808" y="410" width="61" height="12" fill="#2c3756"/>
+<rect x="808" y="446" width="128" height="12" fill="#4f5b6b"/>
+<rect x="808" y="482" width="195" height="12" fill="#2c3756"/>
+<rect x="808" y="518" width="62" height="12" fill="#2c3756"/>
+</svg>

@@ -1,1 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img" aria-label="Placeholder preview: Nova Fluid Type"><rect x="0" y="0" width="640" height="400" fill="#0f1a22"/><rect x="0" y="0" width="640" height="34" fill="#16242f"/><rect x="0" y="34" width="640" height="1" fill="#2b404e"/><rect x="14" y="11" width="12" height="12" fill="#e8432a"/><text x="34" y="22" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#dbe7ee">Nova Fluid Type</text><rect x="490" y="13" width="40" height="8" fill="#2b404e"/><rect x="540" y="13" width="40" height="8" fill="#2b404e"/><rect x="590" y="13" width="36" height="8" fill="#e8432a" opacity="0.85"/><rect x="40" y="62" width="430" height="30" fill="#e8432a"/><rect x="40" y="108" width="360" height="22" fill="#dbe7ee"/><rect x="40" y="146" width="300" height="16" fill="#dbe7ee"/><rect x="40" y="178" width="470" height="11" fill="#7d92a4" opacity="0.55"/><rect x="40" y="205" width="440" height="11" fill="#7d92a4" opacity="0.55"/><rect x="40" y="232" width="390" height="11" fill="#7d92a4" opacity="0.55"/><rect x="40" y="259" width="250" height="8" fill="#7d92a4" opacity="0.55"/><rect x="40" y="340" width="560" height="1" fill="#2b404e"/><rect x="40" y="334" width="1" height="12" fill="#7d92a4"/><rect x="120" y="334" width="1" height="12" fill="#7d92a4"/><rect x="200" y="334" width="1" height="12" fill="#7d92a4"/><rect x="280" y="334" width="1" height="12" fill="#7d92a4"/><rect x="360" y="334" width="1" height="12" fill="#7d92a4"/><rect x="440" y="334" width="1" height="12" fill="#7d92a4"/><rect x="520" y="334" width="1" height="12" fill="#7d92a4"/><rect x="600" y="334" width="1" height="12" fill="#7d92a4"/><rect x="40" y="337" width="320" height="6" fill="#e8432a" opacity="0.8"/><rect x="354" y="330" width="12" height="20" fill="#e8432a"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Nova Fluid Type: Fluid type scale for the Nova component library" font-family="Atkinson Hyperlegible Next, Inter, -apple-system, Segoe UI, system-ui, sans-serif">
+<rect width="1200" height="675" fill="#0c1120"/>
+<rect x="60" y="56" width="1080" height="563" fill="#151d33" stroke="#3d4a70" stroke-width="1.5"/>
+<rect x="60" y="56" width="6" height="563" fill="#b93a1c"/>
+<rect x="104" y="96" width="88" height="88" fill="#b93a1c"/>
+<text x="148" y="154" text-anchor="middle" font-size="40" font-weight="700" fill="#ffffff">Nf</text>
+<text x="220" y="132" font-size="44" font-weight="700" fill="#e8ecf8">Nova Fluid Type</text>
+<text x="222" y="174" font-size="20" font-weight="600" letter-spacing="2" fill="#959eb6">DESIGN SYSTEM · MIGRATION</text>
+<text x="104" y="248" font-size="28" fill="#b4bdd6">Fluid type scale for the Nova component library</text>
+<rect x="104" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="128" y="366" width="110" height="16" fill="#3d4a70"/>
+<rect x="128" y="410" width="60" height="12" fill="#2c3756"/>
+<rect x="128" y="446" width="127" height="12" fill="#b93a1c"/>
+<rect x="128" y="482" width="194" height="12" fill="#2c3756"/>
+<rect x="128" y="518" width="61" height="12" fill="#2c3756"/>
+<rect x="444" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="468" y="366" width="163" height="16" fill="#3d4a70"/>
+<rect x="468" y="410" width="101" height="12" fill="#2c3756"/>
+<rect x="468" y="446" width="168" height="12" fill="#2c3756"/>
+<rect x="468" y="482" width="235" height="12" fill="#2c3756"/>
+<rect x="468" y="518" width="102" height="12" fill="#2c3756"/>
+<rect x="784" y="340" width="312" height="236" fill="#1b253e" stroke="#2c3756" stroke-width="1.5"/>
+<rect x="808" y="366" width="126" height="16" fill="#3d4a70"/>
+<rect x="808" y="410" width="142" height="12" fill="#2c3756"/>
+<rect x="808" y="446" width="209" height="12" fill="#2c3756"/>
+<rect x="808" y="482" width="76" height="12" fill="#2c3756"/>
+<rect x="808" y="518" width="143" height="12" fill="#2c3756"/>
+</svg>

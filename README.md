@@ -1,90 +1,86 @@
-![Project Dashboard — single-file HTML dashboard, set up and maintained via Claude Code](assets/header.png)
+<img width="1600" height="640" alt="Project Dashboard: title and tagline All your projects at a glance, maintained with Claude Code, next to the full dashboard window in dark mode with side navigation, lists, project overview and the task sidebar"All your projects at a glance, maintained with Claude Code" next to a cropped view of the dashboard in dark mode with the focus section, lists and the task sidebar" src="assets/readme/header.png" />
 
 # Project Dashboard
 
-I've been managing a few design system projects at the same time and kept losing track of what's where. I opened Claude Code and started building a dashboard. Just a single HTML file, nothing fancy.
+**All your projects at a glance, in one HTML file, maintained with Claude Code.**
 
-First it was only a table with project names and some numbers. But then I wanted to sort it. Then I wanted search. Project cards came next, then docs tables, then task management. At some point the dashboard started tracking my hours from Claude Code session logs, grew a sidebar for tasks and synergies, and learned drag & drop so I could arrange it the way I think.
+The dashboard shows what you are working on, what comes next and where projects can learn from each other. It is a single `index.html`: no server, no account, no build step, no dependencies. Open it in a browser and it works. Claude Code sets it up for your own projects and keeps it current, guided by the `CLAUDE.md` in this repository.
 
-Somewhere along the way I realized I was learning more about Claude Code than about dashboards. What works, what doesn't, how to structure things so the AI can actually help you. I ended up building three AI agents that now keep the dashboard up to date: a scanner collects the numbers in seconds, a bridge finds connections between projects, and a coordinator orchestrates both.
+It started as a table with a few project names. Sorting came next, then search, cards, tasks, hours from Claude Code sessions, synergies between projects and three agents that keep the numbers current. Version 3 rebuilds all of it on Kernmix, a design system on top of the open standard [KERN](https://www.kern-ux.de/). The demo ships with twelve fictional projects so you can try every feature before you add your own.
 
-The whole thing is still a single HTML file with zero dependencies — no build step, no framework, no server. Open it in a browser and it works. Every feature you see was built in conversation with Claude Code, and the `CLAUDE.md` in this repo is the actual instruction set that makes the AI understand and maintain it.
-
-If you're a designer trying to get into Claude Code and looking to understand better code and developers, fork it, swap in your own projects, and go from there. The demo you're looking at ships with twelve fictional projects so you can click through every feature before wiring up your own.
-
-<img width="1600" height="1268" alt="Project Dashboard demo in dark mode: focus section with two pinned projects above the project overview grouped by organization (one group collapsed, a Claude Design section at the end), smart search field, freshness bars, hours and phases, pinned project quicklinks in the header, and a sidebar with task cards (details, star, hide) and synergy cards" src="screenshot.png" />
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="assets/readme/screenshot-light.png">
+  <img width="1600" height="1000" alt="Project Dashboard in dark mode with fictional demo projects: header with pinned quicklinks and buttons, side navigation with filters, lists, the project overview grouped by organization, and task cards in the right column" src="assets/readme/screenshot-dark.png">
+</picture>
 
 ---
 
-![Section 01 · What it does](assets/banners/01-features.png)
+<img width="1600" height="120" alt="Section 01: Features" src="assets/readme/01-features.png" />
 
 ## Features
 
-**Overview table**
+**Overview and details**
 
-- Sortable project table with a **smart search** — weighted index over rows, project cards, synergies and tasks, with filter chips (`tool:` `org:` `tag:` `in:`), a results panel with highlighted snippets, and a hit counter
-- **Focus section** — pin up to 3 projects above the table
-- Grouped by organization with section sub-headings — sorting by a column switches to a flat global ranking
-- Three view modes: **Projects** (flat, with **tool bands** showing where a project lives), **Organizations** (grouped, sections collapsible and movable), **Active** (starred only)
-- **Open only** toggle hides completed projects
-- Sub-projects shown as indented sub-rows that stay attached to their parent
-- Freshness bar per project — green when recently updated, red (and short) when stale
-- Column visibility toggle — show/hide columns, persisted in localStorage
+- 🗂️ **Project overview**: one numbered row per project: type, organization, tech stack, scope, files, last update with freshness bar, hours, phase and links; grouped by organization, foldable groups, sortable columns.
+- 🧮 **Column picker**: show single columns or named sets (Overview, Organizations, Tech, All).
+- 🏷️ **Seven phases**: Idea, Concept, Prototype, Active, Migration, Stable, Dormant as colored pills.
+- 🃏 **Project details**: one card per project with fact tiles, description, next steps, decisions and a document table; cards grouped like the table, group counts follow the filters.
+- 🖼️ **Previews and share images**: a preview image per card and a 1200×630 share image behind the info "i" at the project name.
+- 📌 **Focus**: pin up to three projects above everything else.
 
-**Organize your work**
+**Navigate and filter**
 
-- Sticky header with **quicklink pills** — pin favorite projects, drag to reorder, click to copy the launch command
-- Star projects as "in progress", mark projects as completed (dims the row and deactivates their tasks)
-- Drag & drop everywhere — reorder sections, organizations and table rows; the saved order heals itself when projects are renamed, added or moved
-- Resizable sidebar (drag the gap; drag far right to hide it) and an organization filter for tasks
-- Remembers what you collapsed — sections, organization groups and project cards
-- Task management with status tracking, plus AI-generated task recommendations
-- Keyboard shortcuts: `/` search, `t` theme, `a` tasks, `1`/`2`/`3` view modes
+- 🧭 **Side navigation**: every section in a collapsible sidebar with an icon-only rail; back and forward in the browser follow your jumps.
+- 🎛️ **Filters for all sections**: organizations, types, phase, "Open only" and "Active", each with "All" and live counts; one filter applies to overview, details, tasks, synergies, lists and focus.
+- ✖️ **Filter chips**: every filtered section shows the active filters; × removes one.
+- 🔎 **Search with field filters**: weighted search over rows, cards, tasks and synergies; `-word`, `"exact phrase"`, `person:`, `tag:`, `org:` and `in:field`, with suggestions on focus.
+- ⬆️ **Back to top**: one click from anywhere in a long column.
 
-**Project knowledge**
+**Organize**
 
-- Expandable project cards (with collapse/expand all)
-- Docs tables per project (research, project, code, Claude files)
-- Synergy cards — connections and transfer opportunities between projects
-- Idea cards for early-stage concepts
+- 📋 **Lists**: your own lists with an icon picker, rename and delete, a one-click quick list from every row, a "Deactivated" list and a list filter for the overview.
+- 🔗 **Quicklinks**: pin projects to the header; a click copies `cd … && claude` for that project.
+- ⭐ **Star and complete**: mark projects as in progress or completed; completed projects dim and their tasks are deactivated.
+- ✋ **Drag and drop**: reorder sections, organizations, table rows, quicklinks and task cards; the order is remembered.
+- ✅ **Tasks**: cards from Markdown tickets with details dialog, star, reorder and check off; kanban view in Obsidian via `tasks.base`.
+- 💬 **AI task suggestions**: suggested next tasks with a reason, generated by Claude Code from your project state; accept one as a task or put it back.
+- 🔄 **Obsidian live sync (optional)**: write task changes back into the ticket files.
+- 🤝 **Synergies**: cards that name a connection between projects, what you get from it and the next step.
+- 💡 **Ideas**: a card for each idea before it becomes a project.
 
-**Time tracking**
+**Work with Claude Code**
 
-- Hours per project via `time-log.md` — manual entries plus Claude session hours computed from `.jsonl` logs
-- Hours column, Σ total, and per-card time-log breakdowns
+- 🚀 **Header buttons**: "Capture idea", "Temp project" and "New project" copy a ready command that starts Claude Code in the dashboard folder; `CLAUDE.md` says what to do.
+- 🧩 **Skills with call graph**: every skill with its purpose and scope, plus a graph of which skill calls which.
+- ⌘ **Shortcuts**: prompt shortcuts such as `+lg` or `+vc`, what they do and in which order they run.
+- 🤖 **Three agents**: Cockpit coordinates, Radar measures, Bridge finds synergies.
+- ℹ️ **About section**: animated graphics that explain how the dashboard is made and how the agents work together.
+- 🛠️ **Helper scripts**: `scan.sh` measures projects and hours, `sync-tasks.py` builds the task cards, `tools/make-social-images.py` renders share images.
+- ⏱️ **Hours**: per project from `time-log.md`, manual entries plus Claude Code session times.
 
-**AI tooling**
+**Look and feel**
 
-- Three AI agents (scanner, bridge, coordinator) — the dashboard maintains itself via Claude Code
-- Shell script that scans all projects, updates time logs, collects tasks, and checks for dead links
-- Self-bootstrapping: `CLAUDE.md` contains everything the AI needs to set up and maintain your dashboard
+- 🌗 **Light and dark**: Kernmix theme "Kobalt", square corners, Lucide icons, the font Atkinson Hyperlegible Next.
+- ♿ **Accessible**: keyboard operable, visible focus, contrast measured in both themes, motion only when the system allows it.
+- ⌨️ **Keyboard shortcuts**: `/` search, `t` theme, `a` tasks, `1` `2` `3` view modes, `Esc` closes panels.
 
-**Architecture**
-
-- Single HTML file, zero dependencies, no build step — works offline
-- Two-column layout: main column + sticky sidebar (tasks & synergies)
-- Dark/light theme, auto-generated color-coded favicons per project
-- Footer with live stats (projects, organizations, in progress, open tasks, hours) and a layout reset
+<img width="1600" height="400" alt="How the dashboard works, in four steps from left to right: 1, your projects: ~/projects/&lt;name&gt;/ with CLAUDE.md and memory, tasks/*.md tickets with YAML frontmatter. 2, Claude Code and helpers: scan.sh reads files, lines, last change and hours; sync-tasks.py and the agents Cockpit, Radar and Bridge. 3, one HTML file: index.html with HTML, CSS and JS, no build, no server; Kernmix on KERN tokens, light and dark. 4, in your browser: opens from file:// and works offline; state in localStorage: stars, done, order." src="assets/readme/how-it-works.png" />
 
 ---
 
-![Section 02 · Clone, then let Claude Code set it up](assets/banners/02-quick-start.png)
+<img width="1600" height="120" alt="Section 02: Quick start" src="assets/readme/02-quick-start.png" />
 
 ## Quick Start
 
-### 1. Clone and explore the demo
+### 1. Clone and open the demo
 
 ```bash
 git clone https://github.com/donludwig/project-dashboard.git
-cd personal-project-dashboard
+cd project-dashboard
 open index.html
 ```
 
-The demo includes 12 fictional example projects showing all features.
-
-### 2. Set up with Claude Code
-
-This is where it gets interesting. The dashboard is designed to **configure itself** via Claude Code:
+### 2. Let Claude Code set it up
 
 ```bash
 claude
@@ -92,298 +88,123 @@ claude
 
 Then say:
 
-> Set up this dashboard for my projects. My code lives in ~/projects
+```
+Set up this dashboard for my projects. My code lives in ~/projects
+```
 
-Claude Code reads the `CLAUDE.md` instructions and will:
+Claude Code reads `CLAUDE.md` and will:
 
-1. **Scan your project directories** — finds all projects, counts files, measures code
-2. **Replace the example data** — swaps demo projects with your real ones
-3. **Build project cards** — pulls descriptions from your READMEs and CLAUDE.md files
-4. **Create docs tables** — inventories each project's files by type
-5. **Configure paths** — sets up local file links and clipboard copy
-6. **Find synergies** — analyzes connections between your projects
-7. **Generate launch scripts** (optional) — one-click `.command` files to open any project in Claude Code
+1. Find your project folders and measure them with `scan.sh`
+2. Replace the demo projects with yours: table rows, cards, document tables
+3. Pick a color, a two-letter monogram and a phase for each project
+4. Turn your tickets into task cards with `sync-tasks.py`
+5. Look for synergies between your projects
+6. Optionally create the three agents and your own skills and shortcuts
 
-### 3. Keep it updated
+### 3. Keep it current
 
-Ask Claude Code anytime:
-
-- `"Scan my projects and update the dashboard"` — refreshes all metrics
-- `"Find synergies between my projects"` — discovers new connections
-- `"Add project X to the dashboard"` — adds a new project
+- "Scan my projects and update the dashboard"
+- "Add project X to the dashboard"
+- "Find synergies between my projects"
 
 ---
 
-![Section 03 · Tables, tasks, time tracking](assets/banners/03-feature-details.png)
+<img width="1600" height="120" alt="Section 03: Feature details" src="assets/readme/03-feature-details.png" />
 
 ## Feature Details
 
-### Single-File Architecture
+### One file
 
-Everything lives in one `index.html` — no build step, no framework, no dependencies. Just open it in a browser.
+Everything lives in `index.html`: the Kernmix design system between the `KERN-SYSTEM` markers, the page styles, the content and the scripts. State that you change in the browser (order, filters, lists, stars, theme) is stored in `localStorage`; nothing is sent anywhere.
 
-### Card Previews
+### Tasks from ticket files
 
-A project card can show a preview image above its path tags: `<figure class="card-preview"><img src="assets/previews/<project-id>.png" …></figure>`. The demo ships schematic SVG placeholders; drop a screenshot (PNG/JPG/WebP/SVG) into `assets/previews/` and point the `src` at it.
-
-### Document Tables
-
-Each project card includes a sortable table of relevant files, categorized by type:
-
-| Type | Color | Examples |
-|------|-------|----------|
-| **Research** | Orange | UX research, audits, walkthroughs |
-| **Project** | Blue | READMEs, changelogs, licenses |
-| **Code** | Green | package.json, configs, token files |
-| **Claude** | Purple | CLAUDE.md, memory files, agent configs |
-
-Each row has **open** (file link) and **copy** (path to clipboard) buttons.
-
-### AI Agent Architecture
-
-Three agents work together as a hybrid Skill/Agent system:
-
-- **Cockpit** — Coordinator that orchestrates the other two
-- **Radar** — Scans project directories for file counts, code lines, docs, Claude context
-- **Bridge** — Compares projects, finds synergies, recommends knowledge transfer
-
-You don't need to set these up manually — just ask Claude Code to scan or analyze, and it follows the conventions documented in `CLAUDE.md`.
-
-Want explicit slash commands? Ask Claude Code:
-```
-Create a /radar skill that scans my projects and updates the dashboard
-```
-
-### Task Management with AI Recommendations
-
-A global task section sits above the overview table, combining manual tasks and AI-generated suggestions.
-
-**Manual tasks** have a checkbox, ticket ID badge, and status (Open/Active/Done). They also appear in their project card for context. Each card has three small actions: **details** (opens a dialog with the full ticket), **star**, and **hide** (view only — a "restore" link brings hidden tasks back). Drag a card to reorder the list. All of this is view state in `localStorage`; the task itself is never changed from the browser.
-
-**Tasks from files (optional).** Write task cards by hand, or keep each task as a Markdown file with frontmatter — the same format `scan.sh` reads from `todo_*.md`:
-
-```markdown
----
-id: APP-12
-title: "Short task title"
-status: open          # open | active | blocked are shown
-priority: high
-project: my-app       # anchor id of the project row
-deadline: 2026-10-01  # optional
-summary: "One line for the card"
----
-Free-form notes — shown in the detail dialog.
-```
-
-`python3 sync-tasks.py` (standard library only) rewrites the block between the `AUTO-TASKS` markers in `index.html`; project name and color come from the overview table. Point `SOURCES` at your ticket folders (`tasks/*.md` in a project, `todo_*.md` in a Claude memory directory). The dashboard never needs the script to run — it is a convenience, not a build step.
-
-There are two ways to work with ticket files:
-
-| | Without Obsidian | With Obsidian |
-|---|---|---|
-| Setup | nothing | keep tickets inside your vault, set `OBSIDIAN` in `index.html` |
-| "Open ticket file" | opens the `.md` via `file://` | opens the ticket in Obsidian |
-| Editing | any editor, then `sync-tasks.py` | in Obsidian, then `sync-tasks.py` |
-
-**AI recommendations** are generated during a Radar scan — the AI analyzes all projects and suggests actionable next steps. Each suggestion has:
-- An `AI` tag to distinguish it from manual tasks
-- A **Promote** button — moves the suggestion into the manual task list
-- A **✕ revert** (demote) button — reverts a promoted task back to a suggestion
-
-**State persistence** — all user interactions are saved to `localStorage`:
-- Checkbox states (which tasks are done)
-- Promoted AI recommendations
-- Open/close state of all collapsible sections
-
-**Task file standard** — tasks are stored as Markdown files with YAML frontmatter in Claude memory directories (`todo_*.md`). The Radar scanner (`scan.sh`) picks them up automatically. Schema:
+Tickets are Markdown files with frontmatter in `tasks/`:
 
 ```yaml
 ---
-id: TODO-DEMO-001
-title: "Migrate typography tokens to fluid scale"
-status: open         # open | active | done | blocked
-priority: high       # low | medium | high | critical
+id: DEMO-1
+title: "Migrate type tokens to the fluid scale"
+status: open          # open | active | blocked | waiting | done | dropped
+status_note: ""
+priority: high        # high | medium | low
 project: nova-fluid-type
-parent: DEMO-000     # optional parent ticket
-deadline: 2026-04-15 # optional
-tags: [typography, tokens]
-created: 2026-03-29
-updated: 2026-03-29
-type: project
+due: "in 4 days"      # a date (2026-11-13) or a short text
+created: 2026-11-09
+summary: "Define clamp() values for all nine font-size steps and keep the old names as aliases."
+next: "Generate the steps for 320 to 1200 px."
 ---
 ```
 
-### Overview Table
+`python3 sync-tasks.py` rewrites the task cards between the `AUTO-TASKS` markers. Done and dropped tickets are skipped. `tasks.base` gives you a kanban view in Obsidian, `templates/ticket.md` is the template.
 
-By default, projects are **grouped by organization** with section sub-headings. Click any column header to sort — this collapses the grouping and ranks all projects **globally** across organizations (a third click resets to the grouped view). Sub-projects always stay attached to their parent, and search hides a section heading when nothing in it matches.
+### Skills and shortcuts
 
-A **view toggle** next to the search switches between three modes: **Projects** (flat list without organization headings), **Organizations** (grouped, the default), and **Active** (only starred projects). In Organizations mode, rows can be reordered per organization via a drag grip on the right edge.
+The skills section lists the skills Claude Code can use, with a graph of who calls whom. The shortcuts section explains prompt shortcuts: `+` plus two letters anywhere in the prompt, run in a fixed order (content, check, output, publish). The demo shows fifteen example skills and eight shortcuts; replace them with your own.
 
-Each row also gets four action buttons (injected by JS): the **bookmark** adds the project to the header quicklinks, the **arrow** pins it into the **Focus** section above the table (max. 3 — the original row is hidden below while pinned, and the focus rows can be reordered by drag), **★** marks it as "in progress" (bold name, amber edge, auto-pins it), and **✓** marks it as completed (dims the row and strikes through its tasks).
+### Agents
 
-Each row includes:
-- Project name with color-coded icon
-- Type, organization, tech stack badges
-- Code metrics (lines, files)
-- Last update with timestamp and a **freshness bar** — a small colored bar that runs green (recent) through amber to a short red bar (stale), so you can spot neglected projects at a glance
-- Hours invested (sourced from per-project `time-log.md`)
-- Phase badge (Active, Stable, Migration, Prototype, Idea)
-- Direct links to local files and live sites
+| Agent | Model | Does | Delivers |
+|---|---|---|---|
+| Cockpit | same as the session | starts Radar and Bridge, checks their results, applies them | a verified, current dashboard |
+| Radar | Sonnet | reads all project folders: files, lines, last change, hours, CLAUDE.md, memory | numbers, document tables, hints about stale notes |
+| Bridge | Opus | compares project content: tokens, components, decisions | synergy cards and task suggestions |
 
-### Smart Search
+Start Cockpit with `claude --agent cockpit` in the dashboard folder. `CLAUDE.md` contains the agent definitions.
 
-The search field builds a weighted index on first use: project name, table row, badges, the project card (subtitle, description, sections, documents, tasks, paths) and every synergy that mentions the project. A results panel lists the best matches with the fields that matched and a highlighted snippet, plus matching synergies and tasks.
+### Hours
 
-| Syntax | Meaning |
-|---|---|
-| `word word` | AND — every word must match |
-| `-word` | exclude |
-| `"exact phrase"` | phrase match |
-| `org:redleaf` | only projects of an organization |
-| `tool:design` | only projects of a tool band |
-| `tag:vite` | match tech badges only |
-| `in:task audit` | search one field only (`in:synergy`, `in:document`, `in:description`, …) |
+Each project can keep a `time-log.md` with manual entries and Claude Code sessions. `scan.sh` reads the session logs in `~/.claude/projects/`, computes active time without breaks and prints the totals for the hours column.
 
-Completed filters turn into **chips inside the search box** (remove with ×, or Backspace in the empty field; `Esc` clears everything). Focusing the field shows clickable suggestions built from your organizations and tool bands.
+### Share images and previews
 
-### Tool Bands & Cloud Projects
-
-Not every project is a local folder. Rows marked `class="cloud-row"` live under a tool band (`<tr class="org-header tool-header">`, e.g. "Claude Design") and carry a link instead of the `claude` button. In the **Projects** view the bands replace the organization headings — "where does this live?" — while the **Organizations** view shows each band as its own section. The first band (`tool-code`) wraps all local projects. The footer adds stacked bars with the project share per tool band and per organization.
-
-### Obsidian Integration (optional)
-
-If your code directory is an Obsidian vault, set `OBSIDIAN = { vault: 'name', root: '/absolute/path/to/vault/' }` in the script. All `.md` links inside the vault then open in Obsidian without leaving the page, and `Cmd/Ctrl+Enter` in the search field runs a full-text vault search. Left empty (the default), links stay plain `file://` links.
-
-### Column Visibility Toggle
-
-A **Display columns** dropdown next to the search input lets you hide columns you don't need. The button shows a `visible/total` counter when columns are hidden, and the state is saved to `localStorage` so it survives reloads. Useful when the table gets wider than your screen — hide what's not relevant for the moment.
-
-### Quicklinks, Layout & Shortcuts
-
-The sticky header holds a **quicklinks bar**: add any project with the **bookmark** button in its table row and it appears as a pill with its icon. Click a pill to copy the `cd … && claude` launch command, drag pills to reorder them, remove them with the ×. Starring a project as "in progress" pins it automatically.
-
-The page is a **two-column layout**: the main column holds the overview and project details, a sticky sidebar holds tasks and synergies. Every section has a drag handle in its header — reorder sections freely, even across columns' saved order. A reset button in the footer clears all layout customizations (sections, rows, quicklinks, stars, completed, view, columns) while keeping theme and task status.
-
-Keyboard shortcuts: `/` focuses the search, `t` toggles the theme, `a` toggles the tasks panel, `1`/`2`/`3` switch the view mode.
-
-The footer shows **live stats** — projects, organizations, in progress, completed, open tasks, ideas, and total hours — updating as you star, complete, or check things off.
-
-### Hours Tracking (time-log.md)
-
-Each project has a `time-log.md` in its root as a rough orientation (not exact tracking). Format:
-
-```markdown
----
-type: time-log
-project: nova-fluid-type
----
-
-# Time Log
-
-## Manual
-
-| Date | Hours | Note |
-|---|---|---|
-| 2026-03-21 | 3.0 | Setup, concept |
-
-## Claude Sessions (auto, by scan.sh)
-
-| Session | Date | Start | End | Hours |
-|---|---|---|---|---|
-| de81b351 | 2026-04-26 | 15:26 | 22:34 | 7.1 |
-
-**Total:** 10.1h (manual: 3.0 + claude: 7.1)
-```
-
-- **Manual section** — you maintain it: work outside of Claude sessions (concept, notes, code without Claude). Decimal hours with a dot.
-- **Claude Sessions section** — `scan.sh` writes it automatically from `.jsonl` session timestamps. Active time only — gaps over 30 minutes (lunch breaks, resuming the next day) are excluded so multi-day sessions don't count idle hours as work. Sub-agent sessions are also excluded.
-- **Total** — auto-summed by `scan.sh`.
-
-The dashboard shows the total per project in the **Hours** column and a Σ across all projects above the table. There's also an optional `<details>` time-log block in each project card with the full breakdown.
-
-### Radar Scanner (scan.sh)
-
-The dashboard includes a bash script that collects all project metrics in ~3 seconds — replacing what previously required multiple AI agents (~3 minutes).
-
-```bash
-./scan.sh              # Scan all projects
-./scan.sh design-sys app    # Scan specific projects (fuzzy match)
-```
-
-Per project, the script collects: file count, lines of code, last modification date, Claude memory count, and session count. It also runs a health check (`CFM`) — uppercase means present, lowercase means missing:
-
-- `C`/`c` — CLAUDE.md exists
-- `F`/`f` — favicon.svg exists
-- `M`/`m` — Claude memory index exists
-
-Beyond the metrics, the script:
-
-- **Writes each project's `time-log.md`** — computes active hours per Claude session from `.jsonl` timestamps (gaps over 30 minutes don't count) and rebuilds the auto section, preserving your manual entries
-- **Lists all root documents** per project with size and date — the basis for reconciling the dashboard's docs tables
-- **Scans tasks** — collects `todo_*.md` files from Claude memory directories with status, priority, and title
-- **Checks for dead links** — verifies every `file://` link in `index.html` and reports targets that no longer exist
-
-The Radar agent calls this script first, then only uses AI for interpretation: what changed, which docs are missing in the dashboard, what needs updating.
-
-Edit the `PROJECTS` array at the top of the script to match your projects. Note that the script writes a `time-log.md` into each existing project directory, so point the array at your real projects before running it.
+`python3 tools/make-social-images.py` renders a 1200×630 image per project into `assets/social/` and updates the `social-images` block in `index.html`. Card previews live in `assets/previews/<project-id>.svg` (or `.png`).
 
 ---
 
-![Section 04 · One file, four helpers](assets/banners/04-structure.png)
+<img width="1600" height="120" alt="Section 04: Structure" src="assets/readme/04-structure.png" />
 
 ## Structure
 
 ```
-index.html      — The complete dashboard (HTML + CSS + JS)
-scan.sh         — Radar scanner script (metrics, time logs, tasks, link check)
-sync-tasks.py   — Optional helper: task cards from ticket files (standard library only)
-tasks/          — Demo tickets (Markdown + frontmatter)
-time-log.md     — Hours log for this repo (example of the format)
-favicon.svg     — Dashboard icon
-assets/         — Visuals (README header, section banners, social preview, LinkedIn) and card previews (`previews/`)
-README.md       — This file
-CHANGELOG.md    — Release notes
-LICENSE         — MIT License
-CLAUDE.md       — AI assistant instructions (the brain of the project)
+index.html              the dashboard (HTML, CSS, JS, embedded Kernmix)
+CLAUDE.md               instructions for Claude Code: setup, conventions, agents
+scan.sh                 measures projects, hours, tasks and links (prints only)
+sync-tasks.py           task cards from tasks/*.md
+tools/make-social-images.py   share images per project
+tasks/                  demo tickets
+tasks.base, templates/  Obsidian kanban view and ticket template
+obsidian-color-code.md  optional color code for tickets and highlights
+time-log.md             example hours log
+assets/                 previews, share images, font, README images
+LICENSE, LICENSES/, NOTICE.md   EUPL-1.2 and third-party licences
+CHANGELOG.md            release notes
 ```
-
-The `CLAUDE.md` is the key file — it contains all the conventions, scan logic, and setup instructions that Claude Code uses to configure and maintain your dashboard.
 
 ---
 
-![Section 05 · Zero dependencies, AI-native](assets/banners/05-design-principles.png)
+<img width="1600" height="120" alt="Section 05: Design principles" src="assets/readme/05-design-principles.png" />
 
 ## Design Principles
 
-- **Zero Dependencies** — No npm, no CDN, no build tools
-- **Single Source of Truth** — One file, always in sync
-- **AI-Native** — Built with and for AI coding assistants
-- **Self-Bootstrapping** — Claude Code sets everything up from `CLAUDE.md`
-- **Offline-First** — Works without internet (except external links)
+- **One file, no dependencies**: no npm, no CDN, no build, works offline.
+- **Accessible by default**: keyboard operable, visible focus, contrast measured in both themes, motion only when the system allows it.
+- **Built on a standard**: components from Kernmix on top of the open KERN standard instead of one-off CSS.
+- **Made for Claude Code**: Claude Code sets it up and keeps it current from `CLAUDE.md`.
+- **Your data stays local**: everything you change lives in your browser.
 
-## Inspired By
-
-- The [Spine Pattern](https://tsoporan.com/blog/spine-pattern-multi-repo-ai-development/) — using a meta-repo as AI context anchor
-- Design System documentation patterns
-- Personal knowledge management tools
+Inspired by the [Spine Pattern](https://tsoporan.com/blog/spine-pattern-multi-repo-ai-development/), design system documentation and personal knowledge management tools.
 
 ---
 
-![Section 06 · Don Ludwig, freelance UX designer](assets/banners/06-about.png)
+<img width="1600" height="120" alt="Section 06: About" src="assets/readme/06-about.png" />
 
 ## About
 
-Don Ludwig, freelance UX designer. I build design systems, support agile product development, and work on making the collaboration between design and dev better. My process: think user-centered, work iteratively, understand technical constraints instead of ignoring them.
-
-Feedback, questions, or just saying hi — happy to hear from you.
+Made by Don Ludwig ([@donludwig](https://github.com/donludwig)), a freelance UX/UI designer from Berlin. I work on design systems, interface design, and accessibility for civic, cultural, and public-sector teams, close to the code and in conversation with the developers who build it. I also contribute to [KERN](https://www.kern-ux.de/), the open design system standard of the German public administration.
 
 [LinkedIn](https://www.linkedin.com/in/donludwig/) · [don@thinkrepeat.com](mailto:don@thinkrepeat.com) · [thinkrepeat.com](https://thinkrepeat.com/)
 
-**More projects:**
-
-- [Closer to Code](https://closer.thinkrepeat.com/) — resources for designers who want to get closer to AI, code, and developers.
-- [Local AI Guide](https://local.thinkrepeat.com/) — the complete journey from your first local inference to a properly fenced-in agent — written to be read, with built-in checklists.
-
 ## License
 
-MIT — see [LICENSE](LICENSE)
+[EUPL-1.2](LICENSE) (European Union Public Licence). Third-party parts (Kernmix, KERN-Kit, Lucide, Atkinson Hyperlegible Next) are listed in [NOTICE.md](NOTICE.md).

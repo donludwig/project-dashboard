@@ -3,37 +3,49 @@
 # Collects all project metrics in a single pass (~3 seconds)
 # Output: structured format for dashboard updates
 #
-# Usage: ./scan.sh                (all projects)
-#        ./scan.sh design-sys app      (only named projects, fuzzy match)
+# Usage: ./scan.sh                       (all projects)
+#        ./scan.sh design-sys app        (only named projects, fuzzy match)
+#        PD_CODE_DIR=~/code ./scan.sh    (other root folder for your projects)
 #
 # Customize: Edit the PROJECTS array below to match your setup.
+# scan.sh only prints; it never writes into index.html. Number and date formats in the
+# output match the overview table: "~4.2k" lines, "2026-11-09 10:00", "31.5h", "4.3 KB".
+# Needs macOS (BSD stat and date).
 
 set -u
 export LC_NUMERIC=C
 
-CODE_DIR="$HOME/projects"
+CODE_DIR="${PD_CODE_DIR:-$HOME/projects}"
 CLAUDE_DIR="$HOME/.claude/projects"
+SELF_DIR="$(cd "$(dirname "$0")" && pwd -P)"  # the dashboard folder itself: its time-log.md is never rewritten
 
 # === CUSTOMIZE THIS ===
 # Format: shortname|directory|claude-project-suffix|color|icon-abbreviation
 #
-# To find your Claude project suffix, take the absolute path of your project,
-# replace all "/" with "-", keep the leading "-".
-# Example: /Users/jane/projects/my-app -> -Users-jane-projects-my-app
+# Leave the Claude project suffix empty to derive it: Claude Code names the folder after the
+# absolute project path with every character other than letters, digits and "-" replaced by "-".
+# Example: "$HOME/projects/my-app" | sed 's/[^A-Za-z0-9-]/-/g'
 #
 # Note: scan.sh writes a time-log.md into each existing project directory
 # (see "Hours check" below) — point this array at your real projects first.
 PROJECTS=(
-  "design-sys|my-design-system|-Users-jane-projects-my-design-system|#005b8e|DS"
-  "app|my-app|-Users-jane-projects-my-app|#10b981|Ma"
-  "docs|my-docs|-Users-jane-projects-my-docs|#f59e0b|Md"
-  "dashboard|personal-project-dashboard|-Users-jane-projects-personal-project-dashboard|#888|PD"
+  "design-sys|my-design-system||#005b8e|Ds"
+  "app|my-app||#0b7a75|Ma"
+  "docs|my-docs||#6d3fd0|Md"
+  "dashboard|project-dashboard||#4f5b6b|Pd"
 )
 
 # Code file extensions (for line counting)
 CODE_EXTS=( ts tsx js jsx css scss html kt java )
 
 # --- Helper functions ---
+
+# Claude project folder for a project: explicit suffix or derived from the path
+claude_dir_for() {
+  local code_path="$1" suffix="$2"
+  [[ -z "$suffix" ]] && suffix="$(printf '%s' "$code_path" | sed 's/[^A-Za-z0-9-]/-/g')"
+  echo "$CLAUDE_DIR/$suffix"
+}
 
 fuzzy_match() {
   local query="$1" entry="$2"
@@ -195,6 +207,14 @@ update_time_log() {
   fi
   claude_total=$(printf "%.1f" "$claude_total")
 
+  # The dashboard's own folder: report the hours but leave its time-log.md untouched
+  if [[ "$(cd "$code_path" && pwd -P)" == "$SELF_DIR" ]]; then
+    rm -f "$tmp"
+    local manual_total; manual_total=$(manual_hours_from_log "$logfile")
+    printf "%.1f %.1f %.1f\n" "$(echo "scale=2; $manual_total + $claude_total" | bc)" "$manual_total" "$claude_total"
+    return
+  fi
+
   # If time-log.md doesn't exist: create the template
   if [[ ! -f "$logfile" ]]; then
     cat > "$logfile" <<EOF
@@ -286,7 +306,7 @@ for entry in "${selected[@]}"; do
   IFS='|' read -r short dir claude_suffix color icon <<< "$entry"
 
   code_path="$CODE_DIR/$dir"
-  claude_path="$CLAUDE_DIR/$claude_suffix"
+  claude_path="$(claude_dir_for "$CODE_DIR/$dir" "$claude_suffix")"
 
   # Skip if directory doesn't exist
   if [[ ! -d "$code_path" ]]; then
@@ -299,6 +319,8 @@ for entry in "${selected[@]}"; do
     -not -path '*/node_modules/*' \
     -not -path '*/.git/*' \
     -not -path '*/dist/*' \
+    -not -path '*/.venv*' \
+    -not -path '*/.cache/*' \
     -not -name '.DS_Store' \
     -type f 2>/dev/null | wc -l | tr -d ' ')
 
@@ -315,6 +337,8 @@ for entry in "${selected[@]}"; do
     -not -path '*/node_modules/*' \
     -not -path '*/.git/*' \
     -not -path '*/dist/*' \
+    -not -path '*/.venv*' \
+    -not -path '*/.cache/*' \
     -type f \( "${find_ext_args[@]}" \) \
     -exec wc -l {} + 2>/dev/null | grep -v ' total$' | awk '{s+=$1} END{print s+0}')
 
@@ -323,6 +347,8 @@ for entry in "${selected[@]}"; do
     -not -path '*/node_modules/*' \
     -not -path '*/.git/*' \
     -not -path '*/dist/*' \
+    -not -path '*/.venv*' \
+    -not -path '*/.cache/*' \
     -not -name '.DS_Store' \
     -not -name 'time-log.md' \
     -type f \
@@ -401,7 +427,7 @@ grand_total_h=0
 for entry in "${selected[@]}"; do
   IFS='|' read -r short dir claude_suffix color icon <<< "$entry"
   code_path="$CODE_DIR/$dir"
-  claude_path="$CLAUDE_DIR/$claude_suffix"
+  claude_path="$(claude_dir_for "$CODE_DIR/$dir" "$claude_suffix")"
   [[ ! -d "$code_path" ]] && continue
 
   read -r total manual claude < <(update_time_log "$code_path" "$claude_path" "$dir")
@@ -414,6 +440,28 @@ done
 
 echo ""
 printf -- "--- HOURS TOTAL: %.1fh (manual: %.1f + claude: %.1f) ---\n" "$grand_total_h" "$grand_manual" "$grand_claude"
+echo ""
+
+# --- Table values: ready to paste into the overview table cells ---
+
+echo "=== TABLE VALUES (overview table) ==="
+echo ""
+printf "%-28s %-26s %6s  %-34s %7s\n" "PROJECT" "SCOPE (data-sort | text)" "FILES" "LAST UPDATE (data-sort | text)" "HOURS"
+printf "%-28s %-26s %6s  %-34s %7s\n" "---" "---" "---" "---" "---"
+for entry in "${selected[@]}"; do
+  IFS='|' read -r short dir claude_suffix color icon <<< "$entry"
+  code_path="$CODE_DIR/$dir"
+  [[ ! -d "$code_path" ]] && continue
+  lines=$(find "$code_path" -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -type f \( "${find_ext_args[@]}" \) \
+    -exec wc -l {} + 2>/dev/null | grep -v ' total$' | awk '{s+=$1} END{print s+0}')
+  files=$(find "$code_path" -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -name '.DS_Store' -type f 2>/dev/null | wc -l | tr -d ' ')
+  upd=$(find "$code_path" -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -name '.DS_Store' -not -name 'time-log.md' -type f \
+    -exec stat -f '%m %Sm' -t '%Y-%m-%d %H:%M' {} + 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+  hours=$(manual_hours_from_log "$code_path/time-log.md")
+  log_total=$(grep -oE '^\*\*Total:\*\* [0-9.]+h' "$code_path/time-log.md" 2>/dev/null | grep -oE '[0-9.]+')
+  [[ -n "$log_total" ]] && hours="$log_total"
+  printf "%-28s %-26s %6s  %-34s %7s\n" "$dir" "$lines | $(format_lines "$lines") lines" "$files" "${upd/ /T} | $upd" "${hours}h"
+done
 echo ""
 
 # --- Docs table check ---
@@ -449,7 +497,7 @@ done
 
 # --- Tasks check: TODO files in Claude memory ---
 
-echo "=== TASKS (TODO files in Claude memory) ==="
+echo "=== TASKS (todo_*.md in Claude memory, tasks/*.md of the dashboard) ==="
 echo ""
 printf "%-12s %-22s %-8s %-8s  %s\n" "STATUS" "ID" "PRIO" "PROJECT" "TITLE"
 printf "%-12s %-22s %-8s %-8s  %s\n" "---" "---" "---" "---" "---"
@@ -459,7 +507,7 @@ task_open=0
 
 for entry in "${selected[@]}"; do
   IFS='|' read -r short dir claude_suffix color icon <<< "$entry"
-  claude_path="$CLAUDE_DIR/$claude_suffix"
+  claude_path="$(claude_dir_for "$CODE_DIR/$dir" "$claude_suffix")"
   mem_path="$claude_path/memory"
 
   [[ ! -d "$mem_path" ]] && continue
@@ -478,7 +526,7 @@ for entry in "${selected[@]}"; do
         status:*) t_status="${line#status: }" ;;
         priority:*) t_priority="${line#priority: }" ;;
         parent:*) t_parent="${line#parent: }" ;;
-        deadline:*) t_deadline="${line#deadline: }" ;;
+        deadline:*|due:*) t_deadline="${line#*: }" ;;
       esac
     done < <(sed -n '2,/^---$/p' "$todo_file" | head -20)
 
@@ -488,6 +536,24 @@ for entry in "${selected[@]}"; do
       "${t_status:-?}" "${t_id:-?}" "${t_priority:--}" "$short" "${t_title:-$(basename "$todo_file")}"
   done < <(find "$mem_path" -maxdepth 1 -name 'todo_*.md' -type f 2>/dev/null)
 done
+
+# Ticket files of the dashboard itself (tasks/*.md, the source for sync-tasks.py)
+while IFS= read -r todo_file; do
+  [[ -z "$todo_file" ]] && continue
+  task_total=$((task_total + 1))
+  t_id="" t_title="" t_status="" t_priority="" t_project=""
+  while IFS= read -r line; do
+    case "$line" in
+      id:*) t_id="${line#id: }" ; t_id="${t_id#\"}" ; t_id="${t_id%\"}" ;;
+      title:*) t_title="${line#title: }" ; t_title="${t_title#\"}" ; t_title="${t_title%\"}" ;;
+      status:*) t_status="${line#status: }" ;;
+      priority:*) t_priority="${line#priority: }" ;;
+      project:*) t_project="${line#project: }" ;;
+    esac
+  done < <(sed -n '2,/^---$/p' "$todo_file" | head -20)
+  [[ "$t_status" == "open" || "$t_status" == "active" || "$t_status" == "blocked" || "$t_status" == "waiting" ]] && task_open=$((task_open + 1))
+  printf "%-12s %-22s %-8s %-8s  %s\n" "${t_status:-?}" "${t_id:-?}" "${t_priority:--}" "${t_project:0:8}" "${t_title:-$(basename "$todo_file")}"
+done < <(find "$SELF_DIR/tasks" -maxdepth 1 -name '*.md' -type f 2>/dev/null | sort)
 
 if (( task_total == 0 )); then
   echo "  (no TODO files found)"

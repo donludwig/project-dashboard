@@ -1,23 +1,27 @@
 ---
-id: DEMO-002
-title: "Component audit for consistent active states"
-status: active
+id: DEMO-2
+title: "Audit active states in ten components"
+status: blocked
+status_note: "waiting for the design review of the tab component"
 priority: medium
 project: helix-typography
-created: 2026-07-18
-summary: "10 components need token-based active state styling with WCAG AA contrast"
+due: "waiting"
+created: 2026-10-28
+summary: "Ten components need token-based active states with WCAG AA contrast."
+next: "Wait for the design review of the tab component."
 ---
 
-# Component audit for consistent active states
+# Audit active states in ten components
 
-Active states are styled per component today, with hard-coded colors in three places.
+Active and selected states are hard-coded in ten components and differ in color and weight.
 
-## Scope
+## Steps
 
-- Tabs, segmented control, pagination, nav items, chips, toggle buttons
-- One semantic token pair: `--state-active-bg` / `--state-active-text`
-- Contrast: 4.5:1 for text, 3:1 for the state indicator against adjacent colors
+- [ ] List the active and selected states per component
+- [ ] Map each state to a token
+- [ ] Check contrast against WCAG AA (3:1 for UI, 4.5:1 for text)
+- [ ] Update the components after the design review
 
-## Open question
+## Notes
 
-Does the active state need a non-color cue everywhere (underline, weight), or only where color is the single difference?
+The tab component sets the pattern for the others, so it goes first.

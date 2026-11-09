@@ -2,6 +2,51 @@
 
 All notable changes to the Project Dashboard.
 
+## 3.0.0 "Common Ground" · 2026-11-09
+
+A new foundation. The dashboard now runs on Kernmix, a design system built on the open standard KERN, ships in English with a fresh set of fictional demo projects, and adds lists, skills, shortcuts and a filter set that works across every section. The project is now licensed under the EUPL-1.2.
+
+### Added
+
+- **Kernmix design system**: all styles and components come from Kernmix, a remix of the open standard KERN, embedded in `index.html` between the `KERN-SYSTEM` markers. Theme "Kobalt" in dark and light, square corners, measured contrast (text at least 4.5:1, interface at least 3:1), Lucide icons throughout.
+- **Header buttons**: "Capture idea", "Temp project" and "New project" copy a command that starts Claude Code in the dashboard folder with the matching request: an idea card, a small temporary work folder shown as a temporary card in Ideas, or a complete new project (folder, CLAUDE.md, memory, `scan.sh` entry, table row and card). `CLAUDE.md` describes each step.
+- **Side navigation**: a collapsible sidebar on the left with every section, a collapse button and an icon-only rail; the selected section is marked as you scroll, jumps are instant, and the browser's back and forward buttons follow your jumps.
+- **Filters for all sections**: a "Filter" group at the top of the sidebar: organization, type, phase, "Open only" and "Active", each with "All" and live counts. A filter applies to the overview, the project details, tasks, synergies, lists and focus at the same time; every filtered section shows the active filters as chips with × to remove them.
+- **Seven phases**: Idea, Concept, Prototype, Active, Migration, Stable and Dormant, each with its own colored pill and a phase filter.
+- **Lists**: your own project lists with an icon picker (search across all Lucide icons), a quick list filled with one click from each row, rename and delete, a "Deactivated" list for completed projects, and a list filter for the overview.
+- **Skills overview with call graph**: a card per Claude Code skill with purpose, scope (global, shared, project) and the projects it belongs to, a filter box, and a graph that shows which skill calls which: entry points, brokers, helpers and building blocks, colored by category, dashed where a skill asks before it continues. Click a skill or a category to highlight its connections.
+- **Shortcuts**: a section for prompt shortcuts (`+` and two letters): what each one does, which skill it starts, and a graphic of the fixed order in which several shortcuts run.
+- **Ideas**: early ideas get their own card in a separate section before they become a project.
+- **About section with animated graphics**: how the dashboard is made (sources, tools, one file, the browser) and how the three agents Cockpit, Radar and Bridge work together, each as a graphic with a text description; motion stops when the system asks for reduced motion.
+- **Project facts and previews**: each card shows phase, type, scope, files, last update (with a freshness bar) and hours as fact tiles, plus a preview image; long descriptions fold with "Read more".
+- **Card groups with counts**: the project details are grouped like the table; group counts follow the active filters and empty groups disappear.
+- **Card actions**: the row buttons (quick list, lists, quicklink, focus, star, completed) also sit in the head of every project card.
+- **Tool groups in the project cards**: a header before the first card of each tool band, foldable, with a card count; jumping to a card in a folded group opens it.
+- **Share images**: `tools/make-social-images.py` renders a 1200×630 image per project in the Kernmix style; an info "i" behind the project name previews it.
+- **Task details**: a dialog per task with status, priority, due date and the ticket text; tasks can be starred, reordered and checked off in the browser (view state only).
+- **AI task suggestions**: a foldable list of suggestions below the tasks, each with project, reason and next step. Accept one to turn it into a task, or put it back. Claude Code writes them on request from your tickets, project status and synergies; the demo ships with four examples.
+- **Search help**: the search field suggests fields (`person:`, `tag:`, `in:memory`, `in:task`, `in:synergy`, `in:document`, `in:status`, `in:cross-links`) and shows the syntax with examples; `org:` filters by organization.
+- **Obsidian Bases view**: `tasks.base` with kanban views by status and priority, a ticket template in `templates/ticket.md`, and an optional color code in `obsidian-color-code.md`.
+- **Column sets**: the column picker offers named sets (Overview, Organizations, Tech, All) besides single columns; table headers carry icons.
+- **Embedded font**: Atkinson Hyperlegible Next ships in `assets/fonts/` (SIL Open Font License), no CDN.
+
+### Changed
+
+- **English throughout**: interface, demo data, tickets, documentation and helper scripts are in English.
+- **New demo data**: twelve fictional projects in five organizations, five tasks, three synergies, three ideas, fifteen example skills and eight shortcuts.
+- **Dates in ISO 8601**: the table, cards and documents show `2026-11-09 10:00`, relative times read "2d ago", decimals use a point.
+- **Tickets**: one bare `status` value (open, active, blocked, waiting, done, dropped) plus `status_note`; new fields `due` (replaces `deadline`, which is still read), `next` and `created`. `sync-tasks.py` writes the new task markup.
+- **`scan.sh`**: code root set with `PD_CODE_DIR` (default `~/projects`), new section with ready-to-paste table values, reads the dashboard's own `tasks/` folder; it never rewrites the dashboard's own `time-log.md` and skips `.venv*` and `.cache` folders.
+- **Overview table**: numbered rows, sticky action column on the right, scope with bars, relative dates with freshness bars; a completed project dims right away.
+- **Licence**: from MIT to the European Union Public Licence v. 1.2 (EUPL-1.2), matching the embedded Kernmix and KERN-Kit. Third-party parts are listed in `NOTICE.md`.
+- **README images**: new header, screenshots in dark and light, section banners, an infographic of how the dashboard works, social preview and LinkedIn image in the Kobalt style.
+
+### Removed
+
+- **Claude Design and other cloud project bands**: the overview lists local projects only.
+- **Old phase badges** and the hand-written CSS; everything visible is a Kernmix component now.
+- **`file://` links in the demo**: document rows offer "copy path" instead.
+
 ## 2.1.0 — 2026-09-17
 
 Focus, smart search and a more forgiving layout.

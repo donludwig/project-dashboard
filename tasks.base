@@ -1,0 +1,109 @@
+# Obsidian Bases view of the ticket files in tasks/ (optional, needs Obsidian 1.14+ for the kanban view).
+# The folder path is relative to the vault root: if your vault is not this dashboard folder,
+# change "tasks" to the path of the ticket folder inside your vault.
+# Dragging a card between kanban columns rewrites the `status` field of the ticket file;
+# run `python3 sync-tasks.py` afterwards to refresh the dashboard.
+filters:
+  and:
+    - file.ext == "md"
+    - file.inFolder("tasks")
+properties:
+  title:
+    displayName: Task
+  status:
+    displayName: Status
+  status_note:
+    displayName: Note
+  priority:
+    displayName: Priority
+  project:
+    displayName: Project
+  due:
+    displayName: Due
+  next:
+    displayName: Next step
+  summary:
+    displayName: Summary
+  created:
+    displayName: Created
+views:
+  - type: kanban
+    name: Kanban Status
+    groupBy:
+      property: status
+      direction: ASC
+    groupOrder:
+      - open
+      - active
+      - blocked
+      - waiting
+      - done
+      - dropped
+    order:
+      - title
+      - priority
+      - project
+      - due
+      - next
+      - status_note
+    sort:
+      - property: priority
+        direction: ASC
+      - property: created
+        direction: ASC
+  - type: kanban
+    name: Kanban Priority
+    filters:
+      or:
+        - status == "open"
+        - status == "active"
+        - status == "blocked"
+        - status == "waiting"
+    groupBy:
+      property: priority
+      direction: ASC
+    groupOrder:
+      - high
+      - medium
+      - low
+    order:
+      - title
+      - status
+      - project
+      - due
+    sort:
+      - property: created
+        direction: ASC
+  - type: table
+    name: Due
+    filters:
+      and:
+        - due != null
+        - or:
+            - status == "open"
+            - status == "active"
+            - status == "blocked"
+            - status == "waiting"
+    order:
+      - due
+      - title
+      - status
+      - status_note
+      - priority
+      - project
+    sort:
+      - property: due
+        direction: ASC
+  - type: table
+    name: All
+    order:
+      - id
+      - title
+      - status
+      - status_note
+      - priority
+      - project
+      - created
+    sort:
+      - property: created
+        direction: DESC

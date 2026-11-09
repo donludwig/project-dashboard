@@ -1,497 +1,196 @@
 # Project Dashboard
 
-Open-source meta-project that documents, connects, and visualizes all your active projects as a single-page HTML dashboard.
+Open-source meta project that documents, connects and visualizes all your active projects as a single-page HTML dashboard. Claude Code sets it up and keeps it current; this file is its instruction set.
 
-Communication language: English.
+Communication language: English (switch to the user's language if they write in another one).
 
 ## Architecture
 
-- **index.html** (~4.9k lines): Complete dashboard in a single file (HTML + CSS + JS, no build step)
-- **scan.sh**: Radar scanner — collects all project metrics in ~3 seconds (see below)
-- **sync-tasks.py**: Optional helper (Python standard library) — rewrites the task cards between the `AUTO-TASKS` markers in index.html from ticket files (`SOURCES` globs). The dashboard never depends on it
-- **tasks/**: Demo tickets (Markdown + frontmatter: id, title, status, priority, project, deadline, summary)
-- **favicon.svg**: Dashboard icon (abstract dashboard glyph — cyan header bar + panel blocks on dark ground)
-- **assets/**: Card previews (`previews/<project-id>.svg|png`, see Card Preview Pattern) and visuals — README header (`header.png`), section banners (`banners/01-06`, placed above the `##` headings in README.md; keep the `##` lines for anchors), GitHub social preview (`social-preview.png`), LinkedIn image (`linkedin.png`)
-- **README.md**: Public documentation
-- **CHANGELOG.md**: Release notes — add an entry for every feature release
-- **LICENSE**: MIT
+- **index.html**: the complete dashboard in one file (HTML, CSS, JS, no framework, no build step). Open it with `file://` in any browser.
+- **Kernmix** (embedded in `index.html` between `<!-- KERN-SYSTEM:BEGIN … -->` and `<!-- KERN-SYSTEM:END -->`): design system on top of the open standard KERN. KERN-Kit 2.8.2, Kernmix tokens and components (`km-` prefix), theme “Kobalt”, the scripts `km-table.js` and `km-popup.js`. **Never edit this block by hand.** Page-specific CSS follows after the block and only uses `--km-*` tokens.
+- **scan.sh**: measures projects (files, lines, last change, hours from Claude Code sessions, CLAUDE.md and memory, tasks, links). It only prints; Claude Code copies the values into `index.html`. Root folder: `PD_CODE_DIR` (default `~/projects`). Needs macOS (`stat -f`, BSD `date`).
+- **sync-tasks.py**: rewrites the task cards between `<!-- AUTO-TASKS:BEGIN … -->` and `<!-- AUTO-TASKS:END -->` from `tasks/*.md`. Standard library only.
+- **tools/make-social-images.py**: renders a 1200×630 share image per project into `assets/social/` with headless Chrome and rewrites the JSON block between `<!-- SOCIAL-I:BEGIN -->` and `<!-- SOCIAL-I:END -->`. Chrome path via `CHROME`, otherwise the macOS default or `google-chrome`/`chromium`.
+- **tasks/**, **templates/ticket.md**, **tasks.base**, **obsidian-color-code.md**: tickets, ticket template, optional Obsidian kanban view and color code.
+- **assets/**: `previews/<project-id>.svg|png` (card previews), `social/` (share images), `fonts/` (Atkinson Hyperlegible Next, OFL), `readme/` (README images), `social-preview.png`, `linkedin.png`.
+- **README.md**, **CHANGELOG.md** (add an entry for every release), **LICENSE** (EUPL-1.2), **LICENSES/**, **NOTICE.md** (third-party parts).
 
 ## Structure of index.html
 
-The HTML follows a strict section order:
-
-1. **Theme Tokens** — CSS Custom Properties for Dark/Light Mode via `data-theme="dark"|"light"` on `<html>`
-2. **Component Styles** — All CSS: layout, header, quicklinks, table, cards, agents, docs-tables, synergies, drag & drop, footer, responsive
-3. **Header** — Sticky full-width band: `h1.logo-home`, `nav#quicklinks` (JS-generated pills), `.header-actions` (tasks toggle + theme toggle)
-4. **Layout wrapper** — `<div class="layout">` with two columns:
-   - `<main class="main-col" id="main-col">` — Focus section (`#pin-section`, first and deliberately not sortable, hidden without pins), Overview Table, About section, Project Details (project cards + Project Ideas as `.ideas-sub` inside the card)
-   - `<div class="col-resizer" id="col-resizer">` — drag handle in the gap: sets `--sidebar-w` (380–860px), hides the sidebar when dragged far right (`.layout.sidebar-hidden`)
-   - `<aside class="sidebar" id="sidebar">` — Tasks, Synergies (sticky, scrolls independently)
-5. **Footer** — Live stats (`#footer-stats`), layout reset button, last-viewed/last-update dates
-6. **JavaScript** — Table sorting (org-grouped by default, global ranking when sorted), smart search (weighted index over rows, cards, synergies, tasks; filter chips `tool:` `org:` `tag:` `in:`; results panel; hit counter), "open only" toggle, focus section (pin up to 3 projects), collapsible/movable org sections, tool bands, sidebar resize, task org filter, optional Obsidian links (`OBSIDIAN` config), column visibility toggle, freshness/activity bars, theme toggle, back-to-top, clipboard, quicklink pills (pin/unpin, drag reorder), star ("in progress") and completed toggles per row, view modes (flat/orgs/active), row drag & drop per organization, section drag & drop per column, footer stats, keyboard shortcuts (`/`, `t`, `a`, `1`/`2`/`3`), collapse/expand all cards
-
-Sections that can be reordered carry `class="sortable-section"` and a unique `data-section` attribute; the saved order is per column container (`main-col` / `sidebar`) in localStorage.
-
-## Bootstrap: Setting Up Your Dashboard
-
-This project is designed to be self-configuring via Claude Code. After cloning, run `claude` in the project directory and say: "Set up this dashboard for my projects. My code lives in ~/my-code-directory".
-
-### What Claude Code generates for you
-
-When a user asks to set up the dashboard, follow these steps:
-
-**Step 1 — Discover projects:**
-Scan the user's code directory for project folders. Identify projects by looking for `package.json`, `CLAUDE.md`, `.git/`, `README.md`, `src/` directories.
-
-**Step 2 — Update index.html:**
-Replace the example projects with the user's real projects:
-- Update the overview table rows (name, type, org, tech badges, metrics, phase)
-- Create project cards with details from each project's README/CLAUDE.md
-- Build docs tables by scanning each project for relevant files
-- Scan file sizes via `stat -f '%z' file` and format as "x.x KB"
-- Scan timestamps via `stat -f '%Sm' -t '%Y-%m-%d %H:%M' file`
-- Assign unique accent colors as CSS custom properties in `:root`
-- Generate inline SVG icons per project (see Icon Pattern below)
-
-**Step 3 — Configure paths:**
-The dashboard uses two JavaScript functions that need the user's base path:
-- `openClaude(project)` — generates a `cd ~/path/project && claude` command, copies to clipboard
-- `copyDocPath(btn, dir, file)` — copies `~/path/dir/file` to clipboard
-- Find these functions in the `<script>` section and update the base path
-
-**Step 4 — Generate launch scripts** (optional, macOS):
-Create a `launch/` directory with `.command` files for each project:
-```bash
-#!/bin/bash
-cd ~/path/to/project && claude
-```
-Make executable: `chmod +x launch/*.command`
-
-**Step 5 — Set up synergies:**
-Analyze projects for shared technologies, patterns, or knowledge transfer opportunities. Create synergy cards in the synergies section.
-
-**Step 6 — Create agents** (optional):
-Ask the user if they want slash commands. If yes, create skill and agent definitions (see Skills & Agents section below).
-
-### Ongoing maintenance
-
-After initial setup, the user can keep the dashboard updated:
-- "Scan my projects and update the dashboard" — full Radar scan
-- "Scan project X" — single project update
-- "Find synergies between my projects" — Bridge analysis
-- "Add project X to the dashboard" — new project to table + card
-
-### Adding a new project (checklist)
-
-When creating a new project, ALL FOUR steps must be completed together:
-
-1. **Project folder:** Create `~/code/{project-name}/` (unzip repo, copy briefing files, install dependencies)
-2. **CLAUDE.md in project:** Create a CLAUDE.md in the project root so Claude Code has context when opening the project later
-3. **Claude project directory:** Create `~/.claude/projects/{encoded-path}/memory/` with MEMORY.md + project_overview.md
-4. **Dashboard entry:** Add overview table row + project card in index.html
-
-**Why all four?** Without step 2+3, opening the project in Claude Code later starts without context. Without step 4, the dashboard doesn't reflect the project. Skipping any step creates an incomplete setup that requires manual fixing later.
-
-#### Step 2 — CLAUDE.md template
-
-Create a CLAUDE.md in the project root with at minimum:
-
-```markdown
-# Project Name
-
-One-line summary of what this project does.
-
-Communication language: English.
-
-## Context
-
-Why this project exists, what problem it solves, link to ticket/issue if applicable.
-
-## Repo Structure
-
-- **src/** — Main source code
-- **docs/** — Documentation
-- ...
-
-## Key Tasks
-
-What needs to be done, acceptance criteria, expected output files.
-```
-
-Adapt the sections to the project's needs. The goal is that Claude Code can understand the project without additional prompting.
-
-#### Step 3 — Claude project directory
-
-The directory name encodes the absolute project path: replace `/` with `-`, keep the leading `-`.
-
-Example: Project at `~/code/my-project` (expands to `/Users/jane/code/my-project`)
-becomes: `~/.claude/projects/-Users-jane-code-my-project/memory/`
-
-Create two files:
-
-**MEMORY.md** (index file, one line per memory):
-```markdown
-# Memory Index — Project Name
-
-## Project
-- [project_overview.md](project_overview.md) — One-line summary of what this project is about
-```
-
-**project_overview.md** (actual memory content):
-```markdown
----
-name: Project Name Overview
-description: One-line description used to decide relevance in future conversations
-type: project
----
-
-Summary of the project context, goals, and current state.
-
-**Why:** Motivation behind the project.
-
-**How to apply:** How this context should shape suggestions.
-```
-
-#### Step 4 — Dashboard entry
-
-Add both a table row and a project card. See the HTML Conventions section below for the exact patterns. Remember to:
-- Choose a unique 2-letter icon abbreviation and accent color
-- Set the correct phase badge (active, stable, migration, prototype, idea)
-- Include a docs table with at least the CLAUDE.md and any briefing files
-- Update the project count in the page header if displayed
-
-## Skills & Agents
-
-Three specialized helpers available as slash commands AND orchestrated subagents.
-
-### Cockpit — Coordinator & Dashboard Developer
-
-Control center of the dashboard. Evolves the `index.html`, coordinates Radar and Bridge, maintains memory files, prioritizes features.
-
-**Invocation:**
-- `/cockpit` — Skill mode (manual, in conversation)
-- `/cockpit status` — Overview of all agents and dashboard state
-- `claude --agent cockpit` — Agent mode (orchestrated, autonomous)
-
-**Capabilities:**
-- Spawns Radar and Bridge as subagents and runs them in parallel
-- Processes their results and updates the dashboard HTML
-- Maintains project memory files
-
-### Radar — Update Scanner
-
-Scans project directories on three levels:
-1. **Code data**: file count, lines of code, prototypes, last modified
-2. **Claude context**: CLAUDE.md presence, memory files, session count, MCP settings
-3. **Health check**: stale memories, missing CLAUDE.md, outdated docs
-
-**Invocation:**
-- `/radar` — Scan all projects
-- `/radar project-a project-b` — Scan specific projects only
-- As subagent of Cockpit (automatic)
-
-**Output per project:** Code metrics diff table, Claude context checklist, warnings for issues.
-
-### Bridge — Synergy Finder
-
-Compares projects by content: token architectures, configurations, component patterns. Identifies transfer opportunities with specific code references.
-
-**Invocation:**
-- `/bridge project-a project-b` — Compare two projects
-- `/bridge transfer project-a→project-b` — Knowledge transfer direction
-- As subagent of Cockpit (automatic)
-
-**Output:** Comparison table + code references + recommendations + risks.
-
-### Architecture: Skills vs. Agents
-
-| | Skills (`/slash`) | Agents (`claude --agent`) |
-|---|---|---|
-| **Invocation** | `/cockpit`, `/radar`, `/bridge` | `claude --agent cockpit` |
-| **Autocomplete on /** | Yes | No |
-| **Cross-invocation** | No — sequential by user | Yes — Cockpit spawns Radar & Bridge |
-| **Parallel execution** | No | Yes — Radar + Bridge simultaneously |
-| **Tool restrictions** | No — full access | Yes — `tools:` field in frontmatter |
-| **File location** | `~/.claude/skills/*/SKILL.md` | `~/.claude/agents/*.md` |
-
-**Why both?**
-- **Skills** for daily use: `/radar` → numbers updated. Fast, direct.
-- **Agents** for orchestrated workflows: `claude --agent cockpit` starts a session where Cockpit autonomously decides when to spawn Radar or Bridge.
-
-**Limitation:** Subagents cannot spawn further subagents. Only the main agent (Cockpit) can delegate. Radar and Bridge are pure workers.
-
-**Typical workflows:**
-- Quick: `/radar` → metrics updated
-- Targeted: `/bridge project-a project-b` → comparison
-- Orchestrated: `claude --agent cockpit` → "Update the dashboard and check if project A has patterns that project B could use" → Cockpit spawns Radar + Bridge, processes results, updates HTML
-
-### Setting up Skills and Agents
-
-To create the skill/agent files for your dashboard, ask Claude Code:
-
-**For Skills:**
-```
-Create /radar, /bridge, and /cockpit skills for this dashboard
-```
-Claude will create files in `~/.claude/skills/radar/SKILL.md` etc.
-
-**For Agents:**
-```
-Create a cockpit agent that can orchestrate radar and bridge
-```
-Claude will create files in `~/.claude/agents/cockpit.md` etc.
-
-### scan.sh — Fast Radar Scanner
-
-The script walks through all project directories and collects five numbers per project:
-
-1. **Files** — How many files are in the directory? (Helper files like node_modules are excluded)
-2. **Lines** — How many lines of code? (Only real code files: TypeScript, CSS, HTML, etc.)
-3. **Last Update** — When was a file last changed?
-4. **Memories** — How many memory files has Claude stored for this project?
-5. **Sessions** — How many times was Claude opened in this project?
-
-After that, the **Docs Check** lists all documents in each project's root directory — with file size and date. This is the comparison basis: if a file appears here that isn't in the dashboard's docs table yet, it needs to be added.
-
-**Hours tracking (`time-log.md`):** scan.sh maintains a `time-log.md` in each project root. It auto-writes the `## Claude Sessions` section from `.jsonl` session timestamps (active time only — gaps over 30 min are excluded, 2 min tail buffer per burst) and leaves the `## Manual` section for the user. The per-project total (manual + claude) feeds the **Hours** column and the Σ info icon above the table. Each project card may also include an optional `<details>` time-log block. When adopting the dashboard, point the `PROJECTS` array at your real projects before running the script — it writes into each existing project directory.
-
-**Tasks check:** the script collects `todo_*.md` files from each project's Claude memory directory, parses the YAML frontmatter (id, title, status, priority), and prints a table plus an open count. Statuses `open`, `active`, and `blocked` count as open.
-
-**Link check:** every `href="file:///…"` link in `index.html` is verified; targets that no longer exist are listed with their line number — the basis for cleaning up moved or deleted documents.
-
-**Why so fast?** Previously, Radar spawned 10 AI agents in parallel — each agent read files individually, reasoned about them, read more files (~3 minutes). The script does the same with simple shell commands ("count all files", "find the newest date") — tasks the computer handles in milliseconds. The AI only comes in afterwards for interpretation: What changed? Which docs are missing?
-
-**Usage:**
-```bash
-./scan.sh              # Scan all projects
-./scan.sh design-sys app    # Scan specific projects (fuzzy match)
-```
-
-**Health Check (CFM):** Each row ends with status letters — uppercase = present, lowercase = missing:
-- `C`/`c` — CLAUDE.md in project root
-- `F`/`f` — favicon.svg in project root
-- `M`/`m` — MEMORY.md in Claude project directory
-- `Ndocs` — Count of root-level documents (excluding CLAUDE.md, README.md, CHANGELOG)
-
-Example: `CFM 4docs` = all present, 4 documents in root. `CfM` = favicon missing.
-
-**Customization:** Edit the `PROJECTS` array at the top of scan.sh to add/remove projects. Each entry: `shortname|directory|claude-project-suffix|color|icon-abbreviation`.
-
-**Integration with /radar:** The Radar skill calls scan.sh first, then the LLM only handles:
-- Delta comparison (previous vs. current values)
-- Docs-table reconciliation (identify missing entries)
-- Dashboard HTML + memory updates
-
-### Radar Scan Logic (detailed)
-
-When scanning a project directory, collect:
-
-**Metrics:**
-- **File count**: All files excluding node_modules, .git, dist, build, coverage
-- **Lines of code**: Count via `find ... -exec wc -l {} +` for source files (.ts, .tsx, .js, .jsx, .css, .scss, .html, .kt, .java)
-- **Last modified**: Most recent file change timestamp
-
-**Phase detection:**
-- Active: changed within last 7 days
-- Stable: no changes in 30+ days, has releases/tags
-- Migration: major version bumps or framework changes in progress
-- Prototype: has prototype/ or poc/ directories
-- Idea: only has README or CLAUDE.md, minimal code
-
-**Docs inventory — categorize files into 4 types:**
-- Research (orange badge): UX research, audits, walkthroughs, analysis documents
-- Project (blue badge): READMEs, changelogs, licenses, roadmaps
-- Code (green badge): package.json, tsconfig, vite.config, token files, build configs
-- Claude (purple badge): CLAUDE.md, memory files, agent configs, .claude/ contents
-
-**Updating the HTML:**
-- Update table row: scope (lines), files, last update, hours, phase badge
-- Update docs table: add/remove file rows, update sizes and timestamps
-- Use `stat -f '%z' file` for byte size → format as "x.x KB"
-- Use `stat -f '%Sm' -t '%Y-%m-%d %H:%M' file` for timestamp
-
-## HTML Conventions
-
-### Overview Table Row Pattern
+1. `<head>`: small start scripts (theme, saved demo state), the Kernmix block, the font block, page styles.
+2. `<header class="km-header">`: logo (click resets filters and search), `nav#km-quicklinks` (pinned projects, filled by JS), theme switch.
+3. `<div class="layout">` with three columns:
+   - `nav#side-nav.km-sidebar`: filter group (status, organizations, types, phase) and one entry per section; collapsible to an icon rail.
+   - `main#main-col`: Focus (`#km-focus`), Lists (`#listen`), About (`data-section="about"`), Project overview (`data-section="overview"`, `table#overview-table`), Project details (`data-section="details"`, `.projects` with one `article.project` per project), Skills (`#skills`), Ideas (`#ideen`), Shortcuts (`#shortcuts`).
+   - `aside#sidebar`: Tasks (`#global-tasks`, cards in `#manual-tasks`) and Synergies (`data-section="synergies"`).
+4. `footer.km-footer`: live counts, layout reset, last viewed and last update.
+5. Scripts: table sorting and grouping, search, filters for all sections, lists, focus, quicklinks, stars and completed, drag and drop of sections and rows, task cards, share-image preview, keyboard shortcuts (`/`, `t`, `a`, `1`–`3`, `Esc`).
+
+Sections that can be reordered carry `class="sortable-section"` and a unique `data-section`. Internal keys stay as they are even where they are German words (`data-state="offen"`, `data-prio="hoch"`, `km-pill--prototyp`, `id="listen"`, `id="ideen"`): scripts and stored state depend on them.
+
+## Bootstrap: setting up the dashboard for the user's projects
+
+The user says something like “Set up this dashboard for my projects. My code lives in ~/projects”. Then:
+
+1. **Find projects.** Folders in the code root with `.git/`, `CLAUDE.md`, `package.json`, `README.md` or `src/`. Ask which ones to include and to which organization (client, team, “Personal”) each belongs.
+2. **Measure.** `PD_CODE_DIR=<root> ./scan.sh` and read the section `=== TABLE VALUES ===` (scope, files, last update, hours per project).
+3. **Replace the demo data** in `index.html`:
+   - overview rows, grouped under one `org-header` row per organization (pattern below);
+   - one project card per project in `.projects`, with description, a panel with next steps and a document table;
+   - task cards: write one ticket per open task to `tasks/` and run `python3 sync-tasks.py`;
+   - synergy cards in the synergies section;
+   - ideas as idea cards in `#ideen`;
+   - skills and shortcuts (see below), or remove the two sections and their entries in `#side-nav`.
+4. **Colors and monograms.** One color per organization (contrast of white text on it at least 4.5:1), a two-letter monogram per project, both in the `data:` SVG of `img.km-monogram` (copy an existing one and change `fill` and the text).
+5. **Paths.** The launch command is `cd ~/projects/<folder> && claude`; search `index.html` for `~/projects/` and replace the root if the user's code lives elsewhere.
+6. **Previews and share images (optional).** Screenshot or SVG per project in `assets/previews/<project-id>.svg|png`, then `python3 tools/make-social-images.py`.
+7. **Agents (optional).** Create Cockpit, Radar and Bridge in `~/.claude/agents/` (definitions below).
+8. **Demo state and Obsidian.** Remove the first `<script>` in `<head>` that seeds the demo stars, pins and quicklinks (`pd-demo-saat-v1`) once the demo projects are gone. Obsidian links use the vault name `projects` (`obsidian://open?vault=projects…`, `advanced-uri?vault=projects`); replace it with the name of the user's vault, or leave it if they do not use Obsidian. The header button for Obsidian live sync is optional and only writes ticket files for cards that carry `data-file`.
+9. **Check.** Open nothing, start no server; render headless if a browser is available, otherwise parse the file: balanced `<div>` and `<details>`, every `href="#…"` points to an existing id, no German demo text left if the user wants English, no personal paths (`/Users/…`) in files the user wants to publish.
+
+### Header buttons: capture idea, temp project, new project
+
+The three buttons in the header copy a command that starts Claude Code in the dashboard folder (`cd ~/projects/project-dashboard && claude "…"`). What to do for each request:
+
+- **“Capture an idea …”**: ask for a short description, then add an idea card in `#ideen` (pattern below, `id="idea-<slug>"`, first badge “Idea”). No project folder, no table row. If the idea has a concrete next step, also write a ticket in `tasks/` and run `python3 sync-tasks.py`.
+- **“Create a temporary work project …”**: for short jobs such as a review or a ticket. Create `~/projects/_temp/<slug>/` with a `CLAUDE.md` (task, sources, status), no memory folder, no `scan.sh` entry, no table row. Show it in the Ideas section as an idea card with the extra class `temp-card`, `id="temp-<slug>"`, indicator `var(--km-color-border-section)`, badges “Temporary” and “Open”, and a line `<p class="km-card__note"><strong>Status:</strong> …</p>`. When the work is done, remove the card; if it grows into a project, follow “New project”.
+- **“Add a new project …”**: ask for name, organization, folder and a short description, then: project folder with `CLAUDE.md`, memory folder `~/.claude/projects/<encoded path>/memory/` with `MEMORY.md`, an entry in the `PROJECTS` list of `scan.sh`, a table row under its organization and a project card (patterns below), optionally a preview and a share image.
+
+Ongoing: “Scan my projects and update the dashboard” (Radar), “Find synergies” (Bridge), “Add project X” (row, card, ticket, preview). Every new project needs: project folder, a `CLAUDE.md` in it, a memory folder `~/.claude/projects/<encoded path>/memory/` with `MEMORY.md`, and the dashboard entry.
+
+## HTML conventions
+
+### Overview row
 
 ```html
+<tr class="org-header km-table__group" style="--org-color:#b93a1c;--km-row-color:#b93a1c"><td colspan="11"><span class="km-table__group-label">Redleaf NGO</span></td></tr>
 <tr>
-  <td>
-    <a class="table-name" href="#project-id">
-      <img class="project-icon" src="data:image/svg+xml,..." alt="">
-      Project Name
-    </a>
-  </td>
-  <td>Type</td>
-  <td>Organization</td>
-  <td><div class="table-badges"><span class="table-badge">Tech</span></div></td>
-  <td class="table-scope" data-sort="1234">~1.2k lines</td>
-  <td data-sort="42">42</td>
-  <td class="table-date" data-sort="2026-03-25T10:30">25.03.2026, 10:30</td>
-  <td class="table-hours" data-sort="3.0">3.0h</td>
-  <td><span class="phase-badge phase-active">Active</span></td>
-  <td><div class="table-links"><a class="table-link" href="file:///...">Local</a></div></td>
-  <td><button class="btn-claude" onclick="openClaude('project-dir')"><span>claude</span><svg><!-- copy icon --></svg></button></td>
+  <td><a class="table-name km-table__name" href="#nova-social-proof"><img class="project-icon km-monogram" src="data:image/svg+xml,…" alt="">Nova Social Proof</a></td>
+  <td>Component</td>
+  <td>Redleaf NGO</td>
+  <td><div class="table-badges km-chips"><span class="table-badge km-pill km-pill--neutral">Lit</span></div></td>
+  <td class="km-table__scope" data-sort="2700">~2.7k lines</td>
+  <td data-sort="55">55</td>
+  <td class="km-table__date" data-sort="2026-11-05T10:00">2026-11-05 10:00</td>
+  <td class="km-table__hours" data-sort="8.5">8.5h</td>
+  <td><span class="phase-badge km-pill km-pill--prototyp">Prototype</span></td>
+  <td><div class="km-chips"><a class="table-link km-chip km-chip--extern" href="https://…" target="_blank" rel="noopener">Site</a></div></td>
+  <td></td>
 </tr>
 ```
 
-The table has 11 columns: name, type, organization, tech badges, scope (lines), files, last update, hours, phase, links, claude button. The hours cell uses a numeric `data-sort` (`3.0`) and displays `3.0h`; a value of `0` shows as `&mdash;`.
+`<tr class="work">` marks a project in progress. The last cell stays empty; scripts fill the action buttons. The first row of the table body is the `tool-code` band header; keep it.
 
-**Sub-rows (child projects):** use `class="sub-row"` — they always stay attached to their parent and never sort independently.
+### Phases
 
-**Organization grouping:** rows are grouped by organization with section-heading rows. Each group starts with:
-```html
-<tr class="org-header"><td colspan="11"><span class="org-header-label">Organization Name</span></td></tr>
-```
-By default the table shows these groups. When the user sorts by a column, JS adds `class="is-sorted"` to the table, which hides the org-headers (CSS) and ranks all projects globally; a reset (third click) restores the grouping. Org-header rows are skipped by the sort, search (hidden when their section has no match), row counter, and column-toggle logic.
+| Phase | Class |
+|---|---|
+| Idea | `km-pill--idee` |
+| Concept | `km-pill--konzept` |
+| Prototype | `km-pill--prototyp` |
+| Active | `km-pill--aktiv` |
+| Migration | `km-pill--migration` |
+| Stable | `km-pill--stabil` |
+| Dormant | `km-pill--neutral` |
 
-**View modes:** a toggle next to the search sets `mode-orgs` (grouped, default) or `mode-active` (only rows with class `work`) on the table; the flat mode has no mode class and hides org-headers via CSS. The mode is persisted in localStorage.
-
-**Row action buttons:** JS injects four buttons into each project row before the claude button — `.ql-pin` (bookmark: add to header quicklinks), `.pin-toggle` (arrow: pin into the Focus section, max. 3; the original row gets `.pinned-away` and a clone appears in `#pin-tbody`, clicks on the clone's other buttons are forwarded to the original), `.star-toggle` (adds class `work`, auto-pins to quicklinks), `.done-toggle` (adds class `completed`, dims the row and deactivates tasks that link to the project via `href="#project-id"`). Rows also get a `.row-grip` drag handle in the last cell for reordering within their group; a main project drags its sub-rows along as a block, an org header drags its whole section.
-
-**Project key = anchor id:** every row-based JS feature (quicklinks, focus, star, done, row order, search, task filter) keys a project by the `href="#project-id"` of its `.table-name` link — never by the `openClaude('…')` argument, which sub-projects without their own folder share with their parent.
-
-**Tool bands & cloud projects:** `<tr class="org-header tool-header" style="--org-color:…">` groups the rows below it by where they live. Bands are the headings of the Projects (flat) view; in the Organizations view a band acts as its own section. The first band carries `tool-code`, wraps all local projects and is hidden in the Organizations view. Projects without a local folder use `<tr class="cloud-row">` and an `<a class="btn-claude" href="…">` link in the last cell instead of the claude button.
-
-**Collapsible org sections:** clicking an org header toggles `.org-collapsed` on it and `.org-collapsed-row` on its rows (state per `ORG:<label>` key in localStorage); ignored while sorting or searching.
-
-**Row order is self-healing:** the saved order (`dashboard-row-order` for Organizations, `dashboard-row-order-flat` for the flat views) is only a ranking of siblings applied to the HTML structure. Unknown keys are ignored, new rows go to the end of their group, sub-rows always stay under their parent — no storage key bump needed after structural edits.
-
-**Tasks org filter:** the select in the tasks header is built from the organizations of the projects that tasks link to; add `data-org="Name"` to a `.task-item` to override.
-
-### Icon Pattern
-
-Inline SVG as data-URI in the table. 32x32 ViewBox, rx=0 square corners (the dashboard uses square corners throughout), white 2-letter abbreviation:
-
-```
-data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23e8432a'/%3E%3Ctext x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3ENf%3C/text%3E%3C/svg%3E
-```
-
-Replace `%23e8432a` with the project's hex color (URL-encoded #) and `Nf` with the 2-letter abbreviation.
-
-### Project Card Pattern
+### Project card
 
 ```html
-<article class="project collapsed" id="project-id">
-  <div class="project-header" style="border-left: 3px solid var(--accent-color);">
-    <div class="project-badges"><span class="table-badge">Tech</span></div>
-    <div class="project-name project-toggle"
-         onclick="this.closest('.project').classList.toggle('collapsed')">
-      Project Name
+<article class="project km-card km-card--accent-left km-card--collapsible" id="nova-social-proof">
+  <div class="project-header km-card__head">
+    <div class="project-indicator" style="background: #b93a1c;"></div>
+    <div class="project-title-block">
+      <div class="project-name project-toggle km-card__title">Nova Social Proof</div>
+      <div class="project-subtitle km-card__subtitle">One line</div>
     </div>
-    <div class="project-subtitle">One-line description</div>
+    <div class="project-badges km-card__badges"><span class="badge km-pill km-pill--neutral">Lit</span></div>
   </div>
-  <div class="project-body">
-    <!-- Grid with project-section divs for Features, Challenges, etc. -->
-    <details open>
-      <summary>Show Documents & Configuration</summary>
-      <table class="docs-table">...</table>
-    </details>
-    <div class="project-paths">
-      <span class="path-tag">~/path/to/project</span>
+  <div class="project-body km-card__body">
+    <p class="project-description">Two or three sentences.</p>
+    <div class="km-panels">
+      <div class="project-section km-panel"><h4>Next steps</h4><ul><li>…</li></ul></div>
     </div>
+    <figure class="cd-preview"><img src="assets/previews/nova-social-proof.svg" width="1200" alt="Preview: Nova Social Proof"></figure>
   </div>
 </article>
 ```
 
-Collapsible: `.collapsed` class toggles `.project-body` visibility via CSS `display: none`.
+The card id equals the `href` anchor of its table row. Fact tiles (phase, type, scope, files, update, hours) and the action buttons are added by script from the table row.
 
-### Card Preview Pattern
-
-Optional, directly above `.project-paths` inside the card body:
+### Document table (inside the card body)
 
 ```html
-<figure class="card-preview"><img src="assets/previews/project-id.png" width="640" height="400" loading="lazy" alt="Preview: Project Name"><figcaption>Preview &middot; as of 2026-09-17</figcaption></figure>
+<details open>
+  <summary>Documents &amp; configuration</summary>
+  <table class="docs-table km-table km-table--compact">
+    <thead><tr><th class="km-table__sort" aria-sort="none" data-sort="text">Type</th><th>Actions</th><th class="km-table__sort" aria-sort="none" data-sort="text">File</th><th>Description</th><th class="km-table__sort" aria-sort="none" data-sort="size">Size</th><th class="km-table__sort" aria-sort="none" data-sort="date">Update</th></tr></thead>
+    <tbody>
+      <tr><td class="doc-type"><span class="km-pill km-pill--info">Project</span></td><td class="km-table__actions km-table__actions--start"><button class="copy-btn km-iconbtn km-iconbtn--label" data-doc-dir="nova-fluid-type" data-doc-path="README.md">copy</button></td><td>README.md</td><td class="km-table__text">What it is</td><td class="doc-size">4.2&nbsp;KB</td><td class="doc-date">2026-11-06&nbsp;12:21</td></tr>
+    </tbody>
+  </table>
+</details>
 ```
 
-The demo uses schematic SVG placeholders. For real projects use a screenshot (640px wide is enough); keep files in `assets/previews/`, never embed them as base64.
+Types and pills: Project `--info`, Research `--warn`, Code `--ok`, Claude `--neutral`. Sizes via `stat -f '%z'`, dates via `stat -f '%Sm' -t '%Y-%m-%d %H:%M'`. Scripts order the columns and add icons.
 
-### Task Card Pattern
+### Task card
 
-Task cards live in `#manual-tasks`. Cards between `<!-- AUTO-TASKS:BEGIN -->` and `<!-- AUTO-TASKS:END -->` are generated by `sync-tasks.py` — edit the ticket file, not the HTML. Hand-written cards go outside the markers and use the same markup:
+Written by `sync-tasks.py`; do not edit between the `AUTO-TASKS` markers. Ticket fields: `id`, `title`, `status` (open | active | blocked | waiting | done | dropped), `status_note`, `priority` (high | medium | low), `project` (anchor id), `due` (date or short text), `created`, `summary`, `next`.
+
+### AI task suggestions
+
+The block between `<!-- AI-SUGGESTIONS:BEGIN … -->` and `<!-- AI-SUGGESTIONS:END -->` in the tasks section holds suggested tasks. When the user asks “Suggest next tasks for my projects”, read the open tickets in `tasks/`, each project's status (CLAUDE.md, memory, recent changes from `scan.sh`) and the synergy cards, then replace the cards inside `.km-suggest__list` with three to six suggestions. Each suggestion names one project, a concrete next step, why it matters now and a rough effort; no duplicates of existing tickets. Update the date in `.km-suggest__note`. The Bridge agent can do this as part of a synergy run. Card pattern:
 
 ```html
-<div class="task-item" data-file="tasks/app-12.md" data-priority="high" data-body="…base64…">
-  <input type="checkbox" class="task-checkbox">
-  <div class="task-content">
-    <div class="task-title"><span>Title</span><span class="task-id">APP-12</span><span class="task-status offen">Open</span></div>
-    <div class="task-meta"><a href="#project-id" style="color:#hex;…">Project</a> &middot; One-line summary</div>
+<div class="task-item km-suggest__task km-task" data-project="prism-fluid-type">
+  <div class="task-content km-task__body">
+    <div class="task-title km-task__title">
+      <span>Share the clamp() test page between Nova and Prism</span>
+      <span class="km-suggest__tag">AI</span><span class="task-status km-task__status offen km-pill km-pill--info">Suggestion</span>
+    </div>
+    <div class="task-meta km-task__meta"><a href="#prism-fluid-type" class="proj-link km-link km-link--projekt">Prism Fluid Type</a> &middot; Reason and smallest next step.</div>
   </div>
 </div>
 ```
 
-`data-file`, `data-priority`, `data-deadline`, `data-created` and `data-body` are optional and only feed the detail dialog. The task title is the key for checkbox sync, star, order and hide — keep titles unique. Status classes: `offen` (open/blocked), `aktiv` (active or has a deadline), `erledigt`. JS adds the details/star/hide buttons and drag ordering; all of it is view state in localStorage, the browser never writes to ticket files. With the `OBSIDIAN` option set, `data-file` links inside the vault open in Obsidian.
+“Accept” (added by script) moves a suggestion into the task list in the browser; “Put back” returns it. To keep an accepted suggestion, write it as a ticket in `tasks/` and run `python3 sync-tasks.py`.
 
-### Docs Table Pattern
-
-```html
-<table class="docs-table">
-  <thead>
-    <tr>
-      <th data-sort="text">Type</th>
-      <th>Actions</th>
-      <th data-sort="text">File</th>
-      <th>Description</th>
-      <th data-sort="size">Size</th>
-      <th data-sort="date">Updated</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="doc-type"><span class="doc-badge research">Research</span></td>
-      <td class="doc-actions">
-        <a class="doc-link" href="file:///path/to/file">open</a>
-        <button class="copy-btn" onclick="copyDocPath(this,'project-dir','file.md')">copy</button>
-      </td>
-      <td>file.md</td>
-      <td>Description of file</td>
-      <td class="doc-size">2.4 KB</td>
-      <td class="doc-date">2026-03-25 10:30</td>
-    </tr>
-  </tbody>
-</table>
-```
-
-4 doc types in fixed display order: Research (orange), Project (blue), Code (green), Claude (purple).
-Badge classes: `doc-badge research`, `doc-badge project`, `doc-badge code`, `doc-badge claude`.
-
-### Idea Card Pattern
-
-Same as project card but with `class="idea"` instead of `class="project"`, no docs table required.
-
-### Synergy Card Pattern
+### Synergy card
 
 ```html
-<div class="synergy-card">
-  <h3>Synergy Title</h3>
-  <p>Description of the connection between projects.</p>
-  <p><strong>Potential:</strong> What could be gained from this synergy.</p>
+<div class="synergy-card km-card">
+  <h3><span class="km-dots"><span class="km-dots__dot" style="--km-dot-color:#b93a1c"></span><span class="km-dots__dot" style="--km-dot-color:#005b8e"></span></span> Title</h3>
+  <div class="km-card__text"><p>What connects the projects.</p><p><strong>What you get:</strong> …</p><p><strong>Next step:</strong> …</p></div>
+  <p class="km-card__meta">As of 2026-11-09</p>
 </div>
 ```
 
-### Phase Badges
+### Idea card
 
-Available phases: `phase-active`, `phase-stable`, `phase-migration`, `phase-prototype`, `phase-idea`
+Like a project card with the extra class `idea-card`, `id="idea-<slug>"`, indicator `var(--km-color-accent)` and a first badge “Idea”; no table row.
 
-### Theme System
+### Skills and shortcuts
 
-CSS Custom Properties in `:root[data-theme="dark"]` and `:root[data-theme="light"]`:
-- `--bg`, `--surface`, `--surface-2`, `--surface-3`: Background layers
-- `--border`, `--border-hover`: Borders
-- `--text`, `--text-muted`, `--text-dim`: Text colors
-- `--accent`, `--on-accent`: UI accent (pins, drag indicators, section icons) and its contrast color
-- `--table-header-bg`, `--table-stripe`: Table colors
-- `--shadow`: Box shadow color
+The demo content in `#skills` and `#shortcuts` is static HTML: one `article.skill-card` per skill (`id="skill-<name>"`), the call graph as inline SVG in `details.km-graph` (nodes `g.km-graph__n` with `data-k`, edges `path.km-graph__e` with `data-a`/`data-b`, dashed edges add `km-graph__frage`), and one `article.km-shortcut` card per shortcut. To show the user's own skills, list `~/.claude/skills/*/SKILL.md`, write one card per skill and redraw the graph from the skills that mention other skills by name, keeping the four columns (entry points, brokers, helpers, building blocks). If the user does not use skills or shortcuts, remove both sections and their sidebar entries.
 
-Global design constants in `:root`: `--radius`/`--radius-lg` are `0` — the dashboard uses square corners throughout; `--caret-mask` is the shared SVG mask for all collapse carets (summaries, cards, AI suggestions).
+## Agents
 
-Project accent colors in `:root` (theme-independent): `--accent-projectname: #hexcolor`
+| Agent | Model | Tools | Role |
+|---|---|---|---|
+| Cockpit | inherits the session | Agent(radar, bridge), Read, Edit, Write, Bash, Glob, Grep | coordinates, checks results, updates `index.html` |
+| Radar | sonnet | Read, Bash, Glob, Grep, Edit | runs `scan.sh`, updates rows, document tables, hours; reports stale or missing CLAUDE.md and memory |
+| Bridge | opus | Read, Bash, Glob, Grep, Edit | compares projects (tokens, components, decisions), writes synergy cards and task suggestions |
 
-Theme toggle button in header switches `data-theme` attribute. System preference detected via `prefers-color-scheme`.
+Create them as `~/.claude/agents/<name>.md` with frontmatter `name`, `description`, `tools`, `model`. Only Cockpit may start other agents; Radar and Bridge are workers. Cockpit verifies every number and claim before it lands in the dashboard. Start with `claude --agent cockpit` in the dashboard folder, or ask Radar or Bridge directly in a session.
 
-## Constraints
+## Rules
 
-- No external dependencies — no npm, no CDN, no build tools, no server. `scan.sh` and `sync-tasks.py` are optional maintenance helpers; `index.html` must always work when simply opened in a browser
-- All project data is maintained via Claude Code scans or manual updates
-- File paths use file:// protocol for local access
-- Works offline (except external links)
+- **No server, no build, no CDN.** Everything stays inside `index.html` and `assets/`.
+- **Square corners** everywhere (`border-radius: 0`), also in SVG (`rx="0"`).
+- **Contrast:** text at least 4.5:1, interface elements at least 3:1, in dark and light.
+- **Kernmix first:** new visible elements use existing `km-` components and `--km-*` tokens; no hex colors or pixel values in page CSS except project colors.
+- **Icons:** Lucide only (the `lucide-icons` JSON block), no characters like ✓ or ★ as icons.
+- **Generated blocks:** never edit between `KERN-SYSTEM`, `AUTO-TASKS` and `SOCIAL-I` markers by hand; `AI-SUGGESTIONS` is written by Claude Code on request.
+- **Small, targeted edits** in `index.html`; read the spot first.
+- **Releases:** update `CHANGELOG.md` (Added, Changed, Removed) with every release.
+- **Licence:** the repository is EUPL-1.2; keep `NOTICE.md` current when third-party parts change.
