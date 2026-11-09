@@ -1,4 +1,4 @@
-<img width="1600" height="640" alt="Project Dashboard: title and tagline All your projects at a glance, maintained with Claude Code, next to the full dashboard window in dark mode with side navigation, lists, project overview and the task sidebar" src="assets/readme/header.png" />
+<img width="1600" alt="Project Dashboard: title and tagline All your projects at a glance, maintained with Claude Code, next to the full dashboard window in dark mode with side navigation, lists, project overview and the task sidebar" src="assets/readme/header.png" />
 
 # Project Dashboard
 
@@ -10,12 +10,12 @@ It started as a table with a few project names. Sorting came next, then search, 
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="assets/readme/screenshot-light.png">
-  <img width="1600" height="1000" alt="Project Dashboard in dark mode with fictional demo projects: header with pinned quicklinks and buttons, side navigation with filters, lists, the project overview grouped by organization, and task cards in the right column" src="assets/readme/screenshot-dark.png">
+  <img width="1600" alt="Project Dashboard in dark mode with fictional demo projects: header with pinned quicklinks and buttons, side navigation with filters, lists, the project overview grouped by organization, and task cards in the right column" src="assets/readme/screenshot-dark.png">
 </picture>
 
 ---
 
-<img width="1600" height="120" alt="Section 01: Features" src="assets/readme/01-features.png" />
+<img width="1600" alt="Section 01: Features" src="assets/readme/01-features.png" />
 
 ## Features
 
@@ -64,11 +64,11 @@ It started as a table with a few project names. Sorting came next, then search, 
 - ♿ **Accessible**: keyboard operable, visible focus, contrast measured in both themes, motion only when the system allows it.
 - ⌨️ **Keyboard shortcuts**: `/` search, `t` theme, `a` tasks, `1` `2` `3` view modes, `Esc` closes panels.
 
-<img width="1600" height="400" alt="How the dashboard works, in four steps from left to right: 1, your projects: ~/projects/&lt;name&gt;/ with CLAUDE.md and memory, tasks/*.md tickets with YAML frontmatter. 2, Claude Code and helpers: scan.sh reads files, lines, last change and hours; sync-tasks.py and the agents Cockpit, Radar and Bridge. 3, one HTML file: index.html with HTML, CSS and JS, no build, no server; Kernmix on KERN tokens, light and dark. 4, in your browser: opens from file:// and works offline; state in localStorage: stars, done, order." src="assets/readme/how-it-works.png" />
+<img width="1600" alt="How the dashboard works, in four steps from left to right: 1, your projects: ~/projects/&lt;name&gt;/ with CLAUDE.md and memory, tasks/*.md tickets with YAML frontmatter. 2, Claude Code and helpers: scan.sh reads files, lines, last change and hours; sync-tasks.py and the agents Cockpit, Radar and Bridge. 3, one HTML file: index.html with HTML, CSS and JS, no build, no server; Kernmix on KERN tokens, light and dark. 4, in your browser: opens from file:// and works offline; state in localStorage: stars, done, order." src="assets/readme/how-it-works.png" />
 
 ---
 
-<img width="1600" height="120" alt="Section 02: Quick start" src="assets/readme/02-quick-start.png" />
+<img width="1600" alt="Section 02: Quick start" src="assets/readme/02-quick-start.png" />
 
 ## Quick Start
 
@@ -109,7 +109,7 @@ Claude Code reads `CLAUDE.md` and will:
 
 ---
 
-<img width="1600" height="120" alt="Section 03: Feature details" src="assets/readme/03-feature-details.png" />
+<img width="1600" alt="Section 03: Feature details" src="assets/readme/03-feature-details.png" />
 
 ## Feature Details
 
@@ -162,7 +162,7 @@ Each project can keep a `time-log.md` with manual entries and Claude Code sessio
 
 ---
 
-<img width="1600" height="120" alt="Section 04: Structure" src="assets/readme/04-structure.png" />
+<img width="1600" alt="Section 04: Structure" src="assets/readme/04-structure.png" />
 
 ## Structure
 
@@ -183,7 +183,7 @@ CHANGELOG.md            release notes
 
 ---
 
-<img width="1600" height="120" alt="Section 05: Design principles" src="assets/readme/05-design-principles.png" />
+<img width="1600" alt="Section 05: Design principles" src="assets/readme/05-design-principles.png" />
 
 ## Design Principles
 
@@ -197,7 +197,7 @@ Inspired by the [Spine Pattern](https://tsoporan.com/blog/spine-pattern-multi-re
 
 ---
 
-<img width="1600" height="120" alt="Section 06: About" src="assets/readme/06-about.png" />
+<img width="1600" alt="Section 06: About" src="assets/readme/06-about.png" />
 
 ## About
 
