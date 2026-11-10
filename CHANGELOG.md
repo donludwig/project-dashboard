@@ -2,6 +2,21 @@
 
 All notable changes to the Project Dashboard.
 
+## 3.1.0 "Traits" · 2026-11-10
+
+Traits in the side navigation, a place to manage lists, and a focus box that matches the overview.
+
+- Side navigation: new group Traits with Live, Open tasks, Untouched for a while and No preview image. Traits come from the data, one at a time, with All first; picking another filter sets them back to All.
+- Counts in the side navigation show exactly what the click shows, under all other active filters.
+- Lists: an All tab with every list, each with drag handle, up, down and delete on the right. Delete asks once, without a browser dialog. You can drag the list tabs too.
+- Lists in the side navigation: clicking the group only opens or closes it; the gear icon next to it opens All and marks Lists.
+- Clicking a list or trait in the side navigation scrolls to the top; switching list tabs brings the Lists section to the top.
+- Focus box: same columns and column widths as the overview, with the tool label and a working info icon. Filters no longer hide pinned projects.
+- Overview: empty groups disappear when filtering by phase; the info icon shows the card preview when a project has no share image.
+- Reloading a page with a #anchor jumps to the card again instead of a random position.
+- Tables: action buttons sit on the right, the column is only as wide as its buttons, and row number, icon and name share one line.
+- Kernmix 0.16.11.
+
 ## 3.0.2 "Overview first" · 2026-11-10
 
 The dashboard opens with the overview.
