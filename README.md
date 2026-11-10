@@ -6,7 +6,7 @@
 
 The dashboard shows what you are working on, what comes next and where projects can learn from each other. It is a single `index.html`: no server, no account, no build step, no dependencies. Open it in a browser and it works. Claude Code sets it up for your own projects and keeps it current, guided by the `CLAUDE.md` in this repository.
 
-It started as a table with a few project names. Sorting came next, then search, cards, tasks, hours from Claude Code sessions, synergies between projects and three agents that keep the numbers current. Version 3 rebuilds all of it on Kernmix, a design system on top of the open standard [KERN](https://www.kern-ux.de/). The demo ships with twelve fictional projects so you can try every feature before you add your own.
+It started as a table with a few project names. Sorting came next, then search, cards, tasks, hours from Claude Code sessions, synergies between projects and three agents that keep the numbers current. Version 3 rebuilds all of it on [Kernmix](https://kernmix.thinkrepeat.com/) ([GitHub](https://github.com/donludwig/kernmix)), a design system on top of the open standard [KERN](https://www.kern-ux.de/). The demo ships with twelve fictional projects so you can try every feature before you add your own.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="assets/readme/screenshot-light.png">

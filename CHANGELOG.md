@@ -2,6 +2,15 @@
 
 All notable changes to the Project Dashboard.
 
+## 3.0.1 · 2026-11-10
+
+A calmer first view and the latest Kernmix.
+
+- First view: no focus box, Project overview collapsed with “open only” on, Project details and Lists open, About further down. The side navigation follows the same order.
+- Your own projects appear under Claude Code in Project details, not under Claude Desktop.
+- Kernmix 0.16.3 with an image viewer: images in a section open large, arrow keys go through them, Esc closes.
+- The design system tile links to the Kernmix repository.
+
 ## 3.0.0 "Common Ground" · 2026-11-09
 
 A new foundation. The dashboard now runs on Kernmix, a design system built on the open standard KERN, ships in English with a fresh set of fictional demo projects, and adds lists, skills, shortcuts and a filter set that works across every section. The project is now licensed under the EUPL-1.2.
