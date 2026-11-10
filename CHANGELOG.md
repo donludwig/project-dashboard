@@ -2,6 +2,13 @@
 
 All notable changes to the Project Dashboard.
 
+## 3.0.2 "Overview first" · 2026-11-10
+
+The dashboard opens with the overview.
+
+- First view: Project overview and Lists open, Project details collapsed, no focus box.
+- README and social images show this first view.
+
 ## 3.0.1 · 2026-11-10
 
 A calmer first view and the latest Kernmix.
